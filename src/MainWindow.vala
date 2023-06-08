@@ -24,8 +24,8 @@ using Gdk;
 
 public class MainWindow : Gtk.ApplicationWindow {
 
-  private GLib.Settings  _settings;
-  private GtkSource.View _entry;
+  private GLib.Settings    _settings;
+  private GtkSource.Buffer _buffer;
   // private Gtk.AccelGroup? _accel_group = null;
   // private UnicodeInsert   _unicoder;
 
@@ -86,13 +86,29 @@ public class MainWindow : Gtk.ApplicationWindow {
     new_btn.clicked.connect( action_new_entry );
     header.pack_start( new_btn );
 
-    stdout.printf( "Header has been packed\n" );
+    /* Now let's setup some stuff related to the text field */
+    var lang_mgr = GtkSource.LanguageManager.get_default();
+    var lang     = lang_mgr.get_language( "markdown" );
 
-    _entry = new GtkSource.View();
-    child = _entry;
+    var style_mgr = GtkSource.StyleSchemeManager.get_default();
+    var style     = style_mgr.get_scheme( "cobalt" );
+    foreach( string id in style_mgr.get_scheme_ids() ) {
+      stdout.printf( "  scheme: %s\n", id );
+    }
+
+    /* Create the text entry view */
+    _buffer = new GtkSource.Buffer.with_language( lang ) {
+      style_scheme = style
+    };
+    var entry = new GtkSource.View.with_buffer( _buffer );
+
+    child = entry;
 
     /* Create unicode inserter */
     // _unicoder = new UnicodeInsert();
+
+    /* Display the window */
+    show();
 
   }
 

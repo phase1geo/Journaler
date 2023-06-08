@@ -46,6 +46,7 @@ public class Journaler : Gtk.Application {
     Intl.textdomain( GETTEXT_PACKAGE );
 
     startup.connect( start_application );
+    activate.connect( on_activate );
 
   }
 
@@ -77,17 +78,13 @@ public class Journaler : Gtk.Application {
     });
     */
 
-    stdout.printf( "Application started\n" );
-
   }
 
   /* Called if we have no files to open */
-  protected override void activate() {
-    hold();
+  private void on_activate() {
     if( new_entry ) {
       appwin.action_new_entry();
     }
-    release();
   }
 
   /* Parse the command-line arguments */
