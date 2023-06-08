@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gresources>
+  <gresource prefix="/com/github/phase1geo/journaler">
+    <file alias="Application.css" compressed="true">Application.css</file>
+    <file alias="shortcuts.ui" compressed="true">com.github.phase1geo.minder.shortcuts.ui</file>
+    <file alias="journaler-logo.svg">icons/scalable/com.github.phase1geo.journaler.svg</file>
+  </gresource>
+</gresources>

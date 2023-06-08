@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright 2018 Trevor Williams <phase1geo@icloud.com> -->
+<component type="desktop-application">
+  <id>com.github.phase1geo.journaler</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0+</project_license>
+  <name>Journaler</name>
+  <summary>Make every day a memory</summary>
+  <description>
+    TBD
+  </description>
+  <provides>
+    <binary>com.github.phase1geo.journaler</binary>
+  </provides>
+  <screenshots>
+    <screenshot>
+      <caption>Main Window</caption>
+      <image>https://raw.githubusercontent.com/phase1geo/Minder/master/data/screenshots/screenshot-current-properties.png</image>
+    </screenshot>
+  </screenshots>
+  <developer_name>Trevor Williams</developer_name>
+  <url type="homepage">https://github.com/phase1geo/journaler/</url>
+  <url type="bugtracker">https://github.com/phase1geo/journaler/issues/</url>
+  <custom>
+    <value key="x-appcenter-color-primary">#603461</value>
+    <value key="x-appcenter-color-primary-text">rgb(255, 255, 255)</value>
+    <value key="x-appcenter-suggested-price">5</value>
+    <value key="x-appcenter-stripe">pk_live_Uhb96elhovWNRGkq07m2FRO9008Ia8OtVa</value>
+  </custom>
+  <content_rating type="oars-1.1">
+    <content_attribute id="violence-cartoon">none</content_attribute>
+    <content_attribute id="violence-fantasy">none</content_attribute>
+    <content_attribute id="violence-realistic">none</content_attribute>
+    <content_attribute id="violence-bloodshed">none</content_attribute>
+    <content_attribute id="violence-sexual">none</content_attribute>
+    <content_attribute id="violence-desecration">none</content_attribute>
+    <content_attribute id="violence-slavery">none</content_attribute>
+    <content_attribute id="violence-worship">none</content_attribute>
+    <content_attribute id="drugs-alcohol">none</content_attribute>
+    <content_attribute id="drugs-narcotics">none</content_attribute>
+    <content_attribute id="drugs-tobacco">none</content_attribute>
+    <content_attribute id="sex-nudity">none</content_attribute>
+    <content_attribute id="sex-themes">none</content_attribute>
+    <content_attribute id="sex-homosexuality">none</content_attribute>
+    <content_attribute id="sex-prostitution">none</content_attribute>
+    <content_attribute id="sex-adultery">none</content_attribute>
+    <content_attribute id="sex-appearance">none</content_attribute>
+    <content_attribute id="language-profanity">none</content_attribute>
+    <content_attribute id="language-humor">none</content_attribute>
+    <content_attribute id="language-discrimination">none</content_attribute>
+    <content_attribute id="social-chat">none</content_attribute>
+    <content_attribute id="social-info">none</content_attribute>
+    <content_attribute id="social-audio">none</content_attribute>
+    <content_attribute id="social-location">none</content_attribute>
+    <content_attribute id="social-contacts">none</content_attribute>
+    <content_attribute id="money-purchasing">none</content_attribute>
+    <content_attribute id="money-gambling">none</content_attribute>
+  </content_rating>
+  <releases>
+  </releases>
+</component>
