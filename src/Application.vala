@@ -33,6 +33,7 @@ public class Journaler : Gtk.Application {
 
   public  static GLib.Settings settings;
   public  static string        version = "0.1";
+  public  static Database      db;
 
   private MainWindow appwin;
 
@@ -59,6 +60,9 @@ public class Journaler : Gtk.Application {
     /* Add the application-specific icons */
     weak IconTheme default_theme = IconTheme.get_for_display( Display.get_default() );
     default_theme.add_resource_path( "/com/github/phase1geo/journaler" );
+
+    /* Open the database */
+    db = new Database();
 
     /* Create the main window */
     appwin = new MainWindow( this, settings );

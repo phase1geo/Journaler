@@ -35,7 +35,8 @@ core_deps = [
     dependency('gtk4'),
     dependency('libxml-2.0'),
     dependency('libarchive'),
-    dependency('gtksourceview-5')
+    dependency('gtksourceview-5'),
+    dependency('sqlite3')
 ]
 
 e = executable('com.github.phase1geo.journaler',
