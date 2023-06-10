@@ -31,13 +31,20 @@ public class DBEntry {
 
   /* Returns the title of this entry */
   public string gen_title() {
-    return( (this.title == "") ? this.date : this.title );
+    return( (this.title == "") ? _( "Entry for %s" ).printf( this.date ) : this.title );
   }
 
   /* Returns the string version of today's date */
   public static string todays_date() {
     var today = new DateTime.now_local();
     return( "%04d-%02d-%02d".printf( today.get_year(), today.get_month(), today.get_day_of_month() ) );
+  }
+ 
+  /* Compares two DBEntries for sorting purposes (by date) */
+  public static int compare( void* x, void* y ) {
+    DBEntry** x1 = (DBEntry**)x;
+    DBEntry** y1 = (DBEntry**)y;
+    return( strcmp( (string)((*y1)->date), (string)((*x1)->date ) ) );
   }
 
   public string to_string() {
@@ -112,13 +119,8 @@ public class Database {
       entries.append_val( entry );
     }
 
-    stdout.printf( "entries.length: %u\n", entries.length );
-
     /* Sort based on date */
-    entries.sort((a, b) => {
-      stdout.printf( "a: %s\n", a.to_string() );
-      return( strcmp( a.date, b.date ) );
-    });
+    entries.sort( (CompareFunc)DBEntry.compare );
 
     return( true );
 

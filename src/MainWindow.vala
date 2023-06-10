@@ -91,35 +91,33 @@ public class MainWindow : Gtk.ApplicationWindow {
     var lbox = new Box( Orientation.VERTICAL, 0 );
     var rbox = new Box( Orientation.VERTICAL, 0 );
 
-    stdout.printf( "allocated_width: %d\n", get_allocated_width() );
     var pw = new Paned( Orientation.HORIZONTAL ) {
       start_child        = lbox,
       end_child          = rbox,
       shrink_start_child = true,
       shrink_end_child   = false
     };
-    Idle.add(() => {
-      stdout.printf( "get_allocated_width: %d\n", get_allocated_width() );
-      pw.position = get_allocated_width() - 200;
-      pw.position_set = true;
-      return( false );
-    });
     child = pw;
 
     add_text_area( lbox );
     add_sidebar( rbox );
 
-    /* Display the window */
     show();
 
-    /* Populate the listbox with all of the entries from the database */
-    populate_listbox();
+    /* Loads the application-wide CSS */
+    load_css();
 
-    /* Load the entry for today */
-    load_today_entry();
+    Timeout.add(1000, () => {
+      pw.position = get_allocated_width() - 200;
+      pw.position_set = true;
+      populate_listbox();
+      load_today_entry();
+      return( false );
+    });
 
   }
 
+  /* Creates the textbox with today's entry. */
   private void add_text_area( Box box ) {
 
     var text_margin  = 20;
@@ -171,7 +169,9 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     _listbox = new ListBox() {
       valign  = Align.FILL,
-      vexpand = true
+      vexpand = true,
+      halign  = Align.FILL,
+      hexpand = true
     };
     _listbox.row_selected.connect((row) => {
       stdout.printf( "HERE!\n" );
@@ -186,6 +186,13 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   }
 
+  /* Loads the application-wide CSS */
+  private void load_css() {
+    var provider = new CssProvider();
+    provider.load_from_resource( "/com/github/phase1geo/journaler/Application.css" );
+    get_style_context().add_provider( provider, STYLE_PROVIDER_PRIORITY_APPLICATION );
+  }
+
   /* Populates the all entries listbox with date from the database */
   private void populate_listbox() {
 
@@ -198,13 +205,24 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     for( int i=0; i<entries.length; i++ ) {
       var label = new Label( entries.index( i ).gen_title() ) {
+        halign  = Align.START,
+        hexpand = true
+      };
+      label.add_css_class( "listbox-head" );
+      var date = new Label( entries.index( i ).date ) {
+        halign  = Align.END,
+        hexpand = true
+      };
+      var box = new Box( Orientation.VERTICAL, 0 ) {
         halign        = Align.START,
         margin_top    = 5,
         margin_bottom = 5,
         margin_start  = 5,
         margin_end    = 5
       };
-      _listbox.append( label );
+      box.append( label );
+      box.append( date );
+      _listbox.append( box );
     }
 
   }

@@ -1,0 +1,711 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the com.github.phase1geo.journaler package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: com.github.phase1geo.journaler\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-06-10 13:50-0500\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: src/Application.vala:101
+msgid "Display version number"
+msgstr ""
+
+#: src/Application.vala:102
+msgid "Creates a new journal entry"
+msgstr ""
+
+#: src/Application.vala:111
+#, c-format
+msgid "ERROR: %s\n"
+msgstr ""
+
+#: src/Application.vala:112
+#, c-format
+msgid "Run '%s --help' to see valid options\n"
+msgstr ""
+
+#: src/Database.vala:34
+#, c-format
+msgid "Entry for %s"
+msgstr ""
+
+#: src/MainWindow.vala:69
+msgid "Journaler"
+msgstr ""
+
+#: src/MainWindow.vala:87
+msgid "New Entry"
+msgstr ""
+
+#: src/Utils.vala:107 src/Utils.vala:113
+#, c-format
+msgid "error: %s\n"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:6
+msgid "Journaler Shortcuts"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:12
+#: data/com.github.phase1geo.journaler.shortcuts.ui:913
+msgid "General"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:16
+msgid "File"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:21
+msgid "New File"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:28
+msgid "Open File"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:35
+msgid "Import File"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:42
+msgid "Save File As"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:58
+msgid "Print File"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:67
+msgid "Notebook Tabs"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:72
+msgid "Close Current Tab"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:79
+msgid "Go to Next Tab"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:86
+msgid "Go to Previous Tab"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:95
+msgid "Undo/Redo"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:99
+msgid "Undo Last Change"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:106
+msgid "Redo Last Undo"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:115
+msgid "Zooming"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:119
+msgid "Zoom In"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:126
+msgid "Zoom Out"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:133
+msgid "Zoom To Actual Size"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:140
+msgid "Zoom to Fit Selected Node Tree"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:147
+msgid "Zoom To Fit"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:156
+msgid "Properties Sidebar"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:160
+msgid "Show Current Tab"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:167
+msgid "Show Style Tab"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:174
+msgid "Show Sticker Tab"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:181
+msgid "Show Map Tab"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:190
+#: data/com.github.phase1geo.journaler.shortcuts.ui:693
+msgid "Miscellaneous"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:194
+msgid "Toggle Focus Mode"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:201
+msgid "Search Nodes/Connections"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:208
+#: data/com.github.phase1geo.journaler.shortcuts.ui:917
+msgid "Show Contextual Menu"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:215
+msgid "Show Preferences"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:222
+msgid "Show Keyboard Shortcuts"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:229
+msgid "Quit Application"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:241
+msgid "Node Commands"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:245
+msgid "Creation/Deletion"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:249
+msgid "New Sibling Node"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:256
+msgid "New Connected Node"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:263
+msgid "New Child Node"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:270
+msgid "Quick Entry Insertion"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:277
+msgid "Quick Entry Replacement"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:284
+msgid "Delete Node"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:293
+#: data/com.github.phase1geo.journaler.shortcuts.ui:803
+msgid "Clipboard"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:297
+msgid "Copy Node"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:304
+msgid "Cut Node"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:311
+msgid "Add Child Node With Clipboard"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:318
+msgid "Replace With Clipboard"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:327
+msgid "Changing Current"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:331
+#: data/com.github.phase1geo.journaler.shortcuts.ui:622
+msgid "Edit Title"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:338
+#: data/com.github.phase1geo.journaler.shortcuts.ui:629
+msgid "Edit Note"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:345
+msgid "Change Task State"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:352
+msgid "Add URL Link To Text"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:359
+#: data/com.github.phase1geo.journaler.shortcuts.ui:725
+msgid "Remove URL Link From Text"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:366
+msgid "View Properties"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:373
+msgid "Toggle Fold"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:380
+msgid "Toggle Node Link"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:387
+msgid "Create Link to Selected Node"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:388
+msgid "[After using this command, 'y' will create the link]"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:395
+msgid "Create Group"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:402
+msgid "Create Connection"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:409
+msgid "Center In View"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:416
+#: data/com.github.phase1geo.journaler.shortcuts.ui:643
+msgid "Place Into View"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:425
+#: data/com.github.phase1geo.journaler.shortcuts.ui:830
+msgid "Selection"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:429
+msgid "Select Root"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:436
+msgid "Select Parent"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:443
+msgid "Select Next Sibling"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:450
+msgid "Select Previous Sibling"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:457
+msgid "Select Child"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:464
+msgid "Select Children"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:471
+msgid "Select Subtree"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:478
+msgid "Select Node Below"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:485
+msgid "Select Node Above"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:492
+msgid "Select Node To Right"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:499
+msgid "Select Node To Left"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:506
+msgid "Select Linked Node"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:513
+msgid "Select Attached Connection"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:522
+msgid "Move"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:526
+msgid "Swap with Sibling Node to Right"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:533
+msgid "Swap with Sibling Node to Left"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:540
+msgid "Swap with Sibling Node Above"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:547
+msgid "Swap with Sibling Node Below"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:554
+msgid "Sort Child Nodes Alphabetically"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:563
+msgid "Alignment"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:567
+msgid "Align Top Side"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:574
+msgid "Align Center Horizontally"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:581
+msgid "Align Bottom Side"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:588
+msgid "Align Left Side"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:595
+msgid "Align Center Vertically"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:602
+msgid "Align Right Side"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:614
+msgid "Connection Commands"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:618
+msgid "Change Current"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:636
+msgid "Show Properties"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:652
+msgid "Traversal"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:656
+msgid "Select Start Node"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:663
+msgid "Select End Node"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:670
+msgid "Select Next Connection"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:677
+msgid "Select Previous Connection"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:689
+msgid "Text Editing"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:697
+msgid "Insert Newline Character"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:704
+msgid "Insert Tab Character"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:711
+msgid "Show Emoji Picker"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:718
+msgid "Add URL Link To Selected Text"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:732
+msgid "End Editing"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:741
+msgid "Cursor Movement"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:745
+msgid "Next Character"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:752
+msgid "Previous Character"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:759
+msgid "Next Word"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:766
+msgid "Previous Word"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:773
+msgid "Next Line"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:780
+msgid "Previous Line"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:787
+msgid "Start Of Text"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:794
+msgid "End Of Text"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:807
+msgid "Copy Selected Text"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:814
+msgid "Cut Selected Text"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:821
+msgid "Paste Text"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:834
+msgid "Add Next Character"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:841
+msgid "Add Previous Character"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:848
+msgid "Add Next Word"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:855
+msgid "Add Previous Word"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:862
+msgid "Add Next Line"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:869
+msgid "Add Previous Line"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:876
+msgid "Add Start Of Text"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:883
+msgid "Add End Of Text"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:890
+msgid "Select All Text"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:897
+msgid "Clear Selection"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:909
+msgid "Mouse Events"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:918
+msgid "[Right-click when item is selected]"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:924
+msgid "Edit Image in Canvas"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:925
+msgid "[Double left-click on image]"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:933
+msgid "Canvas Movement"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:937
+msgid "Pan Canvas"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:938
+msgid "[Middle-click + Drag / Alt + Motion]"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:944
+msgid "Scroll Vertically"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:945
+msgid "[Scrollwheel up/down]"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:951
+msgid "Scroll Horizontally"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:952
+msgid "[Shift + Scrollwheel up/down]"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:960
+msgid "Item Selection"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:964
+msgid "Select Single Item"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:965
+msgid "[Left-click on item]"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:971
+msgid "Select Child Nodes"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:972
+msgid "[Control + Left-click on parent node]"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:978
+msgid "Select Node Tree/Subtree"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:979
+msgid "[Control + Double left-click on parent node]"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:985
+msgid "Select All Nodes at Same Depth Level"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:986
+msgid "[Control + Triple left-click on node]"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:992
+msgid "Block Selection"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:993
+msgid "[Left-click + Drag]"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:1001
+msgid "Item Selection Toggle (Add to/Remove from Selection)"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:1005
+msgid "Toggle Selection of Item"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:1006
+msgid "[Shift + Left-click on item]"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:1012
+msgid "Toggle Selection of Child Nodes"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:1013
+msgid "[Shift + Control + Left-click on item]"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:1019
+msgid "Toggle Selection of Node Tree/Subtree"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:1020
+msgid "[Shift + Control + Double left-click on parent node]"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:1026
+msgid "Toggle Selection of All Nodes at Same Depth Level"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:1027
+msgid "[Shift + Control + Triple left-click on node]"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:1035
+msgid "Text Selection"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:1039
+msgid "Set Cursor Insert Point"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:1040
+msgid "[Left-click anywhere in text]"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:1046
+msgid "Select current word"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:1047
+msgid "[Double left-click on word]"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:1053
+msgid "Select all text"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:1054
+msgid "[Triple left-click anywhere in text]"
+msgstr ""

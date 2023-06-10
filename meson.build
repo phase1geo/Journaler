@@ -4,7 +4,8 @@
     license: 'GPL-3.0'
 )
 
-i18n = import('i18n')
+i18n  = import('i18n')
+gnome = import('gnome')
 
 add_global_arguments('-DGETTEXT_PACKAGE="@0@"'.format (meson.project_name()), language:'c')
 
@@ -15,6 +16,11 @@ config_file = configure_file(
     input: 'src/Config.vala.in',
     output: '@BASENAME@',
     configuration: config_data
+)
+
+gresource = gnome.compile_resources(
+    'journaler-resources', 'data/' + meson.project_name() + '.gresource.xml',
+    source_dir: 'data',
 )
 
 sources = files()
@@ -42,7 +48,7 @@ core_deps = [
 e = executable('com.github.phase1geo.journaler',
     sources,
     config_file,
-    # gresource,
+    gresource,
     dependencies: core_deps,
     vala_args: [
         meson.source_root() + '/vapi/libmarkdown.vapi'
