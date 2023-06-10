@@ -17,16 +17,31 @@ public class DBEntry {
   }
 
   /* Constructor */
+  public DBEntry.for_list( string title, string date ) {
+    this.title = title;
+    this.date  = date;
+  }
+
+  /* Constructor */
   public DBEntry.with_date( string title, string text, string date ) {
     this.title = title;
     this.text  = text;
     this.date  = date;
   }
 
+  /* Returns the title of this entry */
+  public string gen_title() {
+    return( (this.title == "") ? this.date : this.title );
+  }
+
   /* Returns the string version of today's date */
   public static string todays_date() {
     var today = new DateTime.now_local();
     return( "%04d-%02d-%02d".printf( today.get_year(), today.get_month(), today.get_day_of_month() ) );
+  }
+
+  public string to_string() {
+    return( "title: %s, text: %s, date: %s".printf( title, text, date ) );
   }
 
 }
@@ -76,6 +91,34 @@ public class Database {
       stdout.printf( "create table issue, err: %d, errmsg: %s\n", err, errmsg );
       return( false );
     }
+
+    return( true );
+
+  }
+
+  /* Returns the list of all entries to be displayed in the listbox */
+  public bool get_all_entries( ref Array<DBEntry> entries ) {
+
+    Sqlite.Statement stmt;
+
+    var query = "SELECT * FROM Entry;";
+    var err = _db.prepare_v2( query, query.length, out stmt );
+    if( err != Sqlite.OK ) {
+      return( false );
+    }
+
+    while( stmt.step() == Sqlite.ROW ) {
+      var entry = new DBEntry.for_list( stmt.column_text( 1 ), stmt.column_text( 3 ) );
+      entries.append_val( entry );
+    }
+
+    stdout.printf( "entries.length: %u\n", entries.length );
+
+    /* Sort based on date */
+    entries.sort((a, b) => {
+      stdout.printf( "a: %s\n", a.to_string() );
+      return( strcmp( a.date, b.date ) );
+    });
 
     return( true );
 

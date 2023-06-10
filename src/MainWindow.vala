@@ -26,6 +26,7 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   private GLib.Settings    _settings;
   private GtkSource.Buffer _buffer;
+  private ListBox          _listbox;
   // private Gtk.AccelGroup? _accel_group = null;
   // private UnicodeInsert   _unicoder;
 
@@ -87,16 +88,32 @@ public class MainWindow : Gtk.ApplicationWindow {
     new_btn.clicked.connect( action_new_entry );
     header.pack_start( new_btn );
 
-    var box = new Box( Orientation.VERTICAL, 0 );
-    child = box;
+    var lbox = new Box( Orientation.VERTICAL, 0 );
+    var rbox = new Box( Orientation.VERTICAL, 0 );
 
-    add_text_area( box );
+    stdout.printf( "allocated_width: %d\n", get_allocated_width() );
+    var pw = new Paned( Orientation.HORIZONTAL ) {
+      start_child        = lbox,
+      end_child          = rbox,
+      shrink_start_child = true,
+      shrink_end_child   = false
+    };
+    Idle.add(() => {
+      stdout.printf( "get_allocated_width: %d\n", get_allocated_width() );
+      pw.position = get_allocated_width() - 200;
+      pw.position_set = true;
+      return( false );
+    });
+    child = pw;
 
-    /* Create unicode inserter */
-    // _unicoder = new UnicodeInsert();
+    add_text_area( lbox );
+    add_sidebar( rbox );
 
     /* Display the window */
     show();
+
+    /* Populate the listbox with all of the entries from the database */
+    populate_listbox();
 
     /* Load the entry for today */
     load_today_entry();
@@ -149,6 +166,49 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   }
 
+  /* Adds the sidebar */
+  private void add_sidebar( Box box ) {
+
+    _listbox = new ListBox() {
+      valign  = Align.FILL,
+      vexpand = true
+    };
+    _listbox.row_selected.connect((row) => {
+      stdout.printf( "HERE!\n" );
+    });
+
+    var lb_scroll = new ScrolledWindow() {
+      vscrollbar_policy = PolicyType.AUTOMATIC,
+      child = _listbox
+    };
+
+    box.append( lb_scroll );
+
+  }
+
+  /* Populates the all entries listbox with date from the database */
+  private void populate_listbox() {
+
+    var entries = new Array<DBEntry>();
+
+    if( !Journaler.db.get_all_entries( ref entries ) ) {
+      stdout.printf( "ERROR:  Unable to get all entries in the journal\n" );
+      return;
+    }
+
+    for( int i=0; i<entries.length; i++ ) {
+      var label = new Label( entries.index( i ).gen_title() ) {
+        halign        = Align.START,
+        margin_top    = 5,
+        margin_bottom = 5,
+        margin_start  = 5,
+        margin_end    = 5
+      };
+      _listbox.append( label );
+    }
+
+  }
+
   /* Returns the name of the icon to use for a headerbar icon */
   private string get_header_icon_name( string icon_name ) {
     return( "%s%s".printf( icon_name, (on_elementary ? "" : "-symbolic") ) );
@@ -173,7 +233,7 @@ public class MainWindow : Gtk.ApplicationWindow {
   /* Save the current entry to the database */
   public void action_save() {
 
-    var entry = new DBEntry.for_save( "Test", _buffer.text );
+    var entry = new DBEntry.for_save( "", _buffer.text );
 
     if( Journaler.db.save_entry( entry ) ) {
       stdout.printf( "Saved successfully!\n" );
