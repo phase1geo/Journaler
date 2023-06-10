@@ -31,6 +31,7 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   private const GLib.ActionEntry[] action_entries = {
     { "action_new_entry", action_new_entry },
+    { "action_save",      action_save },
     { "action_quit",      action_quit },
   };
 
@@ -86,6 +87,28 @@ public class MainWindow : Gtk.ApplicationWindow {
     new_btn.clicked.connect( action_new_entry );
     header.pack_start( new_btn );
 
+    var box = new Box( Orientation.VERTICAL, 0 );
+    child = box;
+
+    add_text_area( box );
+
+    /* Create unicode inserter */
+    // _unicoder = new UnicodeInsert();
+
+    /* Display the window */
+    show();
+
+    /* Load the entry for today */
+    load_today_entry();
+
+  }
+
+  private void add_text_area( Box box ) {
+
+    var text_margin  = 20;
+    var line_spacing = 5;
+    var font_size    = 14;
+
     /* Now let's setup some stuff related to the text field */
     var lang_mgr = GtkSource.LanguageManager.get_default();
     var lang     = lang_mgr.get_language( "markdown" );
@@ -100,15 +123,29 @@ public class MainWindow : Gtk.ApplicationWindow {
     _buffer = new GtkSource.Buffer.with_language( lang ) {
       style_scheme = style
     };
-    var entry = new GtkSource.View.with_buffer( _buffer );
+    var entry = new GtkSource.View.with_buffer( _buffer ) {
+      valign        = Align.FILL,
+      vexpand       = true,
+      top_margin    = text_margin,
+      left_margin   = text_margin,
+      bottom_margin = text_margin,
+      right_margin  = text_margin,
+      wrap_mode     = WrapMode.WORD,
+      pixels_below_lines = line_spacing,
+      pixels_inside_wrap = line_spacing
 
-    child = entry;
+    };
 
-    /* Create unicode inserter */
-    // _unicoder = new UnicodeInsert();
+    var provider = new CssProvider();
+    provider.load_from_data( "textview { font-size: %dpt; }".printf( font_size ).data );
+    entry.get_style_context().add_provider( provider, STYLE_PROVIDER_PRIORITY_APPLICATION );
 
-    /* Display the window */
-    show();
+    var scroll = new ScrolledWindow() {
+      vscrollbar_policy = PolicyType.AUTOMATIC,
+      child = entry
+    };
+
+    box.append( scroll );
 
   }
 
@@ -121,6 +158,7 @@ public class MainWindow : Gtk.ApplicationWindow {
   private void add_keyboard_shortcuts( Gtk.Application app ) {
 
     app.set_accels_for_action( "win.action_new_entry", { "<Control>n" } );
+    app.set_accels_for_action( "win.action_save",      { "<Control>s" } );
     app.set_accels_for_action( "win.action_quit",      { "<Control>q" } );
 
   }
@@ -129,6 +167,19 @@ public class MainWindow : Gtk.ApplicationWindow {
   public void action_new_entry() {
 
     // TBD
+
+  }
+
+  /* Save the current entry to the database */
+  public void action_save() {
+
+    var entry = new DBEntry.for_save( "Test", _buffer.text );
+
+    if( Journaler.db.save_entry( entry ) ) {
+      stdout.printf( "Saved successfully!\n" );
+    } else {
+      stdout.printf( "Save did not occur\n" );
+    }
 
   }
 
@@ -160,6 +211,20 @@ public class MainWindow : Gtk.ApplicationWindow {
     */
 
     win.show();
+
+  }
+
+  /* Loads the entry in the database for today */
+  private void load_today_entry() {
+
+    DBEntry entry = new DBEntry();
+
+    if( Journaler.db.load_entry( ref entry ) ) {
+      stdout.printf( "Successfully loaded!\n" );
+      _buffer.text = entry.text;
+    } else {
+      stdout.printf( "Uh-oh. No load\n" );
+    }
 
   }
 
