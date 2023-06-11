@@ -24,9 +24,12 @@ using Gdk;
 
 public class MainWindow : Gtk.ApplicationWindow {
 
+  private const int _sidebar_width = 300;
+
   private GLib.Settings    _settings;
   private GtkSource.Buffer _buffer;
   private ListBox          _listbox;
+  private Array<DBEntry>   _listbox_entries;
   // private Gtk.AccelGroup? _accel_group = null;
   // private UnicodeInsert   _unicoder;
 
@@ -57,6 +60,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     Object( application: app );
 
     _settings = settings;
+    _listbox_entries = new Array<DBEntry>();
 
     // var window_x = settings.get_int( "window-x" );
     // var window_y = settings.get_int( "window-y" );
@@ -94,6 +98,8 @@ public class MainWindow : Gtk.ApplicationWindow {
     var pw = new Paned( Orientation.HORIZONTAL ) {
       start_child        = lbox,
       end_child          = rbox,
+      resize_start_child = true,
+      resize_end_child   = false,
       shrink_start_child = true,
       shrink_end_child   = false
     };
@@ -107,13 +113,11 @@ public class MainWindow : Gtk.ApplicationWindow {
     /* Loads the application-wide CSS */
     load_css();
 
-    Timeout.add(1000, () => {
-      pw.position = get_allocated_width() - 200;
-      pw.position_set = true;
-      populate_listbox();
-      load_today_entry();
-      return( false );
-    });
+    /* Populate the sidebar listbox */
+    populate_listbox();
+
+    /* Load the current entry into the text widget */
+    load_entry();
 
   }
 
@@ -148,7 +152,6 @@ public class MainWindow : Gtk.ApplicationWindow {
       wrap_mode     = WrapMode.WORD,
       pixels_below_lines = line_spacing,
       pixels_inside_wrap = line_spacing
-
     };
 
     var provider = new CssProvider();
@@ -168,17 +171,22 @@ public class MainWindow : Gtk.ApplicationWindow {
   private void add_sidebar( Box box ) {
 
     _listbox = new ListBox() {
-      valign  = Align.FILL,
-      vexpand = true,
-      halign  = Align.FILL,
-      hexpand = true
+      show_separators = true,
+      activate_on_single_click = true
     };
     _listbox.row_selected.connect((row) => {
-      stdout.printf( "HERE!\n" );
+      var index = row.get_index();
+      var date  = _listbox_entries.index( index ).date;
+      load_entry( date );
     });
 
     var lb_scroll = new ScrolledWindow() {
+      hscrollbar_policy = PolicyType.NEVER,
       vscrollbar_policy = PolicyType.AUTOMATIC,
+      halign = Align.FILL,
+      hexpand = true,
+      hexpand_set = true,
+      vexpand = true,
       child = _listbox
     };
 
@@ -190,31 +198,40 @@ public class MainWindow : Gtk.ApplicationWindow {
   private void load_css() {
     var provider = new CssProvider();
     provider.load_from_resource( "/com/github/phase1geo/journaler/Application.css" );
-    get_style_context().add_provider( provider, STYLE_PROVIDER_PRIORITY_APPLICATION );
+    StyleContext.add_provider_for_display( get_display(), provider, STYLE_PROVIDER_PRIORITY_APPLICATION );
   }
 
   /* Populates the all entries listbox with date from the database */
   private void populate_listbox() {
 
-    var entries = new Array<DBEntry>();
+    if( _listbox_entries.length > 0 ) {
+      _listbox_entries.remove_range( 0, _listbox_entries.length );
+    }
 
-    if( !Journaler.db.get_all_entries( ref entries ) ) {
+    if( !Journaler.db.get_all_entries( ref _listbox_entries ) ) {
       stdout.printf( "ERROR:  Unable to get all entries in the journal\n" );
       return;
     }
 
-    for( int i=0; i<entries.length; i++ ) {
-      var label = new Label( entries.index( i ).gen_title() ) {
-        halign  = Align.START,
-        hexpand = true
+    for( int i=0; i<_listbox_entries.length; i++ ) {
+      var entry = _listbox_entries.index( i );
+      var label = new Label( "<b>" + entry.gen_title() + "</b>" ) {
+        halign          = Align.START,
+        hexpand         = true,
+        use_markup      = true,
+        // width_chars = 20,
+        // max_width_chars = 20,
+        ellipsize       = Pango.EllipsizeMode.END
       };
       label.add_css_class( "listbox-head" );
-      var date = new Label( entries.index( i ).date ) {
+      var date = new Label( entry.date ) {
         halign  = Align.END,
         hexpand = true
       };
       var box = new Box( Orientation.VERTICAL, 0 ) {
-        halign        = Align.START,
+        halign        = Align.FILL,
+        hexpand       = true,
+        width_request = 300,
         margin_top    = 5,
         margin_bottom = 5,
         margin_start  = 5,
@@ -293,9 +310,13 @@ public class MainWindow : Gtk.ApplicationWindow {
   }
 
   /* Loads the entry in the database for today */
-  private void load_today_entry() {
+  private void load_entry( string? date = null ) {
 
     DBEntry entry = new DBEntry();
+
+    if( date != null ) {
+      entry.date = date;
+    }
 
     if( Journaler.db.load_entry( ref entry ) ) {
       stdout.printf( "Successfully loaded!\n" );
