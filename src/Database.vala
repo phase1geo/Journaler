@@ -34,10 +34,33 @@ public class DBEntry {
     return( (this.title == "") ? _( "Entry for %s" ).printf( this.date ) : this.title );
   }
 
+  /* Returns the current year */
+  public int get_year() {
+    var date_bits = date.split( "-" );
+    return( int.parse( date_bits[0] ) );
+  }
+
+  /* Returns the current month */
+  public int get_month() {
+    var date_bits = date.split( "-" );
+    return( int.parse( date_bits[1] ) );
+  }
+
+  /* Returns the date in DateTime form */
+  public uint get_day() {
+    var date_bits = date.split( "-" );
+    return( (uint)int.parse( date_bits[2] ) );
+  }
+
   /* Returns the string version of today's date */
   public static string todays_date() {
     var today = new DateTime.now_local();
-    return( "%04d-%02d-%02d".printf( today.get_year(), today.get_month(), today.get_day_of_month() ) );
+    return( datetime_date( today ) );
+  }
+
+  /* Returns the string date for the given DateTime object */
+  public static string datetime_date( DateTime date ) {
+    return( "%04d-%02d-%02d".printf( date.get_year(), date.get_month(), date.get_day_of_month() ) );
   }
  
   /* Compares two DBEntries for sorting purposes (by date) */
@@ -121,6 +144,7 @@ public class Database {
 
     /* Sort based on date */
     entries.sort( (CompareFunc)DBEntry.compare );
+    stdout.printf( "Number of found entries: %u\n", entries.length );
 
     return( true );
 

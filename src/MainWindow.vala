@@ -29,6 +29,7 @@ public class MainWindow : Gtk.ApplicationWindow {
   private GLib.Settings    _settings;
   private GtkSource.Buffer _buffer;
   private ListBox          _listbox;
+  private Calendar         _cal;
   private Array<DBEntry>   _listbox_entries;
   // private Gtk.AccelGroup? _accel_group = null;
   // private UnicodeInsert   _unicoder;
@@ -114,7 +115,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     load_css();
 
     /* Populate the sidebar listbox */
-    populate_listbox();
+    populate_sidebar();
 
     /* Load the current entry into the text widget */
     load_entry();
@@ -190,7 +191,38 @@ public class MainWindow : Gtk.ApplicationWindow {
       child = _listbox
     };
 
+    var today = new DateTime.now_local();
+    stdout.printf( "year: %d, month: %d\n", today.get_year(), today.get_month() );
+    _cal = new Calendar() {
+      show_heading = true,
+      year         = today.get_year(),
+      month        = today.get_month() - 1
+    };
+    _cal.day_selected.connect(() => {
+      var dt = _cal.get_date();
+      show_entry_for_date( DBEntry.datetime_date( dt ) );
+    });
+    _cal.next_month.connect( populate_calendar );
+    _cal.next_year.connect( populate_calendar );
+    _cal.prev_month.connect( populate_calendar );
+    _cal.prev_year.connect( populate_calendar );
+
     box.append( lb_scroll );
+    box.append( _cal );
+
+  }
+
+  /* Displays the entry for the selected date */
+  private void show_entry_for_date( string date ) {
+
+    var entry = new DBEntry();
+    entry.date = date;
+
+    if( Journaler.db.load_entry( ref entry ) ) {
+      _buffer.text = entry.text;
+    } else {
+      _buffer.text = "";
+    }
 
   }
 
@@ -201,8 +233,8 @@ public class MainWindow : Gtk.ApplicationWindow {
     StyleContext.add_provider_for_display( get_display(), provider, STYLE_PROVIDER_PRIORITY_APPLICATION );
   }
 
-  /* Populates the all entries listbox with date from the database */
-  private void populate_listbox() {
+  /* Populates the sidebar with information from the database */
+  private void populate_sidebar() {
 
     if( _listbox_entries.length > 0 ) {
       _listbox_entries.remove_range( 0, _listbox_entries.length );
@@ -213,15 +245,21 @@ public class MainWindow : Gtk.ApplicationWindow {
       return;
     }
 
+    populate_listbox();
+    populate_calendar();
+
+  }
+
+  /* Populates the all entries listbox with date from the database */
+  private void populate_listbox() {
+
     for( int i=0; i<_listbox_entries.length; i++ ) {
       var entry = _listbox_entries.index( i );
       var label = new Label( "<b>" + entry.gen_title() + "</b>" ) {
-        halign          = Align.START,
-        hexpand         = true,
-        use_markup      = true,
-        // width_chars = 20,
-        // max_width_chars = 20,
-        ellipsize       = Pango.EllipsizeMode.END
+        halign     = Align.START,
+        hexpand    = true,
+        use_markup = true,
+        ellipsize  = Pango.EllipsizeMode.END
       };
       label.add_css_class( "listbox-head" );
       var date = new Label( entry.date ) {
@@ -240,6 +278,20 @@ public class MainWindow : Gtk.ApplicationWindow {
       box.append( label );
       box.append( date );
       _listbox.append( box );
+    }
+
+  }
+
+  /* Populates the calendar with marks that match the current month/year */
+  private void populate_calendar() {
+
+    _cal.clear_marks();
+
+    for( int i=0; i<_listbox_entries.length; i++ ) {
+      var entry = _listbox_entries.index( i );
+      if( (entry.get_year() == _cal.year) && (entry.get_month() == (_cal.month + 1)) ) {
+        _cal.mark_day( entry.get_day() );
+      }
     }
 
   }
