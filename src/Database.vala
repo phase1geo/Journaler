@@ -144,7 +144,6 @@ public class Database {
 
     /* Sort based on date */
     entries.sort( (CompareFunc)DBEntry.compare );
-    stdout.printf( "Number of found entries: %u\n", entries.length );
 
     return( true );
 
@@ -169,7 +168,7 @@ public class Database {
   }
 
   /* Retrieves the text for the entry at the specified date */
-  public bool load_entry( ref DBEntry entry ) {
+  public bool load_entry( ref DBEntry entry, bool create_if_not_found ) {
 
     Sqlite.Statement stmt;
 
@@ -183,9 +182,11 @@ public class Database {
       entry.title = stmt.column_text( 1 );
       entry.text  = stmt.column_text( 2 );
       return( true );
-    } else {
+    } else if( create_if_not_found ) {
       return( create_entry( ref entry ) );
     }
+
+    return( false );
 
   }
 
@@ -197,8 +198,6 @@ public class Database {
       SET title = '%s', txt = '%s'
       WHERE date = '%s';
       """.printf( entry.title.replace("'", "''"), entry.text.replace("'", "''"), entry.date );
-
-    stdout.printf( "query: %s\n", query );
 
     string errmsg;
     var err = _db.exec( query, null, out errmsg );

@@ -192,7 +192,6 @@ public class MainWindow : Gtk.ApplicationWindow {
     };
 
     var today = new DateTime.now_local();
-    stdout.printf( "year: %d, month: %d\n", today.get_year(), today.get_month() );
     _cal = new Calendar() {
       show_heading = true,
       year         = today.get_year(),
@@ -218,7 +217,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     var entry = new DBEntry();
     entry.date = date;
 
-    if( Journaler.db.load_entry( ref entry ) ) {
+    if( Journaler.db.load_entry( ref entry, false ) ) {
       _buffer.text = entry.text;
     } else {
       _buffer.text = "";
@@ -370,7 +369,7 @@ public class MainWindow : Gtk.ApplicationWindow {
       entry.date = date;
     }
 
-    if( Journaler.db.load_entry( ref entry ) ) {
+    if( Journaler.db.load_entry( ref entry, true ) ) {
       stdout.printf( "Successfully loaded!\n" );
       _buffer.text = entry.text;
     } else {
