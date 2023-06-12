@@ -1,3 +1,7 @@
 .listbox-head {
    font-size: 12pt;
 }
+
+calendar > grid > label.day-number:checked {
+   background-color: rgba(0, 0, 255, 0.1);
+}

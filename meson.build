@@ -20,6 +20,7 @@ config_file = configure_file(
 
 gresource = gnome.compile_resources(
     'journaler-resources', 'data/' + meson.project_name() + '.gresource.xml',
+    build_by_default: true,
     source_dir: 'data',
 )
 
@@ -51,7 +52,7 @@ e = executable('com.github.phase1geo.journaler',
     gresource,
     dependencies: core_deps,
     vala_args: [
-        meson.source_root() + '/vapi/libmarkdown.vapi'
+        meson.project_source_root() + '/vapi/libmarkdown.vapi'
     ],
     install : true
 )
