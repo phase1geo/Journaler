@@ -1,3 +1,9 @@
+public enum DBLoadResult {
+  FAILED,
+  LOADED,
+  CREATED
+}
+
 public class DBEntry {
 
   public string title { get; set; default = ""; }
@@ -168,25 +174,25 @@ public class Database {
   }
 
   /* Retrieves the text for the entry at the specified date */
-  public bool load_entry( ref DBEntry entry, bool create_if_not_found ) {
+  public DBLoadResult load_entry( ref DBEntry entry, bool create_if_not_found ) {
 
     Sqlite.Statement stmt;
 
     var query = "SELECT * FROM Entry WHERE date = '%s';".printf( entry.date );
     var err = _db.prepare_v2( query, query.length, out stmt );
     if( err != Sqlite.OK ) {
-      return( false );
+      return( DBLoadResult.FAILED );
     }
 
     if( stmt.step() == Sqlite.ROW ) {
       entry.title = stmt.column_text( 1 );
       entry.text  = stmt.column_text( 2 );
-      return( true );
-    } else if( create_if_not_found ) {
-      return( create_entry( ref entry ) );
+      return( DBLoadResult.LOADED );
+    } else if( create_if_not_found && create_entry( ref entry ) ) {
+      return( DBLoadResult.CREATED );
     }
 
-    return( false );
+    return( DBLoadResult.FAILED );
 
   }
 

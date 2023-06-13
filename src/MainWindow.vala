@@ -27,7 +27,7 @@ public class MainWindow : Gtk.ApplicationWindow {
   private const int _sidebar_width = 300;
 
   private GLib.Settings    _settings;
-  private GtkSource.Buffer _buffer;
+  private GtkSource.View   _text;
   private ListBox          _listbox;
   private Calendar         _cal;
   private Array<DBEntry>   _listbox_entries;
@@ -140,10 +140,10 @@ public class MainWindow : Gtk.ApplicationWindow {
     }
 
     /* Create the text entry view */
-    _buffer = new GtkSource.Buffer.with_language( lang ) {
+    var buffer = new GtkSource.Buffer.with_language( lang ) {
       style_scheme = style
     };
-    var entry = new GtkSource.View.with_buffer( _buffer ) {
+    _text = new GtkSource.View.with_buffer( buffer ) {
       valign        = Align.FILL,
       vexpand       = true,
       top_margin    = text_margin,
@@ -157,11 +157,11 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     var provider = new CssProvider();
     provider.load_from_data( "textview { font-size: %dpt; }".printf( font_size ).data );
-    entry.get_style_context().add_provider( provider, STYLE_PROVIDER_PRIORITY_APPLICATION );
+    _text.get_style_context().add_provider( provider, STYLE_PROVIDER_PRIORITY_APPLICATION );
 
     var scroll = new ScrolledWindow() {
       vscrollbar_policy = PolicyType.AUTOMATIC,
-      child = entry
+      child = _text
     };
 
     box.append( scroll );
@@ -217,19 +217,18 @@ public class MainWindow : Gtk.ApplicationWindow {
     var entry = new DBEntry();
     entry.date = date;
 
-    if( Journaler.db.load_entry( ref entry, false ) ) {
-      _buffer.text = entry.text;
-    } else {
-      _buffer.text = "";
-    }
+    var load_result = Journaler.db.load_entry( ref entry, false );
+    set_buffer( entry, (load_result != DBLoadResult.FAILED) );
 
   }
 
   /* Loads the application-wide CSS */
   private void load_css() {
+
     var provider = new CssProvider();
     provider.load_from_resource( "/com/github/phase1geo/journaler/Application.css" );
     StyleContext.add_provider_for_display( get_display(), provider, STYLE_PROVIDER_PRIORITY_APPLICATION );
+
   }
 
   /* Populates the sidebar with information from the database */
@@ -252,6 +251,14 @@ public class MainWindow : Gtk.ApplicationWindow {
   /* Populates the all entries listbox with date from the database */
   private void populate_listbox() {
 
+    /* Clear the listbox */
+    var row = _listbox.get_row_at_index( 0 );
+    while( row != null ) {
+      _listbox.remove( row.child );
+      row = _listbox.get_row_at_index( 0 );
+    }
+
+    /* Populate the listbox */
     for( int i=0; i<_listbox_entries.length; i++ ) {
       var entry = _listbox_entries.index( i );
       var label = new Label( "<b>" + entry.gen_title() + "</b>" ) {
@@ -284,22 +291,20 @@ public class MainWindow : Gtk.ApplicationWindow {
   /* Populates the calendar with marks that match the current month/year */
   private void populate_calendar() {
 
-    // _cal.clear_marks();
-    // stdout.printf( "Marks are cleared\n" );
-
     for( int i=0; i<_listbox_entries.length; i++ ) {
       var entry = _listbox_entries.index( i );
       var day   = entry.get_day();
-      stdout.printf( "entry.year: %d, cal.year: %d, entry.month: %d, cal.month: %d\n",
-                     entry.get_year(), _cal.year, entry.get_month(), _cal.month );
-      stdout.printf( "  Checking to see if day %u is checked: %s\n", entry.get_day(), _cal.get_day_is_marked( entry.get_day() ).to_string() );
       if( (entry.get_year() == _cal.year) && (entry.get_month() == (_cal.month + 1)) ) {
         _cal.mark_day( day );
-        stdout.printf( "    Marked day: %u\n", day );
       } else if( _cal.get_day_is_marked( day ) ) {
         _cal.unmark_day( day );
       }
     }
+
+    /* Select the current date again to make sure that everything draw correctly */
+    var current = _cal.get_date();
+    _cal.select_day( _cal.get_date().add_days( 1 ) );
+    _cal.select_day( current );
 
   }
 
@@ -327,7 +332,7 @@ public class MainWindow : Gtk.ApplicationWindow {
   /* Save the current entry to the database */
   public void action_save() {
 
-    var entry = new DBEntry.for_save( "", _buffer.text );
+    var entry = new DBEntry.for_save( "", _text.buffer.text );
 
     if( Journaler.db.save_entry( entry ) ) {
       stdout.printf( "Saved successfully!\n" );
@@ -377,12 +382,39 @@ public class MainWindow : Gtk.ApplicationWindow {
       entry.date = date;
     }
 
-    if( Journaler.db.load_entry( ref entry, true ) ) {
-      stdout.printf( "Successfully loaded!\n" );
-      _buffer.text = entry.text;
-    } else {
-      stdout.printf( "Uh-oh. No load\n" );
+    var load_result = Journaler.db.load_entry( ref entry, true );
+    switch( load_result ) {
+      case DBLoadResult.LOADED :
+        set_buffer( entry, true );
+        break;
+      case DBLoadResult.CREATED :
+        populate_sidebar();
+        set_buffer( entry, true );
+        break;
+      default :
+        set_buffer( entry, false );
+        break;
     }
+
+  }
+
+  /* Sets the entry contents to the given entry, saving the previous contents, if necessary */
+  private void set_buffer( DBEntry entry, bool editable ) {
+
+    if( _text.buffer.get_modified() ) {
+      action_save();
+    }
+
+    /* Set the buffer text to the entry text */
+    _text.buffer.begin_irreversible_action();
+    _text.buffer.text = entry.text;
+    _text.buffer.end_irreversible_action();
+
+    /* Set the editable bit */
+    _text.editable = editable;
+
+    /* Clear the modified bit */
+    _text.buffer.set_modified( false );
 
   }
 
