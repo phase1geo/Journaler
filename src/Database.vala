@@ -64,6 +64,12 @@ public class DBEntry {
     return( datetime_date( today ) );
   }
 
+  /* Returns the DateTime version of the date */
+  public DateTime datetime() {
+    var dt = new DateTime.local( get_year(), get_month(), (int)get_day(), 0, 0, 0 );
+    return( dt );
+  }
+
   /* Returns the string date for the given DateTime object */
   public static string datetime_date( DateTime date ) {
     return( "%04d-%02d-%02d".printf( date.get_year(), date.get_month(), date.get_day_of_month() ) );

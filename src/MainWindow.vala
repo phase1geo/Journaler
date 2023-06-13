@@ -28,6 +28,7 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   private GLib.Settings    _settings;
   private Entry            _title;
+  private Label            _date;
   private GtkSource.View   _text;
   private ListBox          _listbox;
   private Calendar         _cal;
@@ -78,7 +79,6 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     /* Set the main window data */
     set_default_size( window_w, window_h );
-    // destroy.connect( Gtk.main_quit );
 
     /* Set the stage for menu actions */
     var actions = new SimpleActionGroup ();
@@ -133,9 +133,19 @@ public class MainWindow : Gtk.ApplicationWindow {
     /* Add the title */
     _title = new Entry() {
       placeholder_text = _( "Title (Optional)" ),
-      has_frame = false
+      has_frame        = false,
     };
     _title.add_css_class( "title" );
+    _title.add_css_class( "text-background" );
+    _title.add_css_class( "text-padding" );
+
+    /* Add the date */
+    _date = new Label( "" ) {
+      halign = Align.FILL,
+      xalign = (float)0,
+    };
+    _date.add_css_class( "date" );
+    _date.add_css_class( "text-background" );
 
     var sep = new Separator( Orientation.HORIZONTAL );
 
@@ -144,7 +154,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     var lang     = lang_mgr.get_language( "markdown" );
 
     var style_mgr = GtkSource.StyleSchemeManager.get_default();
-    var style     = style_mgr.get_scheme( "cobalt" );
+    var style     = style_mgr.get_scheme( "cobalt-light" );
     foreach( string id in style_mgr.get_scheme_ids() ) {
       stdout.printf( "  scheme: %s\n", id );
     }
@@ -154,19 +164,41 @@ public class MainWindow : Gtk.ApplicationWindow {
       style_scheme = style
     };
     _text = new GtkSource.View.with_buffer( buffer ) {
-      valign        = Align.FILL,
-      vexpand       = true,
-      top_margin    = text_margin,
-      left_margin   = text_margin,
-      bottom_margin = text_margin,
-      right_margin  = text_margin,
-      wrap_mode     = WrapMode.WORD,
+      valign             = Align.FILL,
+      vexpand            = true,
+      top_margin         = text_margin / 2,
+      left_margin        = text_margin,
+      bottom_margin      = text_margin,
+      right_margin       = text_margin,
+      wrap_mode          = WrapMode.WORD,
       pixels_below_lines = line_spacing,
       pixels_inside_wrap = line_spacing
     };
 
     var provider = new CssProvider();
-    provider.load_from_data( "textview { font-size: %dpt; } .title { font-size: %dpt; } ".printf( font_size, font_size ).data );
+    var css_data = """
+      textview {
+        font-size: %dpt;
+      }
+      .title {
+        font-size: %dpt;
+        border: none;
+        box-shadow: none;
+      }
+      .date {
+        padding-left: %dpx;
+      }
+      .text-background {
+        background-color: %s;
+      }
+      .text-padding {
+        padding-left: %dpx;
+        padding-right: %dpx;
+        padding-top: %dpx;
+        padding-bottom: %dpx;
+      }
+    """.printf( font_size, font_size, text_margin, style.get_style( "background-pattern" ).background, (text_margin - 4), (text_margin - 4), 0, 0 );
+    provider.load_from_data( css_data.data );
     StyleContext.add_provider_for_display( get_display(), provider, STYLE_PROVIDER_PRIORITY_APPLICATION );
 
     var scroll = new ScrolledWindow() {
@@ -175,6 +207,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     };
 
     box.append( _title );
+    box.append( _date );
     box.append( sep );
     box.append( scroll );
 
@@ -417,9 +450,13 @@ public class MainWindow : Gtk.ApplicationWindow {
       action_save();
     }
 
-    /* Sets the title */
+    /* Set the title */
     _title.text = entry.title;
     _title.editable = editable;
+
+    /* Set the date */
+    var dt = entry.datetime();
+    _date.label = dt.format( "%A, %B %e, %Y" );
 
     /* Set the buffer text to the entry text */
     _text.buffer.begin_irreversible_action();
