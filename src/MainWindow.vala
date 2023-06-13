@@ -22,18 +22,30 @@
 using Gtk;
 using Gdk;
 
+public enum EditReason {
+  NEW,
+  EDIT
+}
+
 public class MainWindow : Gtk.ApplicationWindow {
 
   private const int _sidebar_width = 300;
 
-  private GLib.Settings    _settings;
-  private Entry            _title;
-  private Label            _date;
-  private GtkSource.View   _text;
-  private ListBox          _listbox;
-  private Calendar         _cal;
-  private Array<DBEntry>   _listbox_entries;
-  // private Gtk.AccelGroup? _accel_group = null;
+  private GLib.Settings  _settings;
+  private Entry          _title;
+  private Label          _date;
+  private GtkSource.View _text;
+  private ListBox        _listbox;
+  private Calendar       _cal;
+  private Stack          _sidebar_stack;
+  private Array<DBEntry> _listbox_entries;
+  private Journals       _journals;
+  private Entry          _edit_name;
+  private TextView       _edit_description;
+  private EditReason     _edit_reason;
+  private Revealer       _edit_del_revealer;
+  private Button         _edit_save;
+
   // private UnicodeInsert   _unicoder;
 
   private const GLib.ActionEntry[] action_entries = {
@@ -64,6 +76,12 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     _settings = settings;
     _listbox_entries = new Array<DBEntry>();
+
+    /* Create and load the journals */
+    _journals = new Journals();
+    _journals.current_changed.connect(() => {
+      populate_sidebar();
+    });
 
     // var window_x = settings.get_int( "window-x" );
     // var window_y = settings.get_int( "window-y" );
@@ -216,6 +234,70 @@ public class MainWindow : Gtk.ApplicationWindow {
   /* Adds the sidebar */
   private void add_sidebar( Box box ) {
 
+    _sidebar_stack = new Stack();
+    _sidebar_stack.add_named( add_current_sidebar(), "current" );
+    _sidebar_stack.add_named( add_journal_edit(),    "journal" );
+
+    box.append( _sidebar_stack );
+
+  }
+
+  /* Sets up the journal editor panel and then switches to it */
+  private void edit_journal( EditReason reason ) {
+
+    _edit_reason = reason;
+
+    if( reason == EditReason.NEW ) {
+      _edit_name.text = "";
+      _edit_description.buffer.text = "";
+      _edit_save.sensitive = false;
+      _edit_del_revealer.reveal_child = false;
+    } else {
+      _edit_name.text = _journals.current.name;
+      _edit_description.buffer.text = _journals.current.description;
+      _edit_save.sensitive = true;
+      _edit_del_revealer.reveal_child = true;
+    }
+
+    _sidebar_stack.visible_child_name = "journal";
+
+  }
+
+  /* Creates the current journal sidebar */
+  private Box add_current_sidebar() {
+
+    var jedit = new Button.from_icon_name( "edit-symbolic" );
+    jedit.clicked.connect(() => {
+      edit_journal( EditReason.EDIT );
+    });
+
+    var journal_list = new Box( Orientation.VERTICAL, 5 );
+
+    var journal_popover = new Popover() {
+      has_arrow = false,
+      child = journal_list
+    };
+
+    var journals = new MenuButton() {
+      halign  = Align.FILL,
+      hexpand = true,
+      label   = _journals.current.name,
+      popover = journal_popover
+    };
+    journals.activate.connect(() => {
+      populate_journal_list( journals );
+    });
+
+    var jadd = new Button.from_icon_name( "list-add-symbolic" );
+    jadd.clicked.connect(() => {
+      edit_journal( EditReason.NEW );
+    });
+
+    var jbox = new Box( Orientation.HORIZONTAL, 5 );
+    jbox.append( jedit );
+    jbox.append( journals );
+    jbox.append( jadd );
+
     _listbox = new ListBox() {
       show_separators = true,
       activate_on_single_click = true
@@ -251,8 +333,126 @@ public class MainWindow : Gtk.ApplicationWindow {
     _cal.prev_month.connect( populate_calendar );
     _cal.prev_year.connect( populate_calendar );
 
+    var box = new Box( Orientation.VERTICAL, 0 );
+    box.append( jbox );
     box.append( lb_scroll );
     box.append( _cal );
+
+    return( box );
+
+  }
+
+  private void populate_journal_list( MenuButton mb ) {
+
+    /* Clear the box */
+    var popover = (Popover)mb.popover;
+    var box     = (Box)popover.child;
+    var w = box.get_first_child();
+    while( w != null ) {
+      var next = w.get_next_sibling();
+      box.remove( w );
+      w = next;
+    }
+
+    for( int i=0; i<_journals.num_journals(); i++ ) {
+      var btn = new Button.with_label( _journals.get_journal( i ).name ) {
+        halign = Align.START,
+        hexpand = true
+      };
+      btn.clicked.connect(() => {
+        _journals.set_current( i );
+        popover.popup();
+      });
+      box.append( btn );
+    }
+
+  }
+
+  private Box add_journal_edit() {
+
+    /* Edit name */
+    var nlbl   = new Label( _( "Name:" ) );
+    _edit_name = new Entry() {
+      halign = Align.FILL
+    };
+    _edit_name.changed.connect(() => {
+      var text = _edit_name.buffer.text;
+      _edit_save.sensitive = ((text != "") && (_journals.get_journal_by_name( text ) == null));
+    });
+    var nbox = new Box( Orientation.HORIZONTAL, 5 );
+    nbox.append( nlbl );
+    nbox.append( _edit_name );
+
+    /* Edit description */
+    var dlbl = new Label( _( "Description:" ) ) {
+      halign = Align.FILL,
+      xalign = (float)0
+    };
+    _edit_description = new TextView() {
+      halign  = Align.FILL,
+      hexpand = true,
+      valign  = Align.FILL,
+      vexpand = true
+    };
+    var dbox = new Box( Orientation.VERTICAL, 5 );
+    dbox.append( dlbl );
+    dbox.append( _edit_description );
+
+    var del = new Button.with_label( _( "Delete" ) ) {
+      // halign = Align.START
+    };
+    del.clicked.connect(() => {
+      stdout.printf( "Deleting journal\n" );
+      _sidebar_stack.visible_child_name = "current";
+    });
+    del.add_css_class( "destructive-action" );
+    _edit_del_revealer = new Revealer() {
+      transition_duration = 0,
+      child = del
+    };
+    var cancel = new Button.with_label( _( "Cancel" ) ) {
+      // halign = Align.END
+    };
+    cancel.clicked.connect(() => {
+      _sidebar_stack.visible_child_name = "current";
+    });
+    _edit_save = new Button.with_label( _( "Save" ) ) {
+      // halign = Align.END
+    };
+    _edit_save.add_css_class( "suggested-action" );
+    _edit_save.clicked.connect(() => {
+      if( _edit_reason == EditReason.NEW ) {
+        var journal = new Journal( _edit_name.buffer.text, _edit_description.buffer.text );
+        _journals.add_journal( journal );
+      } else {
+        _journals.current.name = _edit_name.buffer.text;
+        _journals.current.description = _edit_description.buffer.text;
+        _journals.save();
+      }
+      _sidebar_stack.visible_child_name = "current";
+    });
+    var rbox = new Box( Orientation.HORIZONTAL, 5 ) {
+      halign = Align.END,
+      hexpand = true,
+    };
+    rbox.append( cancel );
+    rbox.append( _edit_save );
+
+    var bbox = new Box( Orientation.HORIZONTAL, 5 ) {
+      margin_top = 5,
+      margin_bottom = 5,
+      margin_start = 5,
+      margin_end = 5
+    };
+    bbox.append( _edit_del_revealer );
+    bbox.append( rbox );
+
+    var box = new Box( Orientation.VERTICAL, 5 );
+    box.append( nbox );
+    box.append( dbox );
+    box.append( bbox );
+
+    return( box );
 
   }
 
@@ -262,7 +462,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     var entry = new DBEntry();
     entry.date = date;
 
-    var load_result = Journaler.db.load_entry( ref entry, false );
+    var load_result = _journals.current.db.load_entry( ref entry, false );
     set_buffer( entry, (load_result != DBLoadResult.FAILED) );
 
   }
@@ -283,7 +483,7 @@ public class MainWindow : Gtk.ApplicationWindow {
       _listbox_entries.remove_range( 0, _listbox_entries.length );
     }
 
-    if( !Journaler.db.get_all_entries( ref _listbox_entries ) ) {
+    if( !_journals.current.db.get_all_entries( ref _listbox_entries ) ) {
       stdout.printf( "ERROR:  Unable to get all entries in the journal\n" );
       return;
     }
@@ -379,7 +579,7 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     var entry = new DBEntry.for_save( _title.text, _text.buffer.text );
 
-    if( Journaler.db.save_entry( entry ) ) {
+    if( _journals.current.db.save_entry( entry ) ) {
       stdout.printf( "Saved successfully!\n" );
     } else {
       stdout.printf( "Save did not occur\n" );
@@ -427,7 +627,7 @@ public class MainWindow : Gtk.ApplicationWindow {
       entry.date = date;
     }
 
-    var load_result = Journaler.db.load_entry( ref entry, true );
+    var load_result = _journals.current.db.load_entry( ref entry, true );
     switch( load_result ) {
       case DBLoadResult.LOADED :
         set_buffer( entry, true );

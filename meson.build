@@ -36,12 +36,9 @@ core_deps = [
     meson.get_compiler('vala').find_library('posix'),
     meson.get_compiler('c').find_library('m', required : false),
     meson.get_compiler('c').find_library('markdown', required : true),
-    dependency('cairo'),
-    dependency('gee-0.8'),
     dependency('granite-7'),
     dependency('gtk4'),
     dependency('libxml-2.0'),
-    dependency('libarchive'),
     dependency('gtksourceview-5'),
     dependency('sqlite3')
 ]

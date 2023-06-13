@@ -90,20 +90,13 @@ public class DBEntry {
 
 public class Database {
 
-  private Sqlite.Database? _db      = null;
-  private string           _db_file = GLib.Path.build_filename( Environment.get_user_data_dir(), "journaler", "test.db" );
+  private Sqlite.Database? _db = null;
 
   /* Default constructor */
-  public Database() {
-
-    var dir = GLib.Path.build_filename( Environment.get_user_data_dir(), "journaler", "db" );
-    DirUtils.create_with_parents( dir, 0775 );
-
-    // Generate the database file pathname
-    _db_file = GLib.Path.build_filename( dir, "test.db" );
+  public Database( string db_file ) {
 
     // Open the database
-    var err = Sqlite.Database.open( _db_file, out _db );
+    var err = Sqlite.Database.open( db_file, out _db );
     if( err != Sqlite.OK ) {
       stderr.printf( "ERROR:  Unable to open database: %s\n", _db.errmsg() );
     }
