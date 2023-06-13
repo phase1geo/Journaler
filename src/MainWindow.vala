@@ -27,6 +27,7 @@ public class MainWindow : Gtk.ApplicationWindow {
   private const int _sidebar_width = 300;
 
   private GLib.Settings    _settings;
+  private Entry            _title;
   private GtkSource.View   _text;
   private ListBox          _listbox;
   private Calendar         _cal;
@@ -129,6 +130,15 @@ public class MainWindow : Gtk.ApplicationWindow {
     var line_spacing = 5;
     var font_size    = 14;
 
+    /* Add the title */
+    _title = new Entry() {
+      placeholder_text = _( "Title (Optional)" ),
+      has_frame = false
+    };
+    _title.add_css_class( "title" );
+
+    var sep = new Separator( Orientation.HORIZONTAL );
+
     /* Now let's setup some stuff related to the text field */
     var lang_mgr = GtkSource.LanguageManager.get_default();
     var lang     = lang_mgr.get_language( "markdown" );
@@ -156,14 +166,16 @@ public class MainWindow : Gtk.ApplicationWindow {
     };
 
     var provider = new CssProvider();
-    provider.load_from_data( "textview { font-size: %dpt; }".printf( font_size ).data );
-    _text.get_style_context().add_provider( provider, STYLE_PROVIDER_PRIORITY_APPLICATION );
+    provider.load_from_data( "textview { font-size: %dpt; } .title { font-size: %dpt; } ".printf( font_size, font_size ).data );
+    StyleContext.add_provider_for_display( get_display(), provider, STYLE_PROVIDER_PRIORITY_APPLICATION );
 
     var scroll = new ScrolledWindow() {
       vscrollbar_policy = PolicyType.AUTOMATIC,
       child = _text
     };
 
+    box.append( _title );
+    box.append( sep );
     box.append( scroll );
 
   }
@@ -332,7 +344,7 @@ public class MainWindow : Gtk.ApplicationWindow {
   /* Save the current entry to the database */
   public void action_save() {
 
-    var entry = new DBEntry.for_save( "", _text.buffer.text );
+    var entry = new DBEntry.for_save( _title.text, _text.buffer.text );
 
     if( Journaler.db.save_entry( entry ) ) {
       stdout.printf( "Saved successfully!\n" );
@@ -404,6 +416,10 @@ public class MainWindow : Gtk.ApplicationWindow {
     if( _text.buffer.get_modified() ) {
       action_save();
     }
+
+    /* Sets the title */
+    _title.text = entry.title;
+    _title.editable = editable;
 
     /* Set the buffer text to the entry text */
     _text.buffer.begin_irreversible_action();
