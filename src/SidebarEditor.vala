@@ -30,9 +30,12 @@ public class MainWindow : Gtk.ApplicationWindow {
   private Entry          _title;
   private Label          _date;
   private GtkSource.View _text;
+  private ListBox        _listbox;
+  private Calendar       _cal;
   private Stack          _sidebar_stack;
+  private Array<DBEntry> _listbox_entries;
   private Journals       _journals;
-  private SidebarEntries _entries;
+  private ListBox        _journal_list;
   private Journal        _edit_journal;
   private Entry          _edit_name;
   private TextView       _edit_description;
@@ -68,6 +71,13 @@ public class MainWindow : Gtk.ApplicationWindow {
     Object( application: app );
 
     _settings = settings;
+    _listbox_entries = new Array<DBEntry>();
+
+    /* Create and load the journals */
+    _journals = new Journals();
+    _journals.current_changed.connect(() => {
+      populate_sidebar();
+    });
 
     // var window_x = settings.get_int( "window-x" );
     // var window_y = settings.get_int( "window-y" );
@@ -118,6 +128,12 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     /* Loads the application-wide CSS */
     load_css();
+
+    /* Populate the sidebar listbox */
+    populate_sidebar();
+
+    /* Load the current entry into the text widget */
+    load_entry();
 
   }
 
@@ -217,7 +233,7 @@ public class MainWindow : Gtk.ApplicationWindow {
   private void add_sidebar( Box box ) {
 
     _sidebar_stack = new Stack();
-    _sidebar_stack.add_named( add_current_sidebar(), "entries" );
+    _sidebar_stack.add_named( add_current_sidebar(), "current" );
     _sidebar_stack.add_named( add_journal_edit(),    "journal" );
 
     box.append( _sidebar_stack );
@@ -248,17 +264,115 @@ public class MainWindow : Gtk.ApplicationWindow {
   /* Creates the current journal sidebar */
   private Box add_current_sidebar() {
 
-    _entries = new SidebarEntries();
+    var journal_popover = new Popover() {
+      has_arrow = false
+    };
 
-    _entries.edit_journal.connect((journal) => {
-      edit_journal( journal );
+    _journal_list = new ListBox();
+    _journal_list.row_activated.connect((row) => {
+      var index = row.get_index();
+      _journals.set_current( index );
+      journal_popover.popdown();
     });
 
-    _entries.show_journal_entry.connect((journal, date) => {
-      show_journal_entry( journal, date );
+    journal_popover.child = _journal_list;
+
+    var journals = new MenuButton() {
+      halign  = Align.FILL,
+      hexpand = true,
+      label   = _journals.current.name,
+      popover = journal_popover
+    };
+
+    var jadd = new Button.from_icon_name( "list-add-symbolic" );
+    jadd.clicked.connect(() => {
+      edit_journal( null );
     });
 
-    return( _entries );
+    var jbox = new Box( Orientation.HORIZONTAL, 5 );
+    // jbox.append( jedit );
+    jbox.append( journals );
+    jbox.append( jadd );
+
+    _listbox = new ListBox() {
+      show_separators = true,
+      activate_on_single_click = true
+    };
+    _listbox.row_selected.connect((row) => {
+      var index = row.get_index();
+      var date  = _listbox_entries.index( index ).date;
+      load_entry( date );
+    });
+
+    var lb_scroll = new ScrolledWindow() {
+      hscrollbar_policy = PolicyType.NEVER,
+      vscrollbar_policy = PolicyType.AUTOMATIC,
+      halign = Align.FILL,
+      hexpand = true,
+      hexpand_set = true,
+      vexpand = true,
+      child = _listbox
+    };
+
+    var today = new DateTime.now_local();
+    _cal = new Calendar() {
+      show_heading = true,
+      year         = today.get_year(),
+      month        = today.get_month() - 1
+    };
+    _cal.day_selected.connect(() => {
+      var dt = _cal.get_date();
+      show_entry_for_date( DBEntry.datetime_date( dt ) );
+    });
+    _cal.next_month.connect( populate_calendar );
+    _cal.next_year.connect( populate_calendar );
+    _cal.prev_month.connect( populate_calendar );
+    _cal.prev_year.connect( populate_calendar );
+
+    var box = new Box( Orientation.VERTICAL, 0 );
+    box.append( jbox );
+    box.append( lb_scroll );
+    box.append( _cal );
+
+    populate_journal_list();
+
+    return( box );
+
+  }
+
+  /* Populates the list of journal entries in the menubutton dropdown list */
+  private void populate_journal_list() {
+
+    /* Clear the box */
+    var row = _journal_list.get_row_at_index( 0 );
+    while( row != null ) {
+      _journal_list.remove( row );
+      row = _journal_list.get_row_at_index( 0 );
+    }
+
+    for( int i=0; i<_journals.num_journals(); i++ ) {
+      var journal = _journals.get_journal( i );
+      var lbl = new Label( journal.name ) {
+        halign  = Align.FILL,
+        hexpand = true,
+        xalign  = (float)0
+      };
+      var edit = new Button.from_icon_name( "edit-symbolic" ) {
+        halign = Align.END
+      };
+      edit.clicked.connect(() => {
+        edit_journal( journal );
+      });
+      var box = new Box( Orientation.HORIZONTAL, 5 ) {
+        margin_start = 5,
+        margin_end = 5,
+        margin_top = 5,
+        margin_bottom = 5
+      };
+      box.append( lbl );
+      box.append( edit );
+      _journal_list.append( box );
+    }
 
   }
 
@@ -300,7 +414,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     del.clicked.connect(() => {
       _journals.remove_journal( _edit_journal );
       _edit_journal = null;
-      _sidebar_stack.visible_child_name = "entries";
+      _sidebar_stack.visible_child_name = "current";
     });
     del.add_css_class( "destructive-action" );
     _edit_del_revealer = new Revealer() {
@@ -311,7 +425,7 @@ public class MainWindow : Gtk.ApplicationWindow {
       // halign = Align.END
     };
     cancel.clicked.connect(() => {
-      _sidebar_stack.visible_child_name = "entries";
+      _sidebar_stack.visible_child_name = "current";
     });
     _edit_save = new Button.with_label( _( "Save" ) ) {
       // halign = Align.END
@@ -321,13 +435,13 @@ public class MainWindow : Gtk.ApplicationWindow {
       if( _edit_journal == null ) {
         var journal = new Journal( _edit_name.buffer.text, _edit_description.buffer.text );
         _journals.add_journal( journal );
-        _entries.populate_journal_list();
+        populate_journal_list();
       } else {
         _edit_journal.name = _edit_name.buffer.text;
         _edit_journal.description = _edit_description.buffer.text;
         _journals.save();
       }
-      _sidebar_stack.visible_child_name = "entries";
+      _sidebar_stack.visible_child_name = "current";
     });
     var rbox = new Box( Orientation.HORIZONTAL, 5 ) {
       halign = Align.END,
@@ -355,12 +469,12 @@ public class MainWindow : Gtk.ApplicationWindow {
   }
 
   /* Displays the entry for the selected date */
-  private void show_journal_entry( Journal journal, string date ) {
+  private void show_entry_for_date( string date ) {
 
     var entry = new DBEntry();
     entry.date = date;
 
-    var load_result = journal.db.load_entry( ref entry, false );
+    var load_result = _journals.current.db.load_entry( ref entry, false );
     set_buffer( entry, (load_result != DBLoadResult.FAILED) );
 
   }
@@ -371,6 +485,83 @@ public class MainWindow : Gtk.ApplicationWindow {
     var provider = new CssProvider();
     provider.load_from_resource( "/com/github/phase1geo/journaler/Application.css" );
     StyleContext.add_provider_for_display( get_display(), provider, STYLE_PROVIDER_PRIORITY_APPLICATION );
+
+  }
+
+  /* Populates the sidebar with information from the database */
+  private void populate_sidebar() {
+
+    if( _listbox_entries.length > 0 ) {
+      _listbox_entries.remove_range( 0, _listbox_entries.length );
+    }
+
+    if( !_journals.current.db.get_all_entries( ref _listbox_entries ) ) {
+      stdout.printf( "ERROR:  Unable to get all entries in the journal\n" );
+      return;
+    }
+
+    populate_listbox();
+    populate_calendar();
+
+  }
+
+  /* Populates the all entries listbox with date from the database */
+  private void populate_listbox() {
+
+    /* Clear the listbox */
+    var row = _listbox.get_row_at_index( 0 );
+    while( row != null ) {
+      _listbox.remove( row );
+      row = _listbox.get_row_at_index( 0 );
+    }
+
+    /* Populate the listbox */
+    for( int i=0; i<_listbox_entries.length; i++ ) {
+      var entry = _listbox_entries.index( i );
+      var label = new Label( "<b>" + entry.gen_title() + "</b>" ) {
+        halign     = Align.START,
+        hexpand    = true,
+        use_markup = true,
+        ellipsize  = Pango.EllipsizeMode.END
+      };
+      label.add_css_class( "listbox-head" );
+      var date = new Label( entry.date ) {
+        halign  = Align.END,
+        hexpand = true
+      };
+      var box = new Box( Orientation.VERTICAL, 0 ) {
+        halign        = Align.FILL,
+        hexpand       = true,
+        width_request = 300,
+        margin_top    = 5,
+        margin_bottom = 5,
+        margin_start  = 5,
+        margin_end    = 5
+      };
+      box.append( label );
+      box.append( date );
+      _listbox.append( box );
+    }
+
+  }
+
+  /* Populates the calendar with marks that match the current month/year */
+  private void populate_calendar() {
+
+    for( int i=0; i<_listbox_entries.length; i++ ) {
+      var entry = _listbox_entries.index( i );
+      var day   = entry.get_day();
+      if( (entry.get_year() == _cal.year) && (entry.get_month() == (_cal.month + 1)) ) {
+        _cal.mark_day( day );
+      } else if( _cal.get_day_is_marked( day ) ) {
+        _cal.unmark_day( day );
+      }
+    }
+
+    /* Select the current date again to make sure that everything draw correctly */
+    var current = _cal.get_date();
+    _cal.select_day( _cal.get_date().add_days( 1 ) );
+    _cal.select_day( current );
 
   }
 
@@ -436,6 +627,31 @@ public class MainWindow : Gtk.ApplicationWindow {
     */
 
     win.show();
+
+  }
+
+  /* Loads the entry in the database for today */
+  private void load_entry( string? date = null ) {
+
+    DBEntry entry = new DBEntry();
+
+    if( date != null ) {
+      entry.date = date;
+    }
+
+    var load_result = _journals.current.db.load_entry( ref entry, true );
+    switch( load_result ) {
+      case DBLoadResult.LOADED :
+        set_buffer( entry, true );
+        break;
+      case DBLoadResult.CREATED :
+        populate_sidebar();
+        set_buffer( entry, true );
+        break;
+      default :
+        set_buffer( entry, false );
+        break;
+    }
 
   }
 

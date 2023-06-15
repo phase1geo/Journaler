@@ -39,11 +39,13 @@ public class Journals {
   }
 
   /* Removes the current journal entry */
-  public void remove_current() {
+  public void remove_journal( Journal journal ) {
     for( int i=0; i<_journals.length; i++ ) {
-      if( (_journals.index( i ) == _current) && (_journals.length > 1) ) {
-        _current = get_journal( ((i + 1) == _journals.length) ? (i - 1) : i );
-        current_changed();
+      if( (_journals.index( i ) == journal) && (_journals.length > 1) ) {
+        if( _current == journal ) {
+          _current = get_journal( ((i + 1) == _journals.length) ? (i - 1) : i );
+          current_changed();
+        }
         _journals.remove_index( i );
         save();
       }
