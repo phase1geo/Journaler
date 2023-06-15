@@ -32,7 +32,7 @@ public class Journaler : Gtk.Application {
   private static bool       new_entry    = false;
 
   public  static GLib.Settings settings;
-  public  static string        version = "0.1";
+  public  static string        version = "1.0";
 
   private MainWindow appwin;
 

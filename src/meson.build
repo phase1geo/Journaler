@@ -4,7 +4,9 @@ sources += files(
     'Journal.vala',
     'Journals.vala',
     'MainWindow.vala',
+    'SidebarEditor.vala',
     'SidebarEntries.vala',
+    'TextArea.vala',
     'Utils.vala'
     #    'TextCompletion.vala',
     #'UnicodeInsert.vala'

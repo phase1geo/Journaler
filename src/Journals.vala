@@ -10,32 +10,27 @@ public class Journals {
   }
 
   public signal void current_changed();
+  public signal void list_changed();
 
   /* Default constructor */
   public Journals() {
     _journals = new Array<Journal>();
-    load();
-    if( _journals.length == 0 ) {
-      _current = new Journal( "Journal", "" );
-      add_journal( _current );
-    } else {
-      _current = _journals.index( 0 );
-    }
-    current_changed();
   }
 
   /* Adds the given journal to the list of journals */
   public void add_journal( Journal journal ) {
     _journals.append_val( journal );
     _current = journal;
-    save();
     current_changed();
+    save();
+    list_changed();
   }
 
   /* Sets the current journal to the given one */
   public void set_current( int index ) {
     _current = get_journal( index );
     current_changed();
+    save();
   }
 
   /* Removes the current journal entry */
@@ -48,6 +43,7 @@ public class Journals {
         }
         _journals.remove_index( i );
         save();
+        list_changed();
       }
     }
   }
@@ -82,10 +78,18 @@ public class Journals {
 
     Xml.Doc*  doc  = new Xml.Doc( "1.0" );
     Xml.Node* root = new Xml.Node( null, "journals" );
+    var       current_index = 0;
+
+    root->set_prop( "version", Journaler.version );
 
     for( int i=0; i<_journals.length; i++ ) {
+      if( _journals.index( i ) == _current ) {
+        current_index = i;
+      }
       root->add_child( _journals.index( i ).save() );
     }
+
+    root->set_prop( "current", current_index.to_string() );
 
     doc->set_root_element( root );
     doc->save_format_file( xml_file(), 1 );
@@ -102,6 +106,19 @@ public class Journals {
       return;
     }
 
+    Xml.Node* root = doc->get_root_element();
+
+    var v = root->get_prop( "version" );
+    if( v != null ) {
+      check_version( v );
+    }
+
+    var c = root->get_prop( "current" );
+    var current_index = 0;
+    if( c != null ) {
+      current_index = int.parse( c );
+    }
+
     for( Xml.Node* it = doc->get_root_element()->children; it != null; it = it->next ) {
       if( (it->type == Xml.ElementType.ELEMENT_NODE) && (it->name == "journal") ) {
         var journal = new Journal.from_xml( it );
@@ -110,6 +127,27 @@ public class Journals {
     }
 
     delete doc;
+
+    /* Set the current journal */
+    if( _journals.length == 0 ) {
+      _current = new Journal( "Journal", "" );
+      add_journal( _current );
+    } else {
+      _current = _journals.index( current_index );
+    }
+
+    current_changed();
+    list_changed();
+
+  }
+
+  /*
+   Allows us to check that the version will be compatible with the current version and
+   perform any updates to make it compatible.
+  */
+  private void check_version( string version ) {
+
+    // TBD
 
   }
 

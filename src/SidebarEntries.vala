@@ -28,36 +28,32 @@ public class SidebarEntries : Box {
 
   private Journals       _journals;
   private Array<DBEntry> _listbox_entries;
+  private MenuButton     _journal_mb;
   private ListBox        _journal_list;
   private ListBox        _listbox;
   private Calendar       _cal;
 
   public signal void edit_journal( Journal? journal );
-  public signal void show_journal_entry( Journal journal, string date );
+  public signal void show_journal_entry( DBEntry entry, bool editable );
 
   /* Create the main window UI */
-  public SidebarEntries() {
+  public SidebarEntries( Journals journals ) {
 
-    Object( orientation: Orientation.VERTICAL, spacing: 5 );
+    Object( orientation: Orientation.VERTICAL, spacing: 5, margin_start: 5, margin_end: 5, margin_top: 5, margin_bottom: 5 );
 
-    _listbox_entries = new Array<DBEntry>();
-
-    /* Create and load the journals */
-    _journals = new Journals();
+    _journals = journals;
     _journals.current_changed.connect(() => {
       populate();
     });
+    _journals.list_changed.connect(() => {
+      populate_journal_list();
+    });
+    _listbox_entries = new Array<DBEntry>();
 
     /* Add UI elements */
     add_journals();
     add_current_list();
     add_calendar();
-
-    /* Populate the list of journals */
-    populate_journal_list();
-
-    /* Populate the sidebar listbox */
-    populate();
 
   }
 
@@ -68,10 +64,9 @@ public class SidebarEntries : Box {
       has_arrow = false
     };
 
-    var journals = new MenuButton() {
+    _journal_mb = new MenuButton() {
       halign  = Align.FILL,
       hexpand = true,
-      label   = _journals.current.name,
       popover = journal_popover
     };
 
@@ -80,7 +75,6 @@ public class SidebarEntries : Box {
       var index = row.get_index();
       _journals.set_current( index );
       journal_popover.popdown();
-      journals.label = _journals.current.name;
     });
 
     journal_popover.child = _journal_list;
@@ -91,13 +85,8 @@ public class SidebarEntries : Box {
       tooltip_text = _( "Add new journal" );
     });
 
-    var box = new Box( Orientation.HORIZONTAL, 5 ) {
-      margin_start  = 5,
-      margin_end    = 5,
-      margin_top    = 5,
-      margin_bottom = 5
-    };
-    box.append( journals );
+    var box = new Box( Orientation.HORIZONTAL, 5 );
+    box.append( _journal_mb );
     box.append( add );
 
     append( box );
@@ -113,9 +102,13 @@ public class SidebarEntries : Box {
     };
 
     _listbox.row_selected.connect((row) => {
+      if( row == null ) {
+        return;
+      }
+      stdout.printf( "Row selected!\n" );
       var index = row.get_index();
       var date  = _listbox_entries.index( index ).date;
-      show_journal_entry( _journals.current, date );
+      show_entry_for_date( date );
     });
 
     var lb_scroll = new ScrolledWindow() {
@@ -145,7 +138,14 @@ public class SidebarEntries : Box {
 
     _cal.day_selected.connect(() => {
       var dt = _cal.get_date();
-      show_journal_entry( _journals.current, DBEntry.datetime_date( dt ) );
+      var date = DBEntry.datetime_date( dt );
+      var index = get_listbox_index_for_date( date );
+      if( index != -1 ) {
+        _listbox.select_row( _listbox.get_row_at_index( index ) );
+      } else {
+        _listbox.select_row( null );
+        show_entry_for_date( date );
+      }
     });
 
     _cal.next_month.connect( populate_calendar );
@@ -204,6 +204,8 @@ public class SidebarEntries : Box {
   /* Populates the sidebar with information from the database */
   private void populate() {
 
+    _journal_mb.label = _journals.current.name;
+
     if( _listbox_entries.length > 0 ) {
       _listbox_entries.remove_range( 0, _listbox_entries.length );
     }
@@ -258,6 +260,18 @@ public class SidebarEntries : Box {
 
   }
 
+  /* Updates the title */
+  public void update_title( string title, string date ) {
+
+    var index = get_listbox_index_for_date( date );
+
+    if( index != -1 ) {
+      _listbox_entries.index( index ).title = title;
+      populate_listbox();
+    }
+
+  }
+
   /* Populates the calendar with marks that match the current month/year */
   private void populate_calendar() {
 
@@ -275,6 +289,30 @@ public class SidebarEntries : Box {
     var current = _cal.get_date();
     _cal.select_day( _cal.get_date().add_days( 1 ) );
     _cal.select_day( current );
+
+  }
+
+  /* Retrieves the index of the listbox that contains the given date */
+  private int get_listbox_index_for_date( string date ) {
+    for( int i=0; i<_listbox_entries.length; i++ ) {
+      if( _listbox_entries.index( i ).date == date ) {
+        return( i );
+      }
+    }
+    return( -1 );
+  }
+
+  /* Displays the entry for the given date */
+  private void show_entry_for_date( string date ) {
+
+    var entry = new DBEntry();
+    entry.date = date;
+
+    /* Attempt to load the entry */
+    var load_result = _journals.current.db.load_entry( ref entry, false );
+
+    /* Indicate that the entry should be displayed */
+    show_journal_entry( entry, (load_result != DBLoadResult.FAILED) );
 
   }
 

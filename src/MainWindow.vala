@@ -27,12 +27,11 @@ public class MainWindow : Gtk.ApplicationWindow {
   private const int _sidebar_width = 300;
 
   private GLib.Settings  _settings;
-  private Entry          _title;
-  private Label          _date;
-  private GtkSource.View _text;
+  private TextArea       _text_area;
   private Stack          _sidebar_stack;
   private Journals       _journals;
   private SidebarEntries _entries;
+  private SidebarEditor  _editor;
   private Journal        _edit_journal;
   private Entry          _edit_name;
   private TextView       _edit_description;
@@ -68,6 +67,9 @@ public class MainWindow : Gtk.ApplicationWindow {
     Object( application: app );
 
     _settings = settings;
+
+    /* Create and load the journals */
+    _journals = new Journals();
 
     // var window_x = settings.get_int( "window-x" );
     // var window_y = settings.get_int( "window-y" );
@@ -116,100 +118,30 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     show();
 
+    /* Handle any request to close the window */
+    close_request.connect(() => {
+      action_save();
+      return( false );
+    });
+
     /* Loads the application-wide CSS */
     load_css();
+
+    /* Load the available journals */
+    _journals.load();
 
   }
 
   /* Creates the textbox with today's entry. */
   private void add_text_area( Box box ) {
 
-    var text_margin  = 20;
-    var line_spacing = 5;
-    var font_size    = 14;
+    _text_area = new TextArea( _journals );
 
-    /* Add the title */
-    _title = new Entry() {
-      placeholder_text = _( "Title (Optional)" ),
-      has_frame        = false,
-    };
-    _title.add_css_class( "title" );
-    _title.add_css_class( "text-background" );
-    _title.add_css_class( "text-padding" );
+    _text_area.title_changed.connect((title, date) => {
+      _entries.update_title( title, date );
+    });
 
-    /* Add the date */
-    _date = new Label( "" ) {
-      halign = Align.FILL,
-      xalign = (float)0
-    };
-    _date.add_css_class( "date" );
-    _date.add_css_class( "text-background" );
-
-    var sep = new Separator( Orientation.HORIZONTAL );
-
-    /* Now let's setup some stuff related to the text field */
-    var lang_mgr = GtkSource.LanguageManager.get_default();
-    var lang     = lang_mgr.get_language( "markdown" );
-
-    var style_mgr = GtkSource.StyleSchemeManager.get_default();
-    var style     = style_mgr.get_scheme( "cobalt-light" );
-    foreach( string id in style_mgr.get_scheme_ids() ) {
-      stdout.printf( "  scheme: %s\n", id );
-    }
-
-    /* Create the text entry view */
-    var buffer = new GtkSource.Buffer.with_language( lang ) {
-      style_scheme = style
-    };
-    _text = new GtkSource.View.with_buffer( buffer ) {
-      valign             = Align.FILL,
-      vexpand            = true,
-      top_margin         = text_margin / 2,
-      left_margin        = text_margin,
-      bottom_margin      = text_margin,
-      right_margin       = text_margin,
-      wrap_mode          = WrapMode.WORD,
-      pixels_below_lines = line_spacing,
-      pixels_inside_wrap = line_spacing
-    };
-    _text.add_css_class( "journal-text" );
-
-    var provider = new CssProvider();
-    var css_data = """
-      .journal-text {
-        font-size: %dpt;
-      }
-      .title {
-        font-size: %dpt;
-        border: none;
-        box-shadow: none;
-      }
-      .date {
-        padding-left: %dpx;
-        padding-bottom: 5px;
-      }
-      .text-background {
-        background-color: %s;
-      }
-      .text-padding {
-        padding-left: %dpx;
-        padding-right: %dpx;
-        padding-top: %dpx;
-        padding-bottom: %dpx;
-      }
-    """.printf( font_size, font_size, text_margin, style.get_style( "background-pattern" ).background, (text_margin - 4), (text_margin - 4), 0, 0 );
-    provider.load_from_data( css_data.data );
-    StyleContext.add_provider_for_display( get_display(), provider, STYLE_PROVIDER_PRIORITY_APPLICATION );
-
-    var scroll = new ScrolledWindow() {
-      vscrollbar_policy = PolicyType.AUTOMATIC,
-      child = _text
-    };
-
-    box.append( _title );
-    box.append( _date );
-    box.append( sep );
-    box.append( scroll );
+    box.append( _text_area );
 
   }
 
@@ -248,14 +180,14 @@ public class MainWindow : Gtk.ApplicationWindow {
   /* Creates the current journal sidebar */
   private Box add_current_sidebar() {
 
-    _entries = new SidebarEntries();
+    _entries = new SidebarEntries( _journals );
 
     _entries.edit_journal.connect((journal) => {
       edit_journal( journal );
     });
 
-    _entries.show_journal_entry.connect((journal, date) => {
-      show_journal_entry( journal, date );
+    _entries.show_journal_entry.connect((entry, editable) => {
+      _text_area.set_buffer( entry, editable );
     });
 
     return( _entries );
@@ -265,103 +197,13 @@ public class MainWindow : Gtk.ApplicationWindow {
   /* Adds the journal editor to the sidebar */
   private Box add_journal_edit() {
 
-    /* Edit name */
-    var nlbl   = new Label( _( "Name:" ) );
-    _edit_name = new Entry() {
-      halign = Align.FILL
-    };
-    _edit_name.changed.connect(() => {
-      var text = _edit_name.buffer.text;
-      _edit_save.sensitive = ((text != "") && (_journals.get_journal_by_name( text ) == null));
-    });
-    var nbox = new Box( Orientation.HORIZONTAL, 5 );
-    nbox.append( nlbl );
-    nbox.append( _edit_name );
+    _editor = new SidebarEditor( _journals );
 
-    /* Edit description */
-    var dlbl = new Label( _( "Description:" ) ) {
-      halign = Align.FILL,
-      xalign = (float)0
-    };
-    _edit_description = new TextView() {
-      halign    = Align.FILL,
-      hexpand   = true,
-      valign    = Align.FILL,
-      vexpand   = true,
-      wrap_mode = WrapMode.WORD
-    };
-    var dbox = new Box( Orientation.VERTICAL, 5 );
-    dbox.append( dlbl );
-    dbox.append( _edit_description );
-
-    var del = new Button.with_label( _( "Delete" ) ) {
-      // halign = Align.START
-    };
-    del.clicked.connect(() => {
-      _journals.remove_journal( _edit_journal );
-      _edit_journal = null;
+    _editor.done.connect(() => {
       _sidebar_stack.visible_child_name = "entries";
     });
-    del.add_css_class( "destructive-action" );
-    _edit_del_revealer = new Revealer() {
-      transition_duration = 0,
-      child = del
-    };
-    var cancel = new Button.with_label( _( "Cancel" ) ) {
-      // halign = Align.END
-    };
-    cancel.clicked.connect(() => {
-      _sidebar_stack.visible_child_name = "entries";
-    });
-    _edit_save = new Button.with_label( _( "Save" ) ) {
-      // halign = Align.END
-    };
-    _edit_save.add_css_class( "suggested-action" );
-    _edit_save.clicked.connect(() => {
-      if( _edit_journal == null ) {
-        var journal = new Journal( _edit_name.buffer.text, _edit_description.buffer.text );
-        _journals.add_journal( journal );
-        _entries.populate_journal_list();
-      } else {
-        _edit_journal.name = _edit_name.buffer.text;
-        _edit_journal.description = _edit_description.buffer.text;
-        _journals.save();
-      }
-      _sidebar_stack.visible_child_name = "entries";
-    });
-    var rbox = new Box( Orientation.HORIZONTAL, 5 ) {
-      halign = Align.END,
-      hexpand = true,
-    };
-    rbox.append( cancel );
-    rbox.append( _edit_save );
 
-    var bbox = new Box( Orientation.HORIZONTAL, 5 ) {
-      margin_top = 5,
-      margin_bottom = 5,
-      margin_start = 5,
-      margin_end = 5
-    };
-    bbox.append( _edit_del_revealer );
-    bbox.append( rbox );
-
-    var box = new Box( Orientation.VERTICAL, 5 );
-    box.append( nbox );
-    box.append( dbox );
-    box.append( bbox );
-
-    return( box );
-
-  }
-
-  /* Displays the entry for the selected date */
-  private void show_journal_entry( Journal journal, string date ) {
-
-    var entry = new DBEntry();
-    entry.date = date;
-
-    var load_result = journal.db.load_entry( ref entry, false );
-    set_buffer( entry, (load_result != DBLoadResult.FAILED) );
+    return( _editor );
 
   }
 
@@ -397,15 +239,7 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   /* Save the current entry to the database */
   public void action_save() {
-
-    var entry = new DBEntry.for_save( _title.text, _text.buffer.text );
-
-    if( _journals.current.db.save_entry( entry ) ) {
-      stdout.printf( "Saved successfully!\n" );
-    } else {
-      stdout.printf( "Save did not occur\n" );
-    }
-
+    _text_area.save();
   }
 
   /* Called when the user uses the Control-q keyboard shortcut */
@@ -436,34 +270,6 @@ public class MainWindow : Gtk.ApplicationWindow {
     */
 
     win.show();
-
-  }
-
-  /* Sets the entry contents to the given entry, saving the previous contents, if necessary */
-  private void set_buffer( DBEntry entry, bool editable ) {
-
-    if( _text.buffer.get_modified() ) {
-      action_save();
-    }
-
-    /* Set the title */
-    _title.text = entry.title;
-    _title.editable = editable;
-
-    /* Set the date */
-    var dt = entry.datetime();
-    _date.label = dt.format( "%A, %B %e, %Y" );
-
-    /* Set the buffer text to the entry text */
-    _text.buffer.begin_irreversible_action();
-    _text.buffer.text = entry.text;
-    _text.buffer.end_irreversible_action();
-
-    /* Set the editable bit */
-    _text.editable = editable;
-
-    /* Clear the modified bit */
-    _text.buffer.set_modified( false );
 
   }
 
