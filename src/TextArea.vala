@@ -25,7 +25,8 @@ using Gdk;
 public class TextArea : Box {
 
   private Journals         _journals;
-  private DBEntry          _entry = null;
+  private Journal?         _journal = null;
+  private DBEntry?         _entry = null;
   private Entry            _title;
   private Label            _date;
   private GtkSource.View   _text;
@@ -124,6 +125,13 @@ public class TextArea : Box {
     _title.activate.connect(() => {
       _text.grab_focus();
     });
+    _title.changed.connect(() => {
+      if( _title.text == "" ) {
+        _title.remove_css_class( "title-bold" );
+      } else {
+        _title.add_css_class( "title-bold" );
+      }
+    });
 
     title_focus.leave.connect(() => {
       save();
@@ -163,9 +171,11 @@ public class TextArea : Box {
       }
       .title {
         font-size: %dpt;
-        font-weight: bold;
         border: none;
         box-shadow: none;
+      }
+      .title-bold {
+        font-weight: bold;
       }
       .date {
         padding-left: %dpx;
@@ -190,17 +200,17 @@ public class TextArea : Box {
   public void save() {
 
     /* If the text area is not editable or has not changed, there's no need to save */
-    if( (_entry == null) || ((!_title.editable || (_title.text == _entry.title)) && (!_text.editable || !_text.buffer.get_modified()))) {
+    if( (_journal == null) || (_entry == null) || ((!_title.editable || (_title.text == _entry.title)) && (!_text.editable || !_text.buffer.get_modified()))) {
       return;
     }
 
     var entry = new DBEntry.with_date( _title.text, _text.buffer.text, _entry.date );
 
-    if( _journals.current.db.save_entry( entry ) ) {
-      if( _title.text != _entry.text ) {
-        _journals.current_changed();
+    if( _journal.db.save_entry( entry ) ) {
+      if( (_journals.current == _journal) && (_title.text != _entry.text) ) {
+        _journals.current_changed( true );
       }
-      stdout.printf( "Saved successfully\n" );
+      stdout.printf( "Saved successfully to journal %s\n", _journal.name );
     }
 
   }
@@ -208,13 +218,12 @@ public class TextArea : Box {
   /* Sets the entry contents to the given entry, saving the previous contents, if necessary */
   public void set_buffer( DBEntry entry, bool editable ) {
 
-    stdout.printf( "Called set_buffer, editable: %s\n", editable.to_string() );
-
     if( _text.buffer.get_modified() ) {
       save();
     }
 
-    _entry = entry;
+    _journal = _journals.current;
+    _entry   = entry;
 
     /* Set the title */
     _title.text = entry.title;

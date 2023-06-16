@@ -9,7 +9,7 @@ public class Journals {
     }
   }
 
-  public signal void current_changed();
+  public signal void current_changed( bool refresh );
   public signal void list_changed();
 
   /* Default constructor */
@@ -21,15 +21,18 @@ public class Journals {
   public void add_journal( Journal journal ) {
     _journals.append_val( journal );
     _current = journal;
-    current_changed();
+    current_changed( false );
     save();
     list_changed();
   }
 
   /* Sets the current journal to the given one */
   public void set_current( int index ) {
-    _current = get_journal( index );
-    current_changed();
+    var journal = get_journal( index );
+    if( _current != journal ) {
+      _current = journal;
+      current_changed( false );
+    }
     save();
   }
 
@@ -39,7 +42,7 @@ public class Journals {
       if( (_journals.index( i ) == journal) && (_journals.length > 1) ) {
         if( _current == journal ) {
           _current = get_journal( ((i + 1) == _journals.length) ? (i - 1) : i );
-          current_changed();
+          current_changed( false );
         }
         _journals.remove_index( i );
         save();
@@ -136,7 +139,7 @@ public class Journals {
       _current = _journals.index( current_index );
     }
 
-    current_changed();
+    current_changed( false );
     list_changed();
 
   }

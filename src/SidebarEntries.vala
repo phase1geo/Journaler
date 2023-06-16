@@ -31,8 +31,9 @@ public class SidebarEntries : Box {
   private MenuButton     _journal_mb;
   private ListBox        _journal_list;
   private ListBox        _listbox;
+  private ScrolledWindow _lb_scroll;
   private Calendar       _cal;
-  private bool           _ignore_cal_select_day = false;
+  private bool           _ignore_select = false;
 
   public signal void edit_journal( Journal? journal );
   public signal void show_journal_entry( DBEntry entry, bool editable );
@@ -43,11 +44,15 @@ public class SidebarEntries : Box {
     Object( orientation: Orientation.VERTICAL, spacing: 5, margin_start: 5, margin_end: 5, margin_top: 5, margin_bottom: 5 );
 
     _journals = journals;
-    _journals.current_changed.connect(() => {
-      populate();
+    _journals.current_changed.connect((refresh) => {
+      populate( refresh );
+      if( !refresh ) {
+        show_entry_for_date( DBEntry.todays_date(), true );
+      }
     });
     _journals.list_changed.connect(() => {
       populate_journal_list();
+      show_entry_for_date( DBEntry.todays_date(), true );
     });
     _listbox_entries = new Array<DBEntry>();
 
@@ -103,7 +108,7 @@ public class SidebarEntries : Box {
     };
 
     _listbox.row_selected.connect((row) => {
-      if( row == null ) {
+      if( _ignore_select || (row == null) ) {
         return;
       }
       var index = row.get_index();
@@ -111,7 +116,7 @@ public class SidebarEntries : Box {
       show_entry_for_date( date, false );
     });
 
-    var lb_scroll = new ScrolledWindow() {
+    _lb_scroll = new ScrolledWindow() {
       hscrollbar_policy = PolicyType.NEVER,
       vscrollbar_policy = PolicyType.AUTOMATIC,
       halign            = Align.FILL,
@@ -121,7 +126,7 @@ public class SidebarEntries : Box {
       child             = _listbox
     };
 
-    append( lb_scroll );
+    append( _lb_scroll );
 
   }
 
@@ -137,7 +142,7 @@ public class SidebarEntries : Box {
     };
 
     _cal.day_selected.connect(() => {
-      if( _ignore_cal_select_day ) {
+      if( _ignore_select ) {
         return;
       }
       var dt = _cal.get_date();
@@ -205,11 +210,16 @@ public class SidebarEntries : Box {
   }
 
   /* Populates the sidebar with information from the database */
-  private void populate() {
+  private void populate( bool refresh ) {
 
+    var display_date = "";
     _journal_mb.label = _journals.current.name;
 
     if( _listbox_entries.length > 0 ) {
+      var selected = _listbox.get_selected_row();
+      if( selected != null ) {
+        display_date = _listbox_entries.index( selected.get_index() ).date;
+      }
       _listbox_entries.remove_range( 0, _listbox_entries.length );
     }
 
@@ -218,13 +228,15 @@ public class SidebarEntries : Box {
       return;
     }
 
-    populate_listbox();
+    populate_listbox( refresh, display_date );
     populate_calendar();
 
   }
 
   /* Populates the all entries listbox with date from the database */
-  private void populate_listbox() {
+  private void populate_listbox( bool refresh, string display_date ) {
+
+    var vpos = _lb_scroll.vadjustment.get_value();
 
     /* Clear the listbox */
     var row = _listbox.get_row_at_index( 0 );
@@ -261,6 +273,14 @@ public class SidebarEntries : Box {
       _listbox.append( box );
     }
 
+    if( refresh ) {
+      var index = get_listbox_index_for_date( display_date );
+      if( index != -1 ) {
+        _listbox.select_row( _listbox.get_row_at_index( index ) );
+      }
+      _lb_scroll.vadjustment.set_value( vpos );
+    }
+
   }
 
   /* Populates the calendar with marks that match the current month/year */
@@ -278,10 +298,10 @@ public class SidebarEntries : Box {
 
     /* Select the current date again to make sure that everything draw correctly */
     var current = _cal.get_date();
-    _ignore_cal_select_day = true;
+    _ignore_select = true;
     _cal.select_day( _cal.get_date().add_days( 1 ) );
     _cal.select_day( current );
-    _ignore_cal_select_day = false;
+    _ignore_select = false;
 
   }
 
@@ -306,16 +326,16 @@ public class SidebarEntries : Box {
 
     /* If we created a new entry, update the list contents */
     if( load_result == DBLoadResult.CREATED ) {
-      populate();
+      populate( true );
     }
 
     /* Make sure that the date is selected in the listbox */
     var index = get_listbox_index_for_date( entry.date );
     if( index != -1 ) {
+      _ignore_select = true;
       _listbox.select_row( _listbox.get_row_at_index( index ) );
-      _ignore_cal_select_day = true;
       _cal.select_day( entry.datetime() );
-      _ignore_cal_select_day = false;
+      _ignore_select = false;
     }
 
     /* Indicate that the entry should be displayed */
