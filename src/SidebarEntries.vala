@@ -32,6 +32,7 @@ public class SidebarEntries : Box {
   private ListBox        _journal_list;
   private ListBox        _listbox;
   private Calendar       _cal;
+  private bool           _ignore_cal_select_day = false;
 
   public signal void edit_journal( Journal? journal );
   public signal void show_journal_entry( DBEntry entry, bool editable );
@@ -105,7 +106,6 @@ public class SidebarEntries : Box {
       if( row == null ) {
         return;
       }
-      stdout.printf( "Row selected!\n" );
       var index = row.get_index();
       var date  = _listbox_entries.index( index ).date;
       show_entry_for_date( date );
@@ -137,6 +137,9 @@ public class SidebarEntries : Box {
     };
 
     _cal.day_selected.connect(() => {
+      if( _ignore_cal_select_day ) {
+        return;
+      }
       var dt = _cal.get_date();
       var date = DBEntry.datetime_date( dt );
       var index = get_listbox_index_for_date( date );
@@ -287,8 +290,10 @@ public class SidebarEntries : Box {
 
     /* Select the current date again to make sure that everything draw correctly */
     var current = _cal.get_date();
+    _ignore_cal_select_day = true;
     _cal.select_day( _cal.get_date().add_days( 1 ) );
     _cal.select_day( current );
+    _ignore_cal_select_day = false;
 
   }
 

@@ -25,7 +25,7 @@ using Gdk;
 public class TextArea : Box {
 
   private Journals         _journals;
-  private DBEntry          _entry;
+  private DBEntry          _entry = null;
   private Entry            _title;
   private Label            _date;
   private GtkSource.View   _text;
@@ -107,6 +107,7 @@ public class TextArea : Box {
     var lang     = lang_mgr.get_language( "markdown" );
 
     /* Create the text entry view */
+    var text_focus = new EventControllerFocus();
     _buffer = new GtkSource.Buffer.with_language( lang );
     _text = new GtkSource.View.with_buffer( _buffer ) {
       valign             = Align.FILL,
@@ -119,6 +120,7 @@ public class TextArea : Box {
       pixels_below_lines = line_spacing,
       pixels_inside_wrap = line_spacing
     };
+    _text.add_controller( text_focus );
     _text.add_css_class( "journal-text" );
 
     _title.activate.connect(() => {
@@ -126,7 +128,11 @@ public class TextArea : Box {
     });
 
     title_focus.leave.connect(() => {
-      title_changed( _title.text, _entry.date );
+      save();
+    });
+
+    text_focus.leave.connect(() => {
+      save();
     });
 
     var scroll = new ScrolledWindow() {
@@ -183,16 +189,16 @@ public class TextArea : Box {
   public void save() {
 
     /* If the text area is not editable or has not changed, there's no need to save */
-    if( !_title.editable && (_title.text == _entry.text) && !_text.editable && !_text.buffer.get_modified()) {
+    if( (_entry == null) || ((!_title.editable || (_title.text == _entry.title)) && (!_text.editable || !_text.buffer.get_modified()))) {
       return;
     }
 
-    var entry = new DBEntry.for_save( _title.text, _text.buffer.text );
+    var entry = new DBEntry.with_date( _title.text, _text.buffer.text, _entry.date );
 
     if( _journals.current.db.save_entry( entry ) ) {
-      stdout.printf( "Saved successfully!\n" );
-    } else {
-      stdout.printf( "Save did not occur\n" );
+      if( _title.text != _entry.text ) {
+        _journals.current_changed();
+      }
     }
 
   }
