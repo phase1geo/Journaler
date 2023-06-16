@@ -58,8 +58,6 @@ public class TextArea : Box {
     }
   }
 
-  public signal void title_changed( string title, string date );
-
   /* Create the main window UI */
   public TextArea( Journals journals ) {
 
@@ -131,9 +129,11 @@ public class TextArea : Box {
       save();
     });
 
+    /*
     text_focus.leave.connect(() => {
       save();
     });
+    */
 
     var scroll = new ScrolledWindow() {
       vscrollbar_policy = PolicyType.AUTOMATIC,
@@ -163,6 +163,7 @@ public class TextArea : Box {
       }
       .title {
         font-size: %dpt;
+        font-weight: bold;
         border: none;
         box-shadow: none;
       }
@@ -199,12 +200,15 @@ public class TextArea : Box {
       if( _title.text != _entry.text ) {
         _journals.current_changed();
       }
+      stdout.printf( "Saved successfully\n" );
     }
 
   }
 
   /* Sets the entry contents to the given entry, saving the previous contents, if necessary */
   public void set_buffer( DBEntry entry, bool editable ) {
+
+    stdout.printf( "Called set_buffer, editable: %s\n", editable.to_string() );
 
     if( _text.buffer.get_modified() ) {
       save();
@@ -230,6 +234,13 @@ public class TextArea : Box {
 
     /* Clear the modified bits */
     _text.buffer.set_modified( false );
+
+    /* Set the grab */
+    if( (_title.text == "") && (_text.buffer.text == "") ) {
+      _title.grab_focus();
+    } else {
+      _text.grab_focus();
+    }
 
   }
 

@@ -36,9 +36,9 @@ public class MainWindow : Gtk.ApplicationWindow {
   // private UnicodeInsert   _unicoder;
 
   private const GLib.ActionEntry[] action_entries = {
-    { "action_new_entry", action_new_entry },
-    { "action_save",      action_save },
-    { "action_quit",      action_quit },
+    { "action_today", action_today },
+    { "action_save",  action_save },
+    { "action_quit",  action_quit },
   };
 
   private bool on_elementary = Gtk.Settings.get_default().gtk_icon_theme_name == "elementary";
@@ -90,10 +90,13 @@ public class MainWindow : Gtk.ApplicationWindow {
     add_keyboard_shortcuts( app );
 
     /* Create title toolbar */
-    var new_btn = new Button.from_icon_name( get_header_icon_name( "document-new" ) );
-    new_btn.set_tooltip_markup( Utils.tooltip_with_accel( _( "New Entry" ), "<Control>n" ) );
-    new_btn.clicked.connect( action_new_entry );
-    header.pack_start( new_btn );
+    var today_img = new Image.from_resource( "/com/github/phase1geo/journaler/today.svg" );
+    var today_btn = new Button() {
+      child = today_img
+    };
+    today_btn.set_tooltip_markup( Utils.tooltip_with_accel( _( "Go To Today" ), "<Control>t" ) );
+    today_btn.clicked.connect( action_today );
+    header.pack_start( today_btn );
 
     var lbox = new Box( Orientation.VERTICAL, 0 );
     var rbox = new Box( Orientation.VERTICAL, 0 );
@@ -125,16 +128,15 @@ public class MainWindow : Gtk.ApplicationWindow {
     /* Load the available journals */
     _journals.load();
 
+    /* Make sure that we display today's entry */
+    action_today();
+
   }
 
   /* Creates the textbox with today's entry. */
   private void add_text_area( Box box ) {
 
     _text_area = new TextArea( _journals );
-
-    _text_area.title_changed.connect((title, date) => {
-      _entries.update_title( title, date );
-    });
 
     box.append( _text_area );
 
@@ -199,17 +201,15 @@ public class MainWindow : Gtk.ApplicationWindow {
   /* Adds keyboard shortcuts for the menu actions */
   private void add_keyboard_shortcuts( Gtk.Application app ) {
 
-    app.set_accels_for_action( "win.action_new_entry", { "<Control>n" } );
-    app.set_accels_for_action( "win.action_save",      { "<Control>s" } );
-    app.set_accels_for_action( "win.action_quit",      { "<Control>q" } );
+    app.set_accels_for_action( "win.action_today", { "<Control>t" } );
+    app.set_accels_for_action( "win.action_save",  { "<Control>s" } );
+    app.set_accels_for_action( "win.action_quit",  { "<Control>q" } );
 
   }
 
   /* Creates a new file */
-  public void action_new_entry() {
-
-    // TBD
-
+  public void action_today() {
+    _entries.show_entry_for_date( DBEntry.todays_date(), true );
   }
 
   /* Save the current entry to the database */

@@ -28,11 +28,10 @@ public class Journaler : Gtk.Application {
 
   private const string INTERFACE_SCHEMA = "org.gnome.desktop.interface";
 
-  private static bool       show_version = false;
-  private static bool       new_entry    = false;
+  private static bool show_version = false;
 
   public  static GLib.Settings settings;
-  public  static string        version = "1.0";
+  public  static string version = "1.0";
 
   private MainWindow appwin;
 
@@ -82,21 +81,17 @@ public class Journaler : Gtk.Application {
 
   /* Called if we have no files to open */
   private void on_activate() {
-    if( new_entry ) {
-      appwin.action_new_entry();
-    }
   }
 
   /* Parse the command-line arguments */
   private void parse_arguments( ref unowned string[] args ) {
 
     var context = new OptionContext( "- Journaler Options" );
-    var options = new OptionEntry[3];
+    var options = new OptionEntry[2];
 
     /* Create the command-line options */
     options[0] = {"version", 0, 0, OptionArg.NONE, ref show_version, _( "Display version number" ), null};
-    options[1] = {"new-entry", 'n', 0, OptionArg.NONE, ref new_entry, _( "Creates a new journal entry" ), null};
-    options[2] = {null};
+    options[1] = {null};
 
     /* Parse the arguments */
     try {

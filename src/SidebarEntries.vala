@@ -108,7 +108,7 @@ public class SidebarEntries : Box {
       }
       var index = row.get_index();
       var date  = _listbox_entries.index( index ).date;
-      show_entry_for_date( date );
+      show_entry_for_date( date, false );
     });
 
     var lb_scroll = new ScrolledWindow() {
@@ -147,7 +147,7 @@ public class SidebarEntries : Box {
         _listbox.select_row( _listbox.get_row_at_index( index ) );
       } else {
         _listbox.select_row( null );
-        show_entry_for_date( date );
+        show_entry_for_date( date, false );
       }
     });
 
@@ -263,18 +263,6 @@ public class SidebarEntries : Box {
 
   }
 
-  /* Updates the title */
-  public void update_title( string title, string date ) {
-
-    var index = get_listbox_index_for_date( date );
-
-    if( index != -1 ) {
-      _listbox_entries.index( index ).title = title;
-      populate_listbox();
-    }
-
-  }
-
   /* Populates the calendar with marks that match the current month/year */
   private void populate_calendar() {
 
@@ -308,13 +296,27 @@ public class SidebarEntries : Box {
   }
 
   /* Displays the entry for the given date */
-  private void show_entry_for_date( string date ) {
+  public void show_entry_for_date( string date, bool create_if_needed ) {
 
     var entry = new DBEntry();
     entry.date = date;
 
     /* Attempt to load the entry */
-    var load_result = _journals.current.db.load_entry( ref entry, false );
+    var load_result = _journals.current.db.load_entry( ref entry, create_if_needed );
+
+    /* If we created a new entry, update the list contents */
+    if( load_result == DBLoadResult.CREATED ) {
+      populate();
+    }
+
+    /* Make sure that the date is selected in the listbox */
+    var index = get_listbox_index_for_date( entry.date );
+    if( index != -1 ) {
+      _listbox.select_row( _listbox.get_row_at_index( index ) );
+      _ignore_cal_select_day = true;
+      _cal.select_day( entry.datetime() );
+      _ignore_cal_select_day = false;
+    }
 
     /* Indicate that the entry should be displayed */
     show_journal_entry( entry, (load_result != DBLoadResult.FAILED) );
