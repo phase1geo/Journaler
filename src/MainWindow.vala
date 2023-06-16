@@ -32,11 +32,6 @@ public class MainWindow : Gtk.ApplicationWindow {
   private Journals       _journals;
   private SidebarEntries _entries;
   private SidebarEditor  _editor;
-  private Journal        _edit_journal;
-  private Entry          _edit_name;
-  private TextView       _edit_description;
-  private Revealer       _edit_del_revealer;
-  private Button         _edit_save;
 
   // private UnicodeInsert   _unicoder;
 
@@ -150,30 +145,9 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     _sidebar_stack = new Stack();
     _sidebar_stack.add_named( add_current_sidebar(), "entries" );
-    _sidebar_stack.add_named( add_journal_edit(),    "journal" );
+    _sidebar_stack.add_named( add_journal_edit(),    "editor" );
 
     box.append( _sidebar_stack );
-
-  }
-
-  /* Sets up the journal editor panel and then switches to it */
-  private void edit_journal( Journal? journal ) {
-
-    _edit_journal = journal;
-
-    if( journal == null ) {
-      _edit_name.text = "";
-      _edit_description.buffer.text = "";
-      _edit_save.sensitive = false;
-      _edit_del_revealer.reveal_child = false;
-    } else {
-      _edit_name.text = journal.name;
-      _edit_description.buffer.text = journal.description;
-      _edit_save.sensitive = true;
-      _edit_del_revealer.reveal_child = true;
-    }
-
-    _sidebar_stack.visible_child_name = "journal";
 
   }
 
@@ -183,7 +157,8 @@ public class MainWindow : Gtk.ApplicationWindow {
     _entries = new SidebarEntries( _journals );
 
     _entries.edit_journal.connect((journal) => {
-      edit_journal( journal );
+      _editor.edit_journal( journal );
+      _sidebar_stack.visible_child_name = "editor";
     });
 
     _entries.show_journal_entry.connect((entry, editable) => {

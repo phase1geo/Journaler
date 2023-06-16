@@ -30,6 +30,10 @@ public class SidebarEditor : Box {
   private TextView _description;
   private Revealer _del_revealer;
   private Button   _save;
+  private string   _orig_name;
+  private string   _orig_description;
+  private bool     _save_name;
+  private bool     _save_description;
 
   /* Indicates that the editing process hsa completed */
   public signal void done();
@@ -62,8 +66,9 @@ public class SidebarEditor : Box {
     };
 
     _name.changed.connect(() => {
-      var text = _name.buffer.text;
-      _save.sensitive = ((text != "") && (_journals.get_journal_by_name( text ) == null));
+      var name = _name.buffer.text;
+      _save_name = (name != _orig_name) && (_journals.get_journal_by_name( name ) == null);
+      _save.sensitive = (name != "") && (_save_name || _save_description);
     });
 
     var box = new Box( Orientation.HORIZONTAL, 5 );
@@ -90,6 +95,10 @@ public class SidebarEditor : Box {
       vexpand   = true,
       wrap_mode = WrapMode.WORD
     };
+    _description.buffer.changed.connect(() => {
+      _save_description = (_description.buffer.text != _orig_description);
+      _save.sensitive   = (_name.buffer.text != "") && (_save_name || _save_description);
+    });
 
     var box = new Box( Orientation.VERTICAL, 5 );
     box.append( lbl );
@@ -121,7 +130,9 @@ public class SidebarEditor : Box {
       done();
     });
 
-    _save = new Button.with_label( _( "Save" ) );
+    _save = new Button.with_label( _( "Save" ) ) {
+      sensitive = false
+    };
     _save.add_css_class( "suggested-action" );
 
     _save.clicked.connect(() => {
@@ -167,6 +178,12 @@ public class SidebarEditor : Box {
       _save.sensitive = true;
       _del_revealer.reveal_child = true;
     }
+
+    _orig_name        = _name.text;
+    _orig_description = _description.buffer.text;
+    _save.sensitive   = false;
+    _save_name        = false;
+    _save_description = false;
 
   }
 
