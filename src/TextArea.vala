@@ -29,6 +29,7 @@ public class TextArea : Box {
   private DBEntry?         _entry = null;
   private Entry            _title;
   private Label            _date;
+  private Entry            _tags;
   private GtkSource.View   _text;
   private GtkSource.Buffer _buffer;
   private int              _font_size = 12;
@@ -99,6 +100,17 @@ public class TextArea : Box {
     _date.add_css_class( "date" );
     _date.add_css_class( "text-background" );
 
+    /* Add the tags */
+    var tags_focus = new EventControllerFocus();
+    _tags = new Entry() {
+      placeholder_text = _( "Tags (Optional, comma-separated)" ),
+      has_frame        = false,
+      enable_emoji_completion = false
+    };
+    _tags.add_controller( tags_focus );
+    _tags.add_css_class( "date" );
+    _tags.add_css_class( "text-background" );
+
     var sep = new Separator( Orientation.HORIZONTAL );
 
     /* Now let's setup some stuff related to the text field */
@@ -150,6 +162,7 @@ public class TextArea : Box {
 
     append( _title );
     append( _date );
+    append( _tags );
     append( sep );
     append( scroll );
 
@@ -204,7 +217,7 @@ public class TextArea : Box {
       return;
     }
 
-    var entry = new DBEntry.with_date( _title.text, _text.buffer.text, _entry.date );
+    var entry = new DBEntry.with_date( _title.text, _text.buffer.text, _tags.text, _entry.date );
 
     if( _journal.db.save_entry( entry ) ) {
       if( (_journals.current == _journal) && (_title.text != _entry.text) ) {
@@ -233,6 +246,10 @@ public class TextArea : Box {
     var dt = entry.datetime();
     _date.label = dt.format( "%A, %B %e, %Y" );
 
+    /* Set the tags */
+    _tags.text = entry.get_tag_list();
+    _tags.editable = editable;
+
     /* Set the buffer text to the entry text */
     _text.buffer.begin_irreversible_action();
     _text.buffer.text = entry.text;
@@ -245,8 +262,10 @@ public class TextArea : Box {
     _text.buffer.set_modified( false );
 
     /* Set the grab */
-    if( (_title.text == "") && (_text.buffer.text == "") ) {
+    if( (_title.text == "") && (_tags.text == "") && (_text.buffer.text == "") ) {
       _title.grab_focus();
+    } else if( (_tags.text == "") && (_text.buffer.text == "") ) {
+      _tags.grab_focus();
     } else {
       _text.grab_focus();
     }
