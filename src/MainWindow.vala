@@ -119,6 +119,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     /* Handle any request to close the window */
     close_request.connect(() => {
       action_save();
+      Journaler.crypt.close();
       return( false );
     });
 
