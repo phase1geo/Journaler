@@ -52,7 +52,7 @@ public class DBEntry {
   /* Adds the given tag (if it doesn't already exist in the list) */
   public void add_tag( string tag ) {
     if( !contains_tag( tag ) ) {
-      stdout.printf( "Does not contain tag (%s)\n", get_tag_list() );
+      stdout.printf( "Does not contain tag %s (%s), appending...\n", tag, get_tag_list() );
       _tags.append( tag );
     }
   }
@@ -141,6 +141,8 @@ public class DBEntry {
 
 public class Database {
 
+  private static const int ERRCODE_NOT_UNIQUE = 19;
+
   private Sqlite.Database? _db = null;
 
   /* Default constructor */
@@ -162,9 +164,7 @@ public class Database {
       return;
     }
 
-    show_table( "Entry" );
-    show_table( "Tag" );
-    show_table( "TagMap" );
+    show_all_tables( "After database creation" );
 
   }
 
@@ -191,8 +191,9 @@ public class Database {
     var tag_map_query = """
       CREATE TABLE IF NOT EXISTS TagMap (
         id       INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
-        entry_id INTEGER                           NOT NULL,
-        tag_id   INTEGER                           NOT NULL
+        entry_id INTEGER,
+        tag_id   INTEGER,
+        UNIQUE (entry_id, tag_id)
       );
       """;
 
@@ -203,30 +204,22 @@ public class Database {
   }
 
   /* Returns the list of all entries to be displayed in the listbox */
-  public bool get_all_entries( ref Array<DBEntry> entries ) {
+  public bool get_all_entries( Array<DBEntry> entries ) {
 
-    Sqlite.Statement stmt;
+    var query = "SELECT * FROM Entry ORDER BY date DESC;";
 
-    var query = "SELECT * FROM Entry;";
-    var err = _db.prepare_v2( query, query.length, out stmt );
-    if( err != Sqlite.OK ) {
-      return( false );
-    }
-
-    while( stmt.step() == Sqlite.ROW ) {
-      var entry = new DBEntry.for_list( stmt.column_text( 1 ), stmt.column_text( 3 ) );
+    var retval = exec_query( query, (ncols, vals, names) => {
+      var entry = new DBEntry.for_list( vals[1], vals[3] );
       entries.append_val( entry );
-    }
+      return( 0 );
+    });
 
-    /* Sort based on date */
-    entries.sort( (CompareFunc)DBEntry.compare );
-
-    return( true );
+    return( retval );
 
   }
 
   /* Creates a new entry with the given date if one could not be found */
-  private bool create_entry( ref DBEntry entry ) {
+  private bool create_entry( DBEntry entry ) {
 
     /* Insert the entry */
     var entry_query = """
@@ -262,14 +255,14 @@ public class Database {
 
     }
 
+    show_all_tables( "After entry creation\n" );
+
     return( true );
 
   }
 
   /* Retrieves the text for the entry at the specified date */
-  public DBLoadResult load_entry( ref DBEntry entry, bool create_if_not_found ) {
-
-    Sqlite.Statement stmt;
+  public DBLoadResult load_entry( DBEntry entry, bool create_if_not_found ) {
 
     var query = """
       SELECT
@@ -284,37 +277,34 @@ public class Database {
       ORDER BY Entry.date;
     """.printf( entry.date );
 
-    var err = _db.prepare_v2( query, query.length, out stmt );
-    if( err != Sqlite.OK ) {
-      stdout.printf( "Issue with prepare_v2, code: %d, msg: %s\n", _db.errcode(), _db.errmsg() );
-      return( DBLoadResult.FAILED );
-    }
-
-    stdout.printf( "column_count: %d\n", stmt.column_count() );
-
-    if( stmt.step() == Sqlite.ROW ) {
-      while( stmt.step() == Sqlite.ROW ) {
-        entry.title = stmt.column_text( 1 );
-        entry.text  = stmt.column_text( 2 );
-        var tag     = stmt.column_text( 4 );
-        if( tag != null ) {
-          stdout.printf( "appending tag: %s\n", tag );
-          entry.add_tag( tag );
-        }
+    var loaded = false;
+    exec_query( query, (ncols, vals, names) => {
+      entry.title = vals[1];
+      entry.text  = vals[2];
+      var tag = vals[4];
+      if( tag != null ) {
+        stdout.printf( "appending tag: %s\n", tag );
+        entry.add_tag( tag );
       }
+      loaded = true;
+      return( 0 );
+    });
+
+    if( loaded ) {
+      stdout.printf( "load entry occurred\n" );
       return( DBLoadResult.LOADED );
-    } else if( create_if_not_found && create_entry( ref entry ) ) {
+    } else if( create_if_not_found && create_entry( entry ) ) {
+      stdout.printf( "create_entry occurred\n" );
       return( DBLoadResult.CREATED );
     }
 
+    stdout.printf( "Everything went to pot!\n" );
     return( DBLoadResult.FAILED );
 
   }
 
   /* Saves the entry to the database */
   public bool save_entry( DBEntry entry ) {
-
-    Sqlite.Statement stmt;
 
     var entry_query = """
       UPDATE Entry
@@ -323,19 +313,14 @@ public class Database {
       RETURNING id;
       """.printf( entry.title.replace("'", "''"), entry.text.replace("'", "''"), entry.date );
 
-    var err = _db.prepare_v2( entry_query, entry_query.length, out stmt );
-    if( err != Sqlite.OK ) {
-      stdout.printf( "Issue with prepare_v2, code: %d, msg: %s\n", _db.errcode(), _db.errmsg() );
-      return( false );
-    }
-
-    stdout.printf( "column_count: %d\n", stmt.column_count() );
-
-    /* Get the updated entry ID */
     var entry_id = -1;
-    if( stmt.step() == Sqlite.ROW ) {
-      entry_id = stmt.column_int( 0 );
-    } else {
+    var res = exec_query( entry_query, (ncols, vals, names) => {
+      entry_id = int.parse( vals[0] );
+      return( 0 );
+    });
+
+    /* If the entry update failed something bad happened so stop here */
+    if( !res || (entry_id == -1) ) {
       return( false );
     }
 
@@ -346,32 +331,43 @@ public class Database {
         INSERT INTO Tag (name) VALUES('%s');
         """.printf( tag );
 
-      // Don't fail if there is an error (it may be because the tag already exists)
       exec_query( tag_query );
 
-      var tag_id = (int)_db.last_insert_rowid();
+      var tag2_query = """
+        SELECT id FROM Tag WHERE name = '%s';
+        """.printf( tag );
 
-      var map_query = """
-        INSERT INTO TagMap (entry_id, tag_id) VALUES(%d, %d);
-        """.printf( entry_id, tag_id );
+      var tag_id = -1;
+      exec_query( tag2_query, (ncols, vals, names) => {
+        tag_id = int.parse( vals[0] );
+        return( 0 );
+      });
 
-      if( !exec_query( map_query ) ) {
-        return( false );
+      if( (entry_id != -1) && (tag_id != -1) ) {
+        var map_query = """
+          INSERT INTO TagMap (entry_id, tag_id) VALUES(%d, %d);
+          """.printf( entry_id, tag_id );
+  
+        exec_query( map_query );
       }
 
     }
+
+    show_all_tables( "After save" );
 
     return( true );
 
   }
 
   /* Executes the given query on the database */
-  private bool exec_query( string query ) {
+  private bool exec_query( string query, Sqlite.Callback? callback = null ) {
 
     string errmsg;
-    var err = _db.exec( query, null, out errmsg );
+    var err = _db.exec( query, callback, out errmsg );
     if( err != Sqlite.OK ) {
-      stdout.printf( "err: %d, errmsg: %s\n", err, errmsg );
+      if( err != ERRCODE_NOT_UNIQUE ) {
+        stdout.printf( "err: %d, errmsg: %s\n", err, errmsg );
+      }
       return( false );
     }
 
@@ -386,30 +382,35 @@ public class Database {
       SELECT * FROM %s;
       """.printf( table_name );
 
-    string errmsg;
-    string[] res;
-    int nrows, ncols;
-
-    var err = _db.get_table( query, out res, out nrows, out ncols, out errmsg );
-    if( err != Sqlite.OK ) {
-      stdout.printf( "Issue with get_table, msg: %s\n", errmsg );
-      return;
-    }
-
-    stdout.printf( "Table %s (rows: %d)\n", table_name, ((nrows == 0) ? 0 : (nrows - 1)) );
+    stdout.printf( "Table %s\n", table_name );
     stdout.printf( "--------------------------\n" );
-    for( int i=0; i<nrows; i++ ) {
+
+    var i = 0;
+    exec_query( query, (ncols, vals, names) => {
+      if( i++ == 0 ) {
+        for( int j=0; j<ncols; j++ ) {
+          stdout.printf( "%s\t", names[j] );
+        }
+        stdout.printf( "\n--------------------------\n" );
+      }
       for( int j=0; j<ncols; j++ ) {
-        stdout.printf( "%s\t", res[(i * ncols) + j] );
+        stdout.printf( "%s\t", vals[j] );
       }
       stdout.printf( "\n" );
-      if( i == 0 ) {
-        stdout.printf( "--------------------------\n" );
-      }
-    }
+      return( 0 );
+    });
 
     stdout.printf( "\n" );
 
+  }
+
+  /* Displays all of the tables */
+  private void show_all_tables( string msg ) {
+    stdout.printf( "%s\n", msg );
+    stdout.printf( "==========================\n" );
+    show_table( "Entry" );
+    show_table( "Tag" );
+    show_table( "TagMap" );
   }
 
 }
