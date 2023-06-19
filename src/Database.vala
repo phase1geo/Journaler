@@ -141,7 +141,7 @@ public class DBEntry {
 
 public class Database {
 
-  private static const int ERRCODE_NOT_UNIQUE = 19;
+  private const int ERRCODE_NOT_UNIQUE = 19;
 
   private Sqlite.Database? _db = null;
 
@@ -230,31 +230,6 @@ public class Database {
       return( false );
     }
 
-    var entry_id = (int)_db.last_insert_rowid();
-
-    /* Add the tags and tag mappings */
-    foreach( string tag in entry.tags ) {
-
-      var tag_query = """
-        INSERT INTO Tag (name) VALUES('%s');
-        """.printf( tag );
-
-      if( !exec_query( tag_query ) ) {
-        return( false );
-      }
-
-      var tag_id = (int)_db.last_insert_rowid();
-
-      var map_query = """
-        INSERT INTO TagMap (entry_id, tag_id) VALUES (%d, %d);
-        """.printf( entry_id, tag_id );
-
-      if( !exec_query( map_query ) ) {
-        return( false );
-      }
-
-    }
-
     show_all_tables( "After entry creation\n" );
 
     return( true );
@@ -283,7 +258,6 @@ public class Database {
       entry.text  = vals[2];
       var tag = vals[4];
       if( tag != null ) {
-        stdout.printf( "appending tag: %s\n", tag );
         entry.add_tag( tag );
       }
       loaded = true;
@@ -291,14 +265,11 @@ public class Database {
     });
 
     if( loaded ) {
-      stdout.printf( "load entry occurred\n" );
       return( DBLoadResult.LOADED );
     } else if( create_if_not_found && create_entry( entry ) ) {
-      stdout.printf( "create_entry occurred\n" );
       return( DBLoadResult.CREATED );
     }
 
-    stdout.printf( "Everything went to pot!\n" );
     return( DBLoadResult.FAILED );
 
   }
@@ -324,30 +295,28 @@ public class Database {
       return( false );
     }
 
+    /* Delete the tag-map entries associated with the updated entry */
+    var map_del_query = "DELETE FROM TagMap WHERE entry_id = %d;".printf( entry_id );
+    exec_query( map_del_query );
+
     /* Let's store the tags and tag mappings */
     foreach( string tag in entry.tags ) {
 
-      var tag_query = """
-        INSERT INTO Tag (name) VALUES('%s');
-        """.printf( tag );
-
+      /* Insert the tag into the table */
+      var tag_query = "INSERT INTO Tag (name) VALUES('%s');".printf( tag );
       exec_query( tag_query );
 
-      var tag2_query = """
-        SELECT id FROM Tag WHERE name = '%s';
-        """.printf( tag );
-
-      var tag_id = -1;
+      /* Get the index of the tag (even if it wasn't inserted */
+      var tag2_query = "SELECT id FROM Tag WHERE name = '%s';".printf( tag );
+      var tag_id     = -1;
       exec_query( tag2_query, (ncols, vals, names) => {
         tag_id = int.parse( vals[0] );
         return( 0 );
       });
 
+      /* Add the tag-map entry */
       if( (entry_id != -1) && (tag_id != -1) ) {
-        var map_query = """
-          INSERT INTO TagMap (entry_id, tag_id) VALUES(%d, %d);
-          """.printf( entry_id, tag_id );
-  
+        var map_query = "INSERT INTO TagMap (entry_id, tag_id) VALUES(%d, %d);".printf( entry_id, tag_id );
         exec_query( map_query );
       }
 
