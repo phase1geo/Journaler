@@ -29,7 +29,7 @@ public class TextArea : Box {
   private DBEntry?         _entry = null;
   private Entry            _title;
   private Label            _date;
-  private Entry            _tags;
+  private TagBox           _tags;
   private GtkSource.View   _text;
   private GtkSource.Buffer _buffer;
   private int              _font_size = 12;
@@ -101,15 +101,9 @@ public class TextArea : Box {
     _date.add_css_class( "text-background" );
 
     /* Add the tags */
-    var tags_focus = new EventControllerFocus();
-    _tags = new Entry() {
-      placeholder_text = _( "Tags (Optional, comma-separated)" ),
-      has_frame        = false,
-      enable_emoji_completion = false
-    };
-    _tags.add_controller( tags_focus );
-    _tags.add_css_class( "date" );
-    _tags.add_css_class( "text-background" );
+    _tags = new TagBox();
+    _tags.add_class( "date" );
+    _tags.add_class( "text-background" );
 
     var sep = new Separator( Orientation.HORIZONTAL );
 
@@ -190,6 +184,14 @@ public class TextArea : Box {
       .title-bold {
         font-weight: bold;
       }
+      .tags {
+        border-radius: 1em;
+        background-color: rgba(0, 0, 0, 0.1);
+        padding: 5px;
+      }
+      .tags:focus {
+        background-color: rgba(0, 0, 0, 0.2);
+      }
       .date {
         padding-left: %dpx;
         padding-bottom: 5px;
@@ -198,12 +200,9 @@ public class TextArea : Box {
         background-color: %s;
       }
       .text-padding {
-        padding-left: %dpx;
-        padding-right: %dpx;
-        padding-top: %dpx;
-        padding-bottom: %dpx;
+        padding: 0px, %dpx;
       }
-    """.printf( _font_size, _font_size, _text_margin, style.get_style( "background-pattern" ).background, (_text_margin - 4), (_text_margin - 4), 0, 0 );
+    """.printf( _font_size, _font_size, _text_margin, style.get_style( "background-pattern" ).background, (_text_margin - 4) );
     provider.load_from_data( css_data.data );
     StyleContext.add_provider_for_display( get_display(), provider, STYLE_PROVIDER_PRIORITY_APPLICATION );
 
@@ -217,7 +216,7 @@ public class TextArea : Box {
       return;
     }
 
-    var entry = new DBEntry.with_date( _title.text, _text.buffer.text, _tags.text, _entry.date );
+    var entry = new DBEntry.with_date( _title.text, _text.buffer.text, null, _tags.entry.get_tag_list(), _entry.date );
 
     if( _journal.db.save_entry( entry ) ) {
       if( (_journals.current == _journal) && (_title.text != _entry.text) ) {
@@ -238,6 +237,8 @@ public class TextArea : Box {
     _journal = _journals.current;
     _entry   = entry;
 
+    stdout.printf( "entry: %s\n", _entry.to_string() );
+
     /* Set the title */
     _title.text = entry.title;
     _title.editable = editable;
@@ -247,8 +248,9 @@ public class TextArea : Box {
     _date.label = dt.format( "%A, %B %e, %Y" );
 
     /* Set the tags */
-    _tags.text = entry.get_tag_list();
-    _tags.editable = editable;
+    _tags.journal = _journal;
+    _tags.entry   = entry;
+    _tags.update_tags();
 
     /* Set the buffer text to the entry text */
     _text.buffer.begin_irreversible_action();
@@ -262,9 +264,12 @@ public class TextArea : Box {
     _text.buffer.set_modified( false );
 
     /* Set the grab */
-    if( (_title.text == "") && (_tags.text == "") && (_text.buffer.text == "") ) {
+    var title_empty = _title.text == "";
+    var tags_empty  = _tags.entry.tags.length() == 0;
+    var text_empty  = _text.buffer.text == "";
+    if( title_empty && tags_empty && text_empty ) {
       _title.grab_focus();
-    } else if( (_tags.text == "") && (_text.buffer.text == "") ) {
+    } else if( tags_empty && text_empty ) {
       _tags.grab_focus();
     } else {
       _text.grab_focus();

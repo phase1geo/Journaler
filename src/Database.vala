@@ -1,3 +1,5 @@
+using Gtk;
+
 public enum DBLoadResult {
   FAILED,
   LOADED,
@@ -11,6 +13,7 @@ public class DBEntry {
   public string       title { get; set; default = ""; }
   public string       text  { get; set; default = ""; }
   public string       date  { get; set; default = ""; }
+  public Image?       image { get; set; default = null; }
   public List<string> tags  {
     get {
       return( _tags );
@@ -37,10 +40,11 @@ public class DBEntry {
   }
 
   /* Constructor */
-  public DBEntry.with_date( string title, string text, string tag_list, string date ) {
+  public DBEntry.with_date( string title, string text, Image? image, string tag_list, string date ) {
     this.title = title;
     this.text  = text;
     this.date  = date;
+    this.image = image;
     store_tag_list( tag_list );
   }
 
@@ -54,6 +58,16 @@ public class DBEntry {
     if( !contains_tag( tag ) ) {
       stdout.printf( "Does not contain tag %s (%s), appending...\n", tag, get_tag_list() );
       _tags.append( tag );
+    }
+  }
+
+  /* Replaces the old tag with the new tag */
+  public void replace_tag( string old_tag, string new_tag ) {
+    stdout.printf( "In DBEntry, replace_tag, old_tag: %s, new_tag: %s\n", old_tag, new_tag );
+    var index = _tags.index( old_tag );
+    if( index != -1 ) {
+      _tags.remove( old_tag );
+      _tags.insert( new_tag, index );
     }
   }
 
@@ -80,6 +94,18 @@ public class DBEntry {
       add_tag( tag.strip() );
     }
   }
+
+  /* Sets the image with the given byte array data */
+  /*
+  public void set_image_byte_array( byte[] barray ) {
+  }
+
+  public byte[] get_image_byte_array() {
+    var outputStream = new ByteArrayOutputStream();
+    bitmap.compress(CompressFormat.PNG, 0, outputStream);
+    return( outputStream.toByteArray() );
+  }
+  */
 
   /* Returns the title of this entry */
   public string gen_title() {
@@ -134,7 +160,7 @@ public class DBEntry {
     foreach( string tag in tags ) {
       tag_array += tag;
     }
-    return( "title: %s, text: %s, date: %s, tags: %s".printf( title, text, date, string.join( ":", tag_array ) ) );
+    return( "title: %s, text: %s, date: %s, tags: %s".printf( title, text, date, string.joinv( ":", tag_array ) ) );
   }
 
 }
@@ -177,7 +203,8 @@ public class Database {
         id    INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
         title TEXT                              NOT NULL,
         txt   TEXT                              NOT NULL,
-        date  TEXT                              NOT NULL
+        date  TEXT                              NOT NULL,
+        image BLOB
       );
       """;
 
@@ -218,6 +245,20 @@ public class Database {
 
   }
 
+  /* Returns the list of all tags that currently exist */
+  public bool get_all_tags( List<string> tags ) {
+
+    var query = "SELECT * FROM Tag;";
+
+    return(
+      exec_query( query, (ncols, vals, names) => {
+        tags.append( vals[0] );
+        return( 0 );
+      })
+    ); 
+
+  }
+
   /* Creates a new entry with the given date if one could not be found */
   private bool create_entry( DBEntry entry ) {
 
@@ -252,11 +293,14 @@ public class Database {
       ORDER BY Entry.date;
     """.printf( entry.date );
 
+    stdout.printf( "In load_entry.......\n" );
+
     var loaded = false;
     exec_query( query, (ncols, vals, names) => {
+      stdout.printf( "ncols: %d, title: %s, text: %s, tag: %s\n", ncols, vals[1], vals[2], vals[5] );
       entry.title = vals[1];
       entry.text  = vals[2];
-      var tag = vals[4];
+      var tag = vals[5];
       if( tag != null ) {
         entry.add_tag( tag );
       }
@@ -271,6 +315,18 @@ public class Database {
     }
 
     return( DBLoadResult.FAILED );
+
+  }
+
+  /* Saves only the tags stored in this entry in the Tag table */
+  public bool save_tags_only( DBEntry entry ) {
+
+    foreach( var tag in entry.tags ) {
+      var tag_query = "INSERT INTO Tag (name) VALUES('%s');".printf( tag );
+      exec_query( tag_query );
+    }
+
+    return( true );
 
   }
 
