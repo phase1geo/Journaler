@@ -56,14 +56,12 @@ public class DBEntry {
   /* Adds the given tag (if it doesn't already exist in the list) */
   public void add_tag( string tag ) {
     if( !contains_tag( tag ) ) {
-      stdout.printf( "Does not contain tag %s (%s), appending...\n", tag, get_tag_list() );
       _tags.append( tag );
     }
   }
 
   /* Replaces the old tag with the new tag */
   public void replace_tag( string old_tag, string new_tag ) {
-    stdout.printf( "In DBEntry, replace_tag, old_tag: %s, new_tag: %s\n", old_tag, new_tag );
     var index = _tags.index( old_tag );
     if( index != -1 ) {
       _tags.remove( old_tag );
@@ -190,7 +188,7 @@ public class Database {
       return;
     }
 
-    show_all_tables( "After database creation" );
+    // show_all_tables( "After database creation" );
 
   }
 
@@ -246,16 +244,16 @@ public class Database {
   }
 
   /* Returns the list of all tags that currently exist */
-  public bool get_all_tags( List<string> tags ) {
+  public bool get_all_tags( Array<string> tags ) {
 
     var query = "SELECT * FROM Tag;";
 
-    return(
-      exec_query( query, (ncols, vals, names) => {
-        tags.append( vals[0] );
-        return( 0 );
-      })
-    ); 
+    var retval = exec_query( query, (ncols, vals, names) => {
+      tags.append_val( vals[1] );
+      return( 0 );
+    });
+
+    return( retval );
 
   }
 
@@ -271,7 +269,7 @@ public class Database {
       return( false );
     }
 
-    show_all_tables( "After entry creation\n" );
+    // show_all_tables( "After entry creation\n" );
 
     return( true );
 
@@ -293,11 +291,8 @@ public class Database {
       ORDER BY Entry.date;
     """.printf( entry.date );
 
-    stdout.printf( "In load_entry.......\n" );
-
     var loaded = false;
     exec_query( query, (ncols, vals, names) => {
-      stdout.printf( "ncols: %d, title: %s, text: %s, tag: %s\n", ncols, vals[1], vals[2], vals[5] );
       entry.title = vals[1];
       entry.text  = vals[2];
       var tag = vals[5];
@@ -378,7 +373,7 @@ public class Database {
 
     }
 
-    show_all_tables( "After save" );
+    // show_all_tables( "After save" );
 
     return( true );
 

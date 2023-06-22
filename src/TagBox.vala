@@ -5,11 +5,11 @@ public class TagBox : Box {
   private Journal? _journal = null;
   private DBEntry? _entry = null;
 
-  private Box             _box;
-  private EntryCompletion _completion;
-  private TagEntry        _new_tag_entry;
+  private Box      _box;
+  private TagEntry _new_tag_entry;
 
-  private List<Widget> _tag_widgets;
+  private List<Widget>  _tag_widgets;
+  private Array<string> _all_tags;
 
   public Journal? journal {
     get {
@@ -36,17 +36,11 @@ public class TagBox : Box {
     Object( orientation: Orientation.VERTICAL, spacing: 0 );
 
     _tag_widgets = new List<Widget>();
+    _all_tags    = new Array<string>();
 
-    _completion = new Gtk.EntryCompletion () {
-      text_column        = 0,
-      popup_completion   = true,
-      popup_set_width    = true,
-      popup_single_match = true
+    _new_tag_entry = new TagEntry( _("Click to add tag…") ) {
+      add_css = false
     };
-
-    _new_tag_entry = new TagEntry( _("Click to add tag…") );
-    _new_tag_entry.add_css = false;
-    _new_tag_entry.completion = _completion;
     _new_tag_entry.activated.connect((tag) => {
       _entry.add_tag( tag );
       update_tags();
@@ -71,32 +65,30 @@ public class TagBox : Box {
   /* This should be called whenever the tags change in _entry */
   public void update_tags() {
 
+    /* Refresh the completion data */
+    refresh_completion();
+
     /* Redraw the tags in the UI */
     redraw_tags();
 
     /* Update the database with the entry changes */
     _journal.db.save_tags_only( _entry );
 
-    /* Refresh the completion data */
-    refresh_completion();
-
   }
 
   /* Updates the completion UI */
   private void refresh_completion () {
 
-    TreeIter iter;
+    /* Clear the current tags */
+    _all_tags.remove_range( 0, _all_tags.length );
 
-    var all_tags = new List<string>();
-    _journal.db.get_all_tags( all_tags );
+    /* Get the tags from the database */
+    _journal.db.get_all_tags( _all_tags );
 
-    var list_store = new Gtk.ListStore( 1, typeof(string) );
-    _completion.set_model( list_store );
-
-    foreach( var tag in all_tags ) {
-      if( (_entry == null) || !_entry.contains_tag( tag ) ) {
-        list_store.append( out iter );
-        list_store.set( iter, 0, tag );
+    /* Remove any tags that are currently set for this entry */
+    for( int i=(int)(_all_tags.length - 1); i>=0; i-- ) {
+      if( (_entry != null) && _entry.contains_tag( _all_tags.index( i ) ) ) {
+        _all_tags.remove_index( i );
       }
     }
 
@@ -120,6 +112,7 @@ public class TagBox : Box {
     foreach( var tag in _entry.tags ) {
 
       var tag_button = new TagEntry( tag );
+      tag_button.populate_completion( _all_tags );
 
       tag_button.activated.connect((btag) => {
         _entry.replace_tag( tag, btag );
@@ -139,6 +132,7 @@ public class TagBox : Box {
 
     }
 
+    _new_tag_entry.populate_completion( _all_tags );
     _new_tag_entry.hide_entry();
     _new_tag_entry.text = "";
 

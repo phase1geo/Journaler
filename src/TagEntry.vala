@@ -20,15 +20,6 @@ public class TagEntry : Box {
     }
   }
 
-  public EntryCompletion completion {
-    get {
-      return( _entry.completion );
-    }
-    set {
-      _entry.completion = value;
-    }
-  }
-
   public bool add_css {
     get {
       return( _add_css );
@@ -68,6 +59,14 @@ public class TagEntry : Box {
     _button.add_css_class( "tags" );
     _button.get_style_context().add_class( "flat" );
 
+    var completion = new EntryCompletion() {
+      text_column        = 0,
+      popup_completion   = true,
+      popup_set_width    = true,
+      popup_single_match = true,
+      minimum_key_length = 1
+    };
+
     var entry_focus = new EventControllerFocus();
     var entry_key   = new EventControllerKey();
     _entry = new Entry() {
@@ -77,7 +76,8 @@ public class TagEntry : Box {
       show_emoji_icon = true,
       max_width_chars = 3,
       width_chars     = 1,
-      hexpand         = false
+      hexpand         = false,
+      completion      = completion
     };
     _entry.add_controller( entry_focus );
     _entry.add_controller( entry_key );
@@ -140,12 +140,27 @@ public class TagEntry : Box {
 
   }
 
+  /* Populates the entry completion with the given tags */
+  public void populate_completion( Array<string> tags ) {
+
+    TreeIter iter;
+
+    var list_store = new Gtk.ListStore( 1, typeof(string) );
+    _entry.completion.set_model( list_store );
+
+    for( int i=0; i<tags.length; i++ ) {
+      list_store.append( out iter );
+      list_store.set( iter, 0, tags.index( i ) );
+    }
+
+  }
+
   /* Displays the text entry field */
   public void show_entry() {
     _button_revealer.reveal_child = false;
     _entry_revealer.reveal_child  = true;
     _entry.can_focus = true;
-    _entry.grab_focus();
+    stdout.printf( "grab_focus: %s\n", _entry.grab_focus().to_string() );
   }
 
   /* Hides the text entry field and just shows the tag */
