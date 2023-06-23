@@ -223,7 +223,7 @@ public class SidebarEntries : Box {
       _listbox_entries.remove_range( 0, _listbox_entries.length );
     }
 
-    if( !_journals.current.db.get_all_entries( ref _listbox_entries ) ) {
+    if( !_journals.current.db.get_all_entries( _listbox_entries ) ) {
       stdout.printf( "ERROR:  Unable to get all entries in the journal\n" );
       return;
     }
@@ -276,7 +276,9 @@ public class SidebarEntries : Box {
     if( refresh ) {
       var index = get_listbox_index_for_date( display_date );
       if( index != -1 ) {
+        _ignore_select = true;
         _listbox.select_row( _listbox.get_row_at_index( index ) );
+        _ignore_select = false;
       }
       _lb_scroll.vadjustment.set_value( vpos );
     }
@@ -322,7 +324,7 @@ public class SidebarEntries : Box {
     entry.date = date;
 
     /* Attempt to load the entry */
-    var load_result = _journals.current.db.load_entry( ref entry, create_if_needed );
+    var load_result = _journals.current.db.load_entry( entry, create_if_needed );
 
     /* If we created a new entry, update the list contents */
     if( load_result == DBLoadResult.CREATED ) {

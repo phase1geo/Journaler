@@ -43,8 +43,8 @@ public class Journal {
   }
 
   /* Constructor */
-  public Journal.from_xml( Xml.Node* node ) {
-    load( node );
+  public Journal.from_xml( Xml.Node* node, out bool loaded ) {
+    loaded = load( node );
   }
 
   /* Gets the pathname of the associated database */
@@ -71,18 +71,25 @@ public class Journal {
   }
 
   /* Loads the journal from XML format */
-  public void load( Xml.Node* node ) {
+  public bool load( Xml.Node* node ) {
 
     var n = node->get_prop( "name" );
     if( n != null ) {
       _name = n;
-      _db   = new Database( db_path() );
     }
 
     var d = node->get_prop( "description" );
     if( d != null ) {
       _description = d;
     }
+
+    /* If the name was set and the database file exists, create the database */
+    if( (_name != "") && FileUtils.test( db_path(), FileTest.EXISTS ) ) {
+      _db = new Database( db_path() );
+      return( true );
+    }
+
+    return( false );
 
   }
 

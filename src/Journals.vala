@@ -124,8 +124,11 @@ public class Journals {
 
     for( Xml.Node* it = doc->get_root_element()->children; it != null; it = it->next ) {
       if( (it->type == Xml.ElementType.ELEMENT_NODE) && (it->name == "journal") ) {
-        var journal = new Journal.from_xml( it );
-        _journals.append_val( journal );
+        bool loaded = false;
+        var journal = new Journal.from_xml( it, out loaded );
+        if( loaded ) {
+          _journals.append_val( journal );
+        }
       }
     }
 

@@ -63,8 +63,8 @@ case $1 in
     ;;
 "debug")
     initialize
-    G_DEBUG=fatal-criticals gdb --args ./com.github.phase1geo.journaler "${@:2}"
-    # G_DEBUG=fatal-warnings gdb --args ./com.github.phase1geo.journaler "${@:2}"
+    # G_DEBUG=fatal-criticals gdb --args ./com.github.phase1geo.journaler "${@:2}"
+    G_DEBUG=fatal-warnings gdb --args ./com.github.phase1geo.journaler "${@:2}"
     ;;
  "valgrind")
     initialize
