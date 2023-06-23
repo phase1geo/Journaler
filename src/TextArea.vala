@@ -24,6 +24,7 @@ using Gdk;
 
 public class TextArea : Box {
 
+  private MainWindow       _win;
   private Journals         _journals;
   private Journal?         _journal = null;
   private DBEntry?         _entry = null;
@@ -35,6 +36,9 @@ public class TextArea : Box {
   private int              _font_size = 12;
   private int              _text_margin = 20;
   private string           _theme = "cobalt-light";
+  private Revealer         _image_revealer;
+  private Revealer         _burger_add_revealer;
+  private Revealer         _burger_change_revealer;
 
   public int font_size {
     get {
@@ -61,10 +65,11 @@ public class TextArea : Box {
   }
 
   /* Create the main window UI */
-  public TextArea( Journals journals ) {
+  public TextArea( MainWindow win, Journals journals ) {
 
     Object( orientation: Orientation.VERTICAL, spacing: 0 );
 
+    _win = win;
     _journals = journals;
 
     /* Add the UI components */
@@ -83,6 +88,8 @@ public class TextArea : Box {
     /* Add the title */
     var title_focus = new EventControllerFocus();
     _title = new Entry() {
+      halign                  = Align.FILL,
+      hexpand                 = true,
       placeholder_text        = _( "Title (Optional)" ),
       has_frame               = false,
       enable_emoji_completion = true
@@ -91,6 +98,12 @@ public class TextArea : Box {
     _title.add_css_class( "title" );
     _title.add_css_class( "text-background" );
     _title.add_css_class( "text-padding" );
+
+    var tbox = new Box( Orientation.HORIZONTAL, 5 );
+    tbox.add_css_class( "title-box" );
+    tbox.add_css_class( "text-background" );
+    tbox.append( _title );
+    tbox.append( create_burger_menu() );
 
     /* Add the date */
     _date = new Label( "" ) {
@@ -106,6 +119,10 @@ public class TextArea : Box {
     _tags.add_class( "text-background" );
 
     var sep = new Separator( Orientation.HORIZONTAL );
+
+    _image_revealer = new Revealer() {
+      reveal_child = false
+    };
 
     /* Now let's setup some stuff related to the text field */
     var lang_mgr = GtkSource.LanguageManager.get_default();
@@ -149,17 +166,134 @@ public class TextArea : Box {
     });
     */
 
+    var scroll_box = new Box( Orientation.VERTICAL, 0 );
+    scroll_box.append( _image_revealer );
+    scroll_box.append( _text );
+
     var scroll = new ScrolledWindow() {
       vscrollbar_policy = PolicyType.AUTOMATIC,
-      child = _text
+      child = scroll_box
     };
 
-    append( _title );
+    append( tbox );
     append( _date );
     append( _tags );
     append( sep );
     append( scroll );
 
+  }
+
+  /* Creates burger menu and populates it with features */
+  private MenuButton create_burger_menu() {
+
+    /* Create the menubutton itself */
+    var mb = new MenuButton() {
+      icon_name = "view-more-symbolic",
+      halign    = Align.END,
+    };
+
+    var add_image = new Button.with_label( _( "Add Image" ) );
+    add_image.clicked.connect(() => {
+      mb.popdown();
+      add_entry_image();
+    });
+
+    var add_box = new Box( Orientation.VERTICAL, 0 );
+    add_box.append( add_image );
+
+    _burger_add_revealer = new Revealer() {
+      reveal_child = true,
+      child = add_box
+    };
+
+    var change_image = new Button.with_label( _( "Change Image" ) );
+    change_image.clicked.connect(() => {
+      mb.popdown();
+      add_entry_image();
+    });
+
+    var remove_image = new Button.with_label( _( "Remove Image" ) );
+    remove_image.clicked.connect(() => {
+      mb.popdown();
+      remove_entry_image();
+    });
+
+    var change_box = new Box( Orientation.VERTICAL, 0 );
+    change_box.append( change_image );
+    change_box.append( remove_image );
+
+    _burger_change_revealer = new Revealer() {
+      reveal_child = false,
+      child = change_box
+    };
+
+    var menu_box = new Box( Orientation.VERTICAL, 0 );
+    menu_box.append( _burger_add_revealer );
+    menu_box.append( _burger_change_revealer );
+
+    var burger_popover = new Popover() {
+      has_arrow = false,
+      child = menu_box
+    };
+    mb.popover = burger_popover;
+    mb.add_css_class( "text-background" );
+
+    return( mb );
+
+  }
+
+  /* Adds or changes the image associated with the current entry */
+  private void add_entry_image() {
+
+    var dialog = new FileChooserDialog( _( "Select an image" ), _win, FileChooserAction.OPEN,
+                                        _( "Cancel" ), ResponseType.CANCEL,
+                                        _( "Open" ), ResponseType.ACCEPT );
+
+    /* Add filters */
+    var filter = new FileFilter() {
+      name = _( "PNG Images" )
+    };
+    filter.add_suffix( "png" );
+    dialog.add_filter( filter );
+
+    dialog.response.connect((id) => {
+      if( id == ResponseType.ACCEPT ) {
+        var file = dialog.get_file();
+        if( file != null ) {
+          try {
+            var img = new Picture.for_file( file ) {
+              // content_fit = ContentFit.CONTAIN
+            };
+            _image_revealer.child = img;
+            _image_revealer.reveal_child = true;
+            image_added();
+          } catch( Error e ) {
+            stderr.printf( "ERROR: %s\n", e.message );
+          }
+        }
+      }
+      dialog.close();
+    });
+
+    dialog.show();
+
+  }
+
+  /* Removes the image associated with the current entry */
+  private void remove_entry_image() {
+
+    stdout.printf( "Removing entry image\n" );
+
+  }
+
+  private void image_added() {
+    _burger_add_revealer.reveal_child = false;
+    _burger_change_revealer.reveal_child = true;
+  }
+
+  private void image_removed() {
+    _burger_add_revealer.reveal_child = true;
+    _burger_change_revealer.reveal_child = false;
   }
 
   /* Sets the theme and CSS classes */
@@ -180,6 +314,10 @@ public class TextArea : Box {
         font-size: %dpt;
         border: none;
         box-shadow: none;
+      }
+      .title-box {
+        padding-top: 5px;
+        padding-right: 5px;
       }
       .title-bold {
         font-weight: bold;

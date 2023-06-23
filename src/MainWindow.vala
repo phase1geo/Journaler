@@ -136,7 +136,7 @@ public class MainWindow : Gtk.ApplicationWindow {
   /* Creates the textbox with today's entry. */
   private void add_text_area( Box box ) {
 
-    _text_area = new TextArea( _journals );
+    _text_area = new TextArea( this, _journals );
 
     box.append( _text_area );
 
