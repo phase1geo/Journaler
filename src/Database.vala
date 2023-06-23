@@ -169,6 +169,8 @@ public class Database {
 
   private Sqlite.Database? _db = null;
 
+  private bool debug = false;  // Useful for debugging database issues by displaying the table contents
+
   /* Default constructor */
   public Database( string db_file ) {
 
@@ -188,7 +190,7 @@ public class Database {
       return;
     }
 
-    // show_all_tables( "After database creation" );
+    show_all_tables( "After database creation" );
 
   }
 
@@ -269,7 +271,7 @@ public class Database {
       return( false );
     }
 
-    // show_all_tables( "After entry creation\n" );
+    show_all_tables( "After entry creation\n" );
 
     return( true );
 
@@ -373,7 +375,7 @@ public class Database {
 
     }
 
-    // show_all_tables( "After save" );
+    show_all_tables( "After save" );
 
     return( true );
 
@@ -426,6 +428,7 @@ public class Database {
 
   /* Displays all of the tables */
   private void show_all_tables( string msg ) {
+    if( !debug ) return;
     stdout.printf( "%s\n", msg );
     stdout.printf( "==========================\n" );
     show_table( "Entry" );

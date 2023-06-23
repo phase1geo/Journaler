@@ -200,7 +200,7 @@ public class TextArea : Box {
         background-color: %s;
       }
       .text-padding {
-        padding: 0px, %dpx;
+        padding: 0px %dpx;
       }
     """.printf( _font_size, _font_size, _text_margin, style.get_style( "background-pattern" ).background, (_text_margin - 4) );
     provider.load_from_data( css_data.data );
@@ -236,8 +236,6 @@ public class TextArea : Box {
 
     _journal = _journals.current;
     _entry   = entry;
-
-    stdout.printf( "entry: %s\n", _entry.to_string() );
 
     /* Set the title */
     _title.text = entry.title;
