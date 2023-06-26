@@ -15,19 +15,21 @@ public class Security {
     var cipher = new Crypt();
     cipher.generate_key( password );
     var encrypted = cipher.encrypt( password );
-    cipher.close();
+    // cipher.close();
     return( encrypted );
   }
 
   /* Creates the password file, writing the given password in encrypted form */
-  public static void create_password_file( string password ) {
+  public static bool create_password_file( string password ) {
     if( !does_password_exist() ) {
       try {
-        FileUtils.set_contents_full( get_password_file(), encrypt_password( password ), -1, 0, 0600 );
+        FileUtils.set_contents_full( get_password_file(), encrypt_password( password ), -1, 0, 0400 );
+        return( true );
       } catch( FileError e ) {
         stderr.printf( "ERROR: %s\n", e.message );
       }
     }
+    return( false );
   }
 
   /* Checks to see if the given password matches the stored password */

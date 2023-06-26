@@ -140,7 +140,12 @@ public class MainWindow : Gtk.ApplicationWindow {
     add_locked_view( pbox );
 
     /* Create primary stack */
-    _lock_stack = new Stack();
+    _lock_stack = new Stack() {
+      halign = Align.FILL,
+      valign = Align.FILL,
+      hexpand = true,
+      vexpand = true
+    };
     _lock_stack.add_named( sbox, "setlock-view" );
     _lock_stack.add_named( pbox, "lock-view" );
     _lock_stack.add_named( pw,   "entry-view" );
@@ -159,7 +164,6 @@ public class MainWindow : Gtk.ApplicationWindow {
     /* Handle any request to close the window */
     close_request.connect(() => {
       action_save();
-      Journaler.crypt.close();
       return( false );
     });
 
@@ -197,14 +201,77 @@ public class MainWindow : Gtk.ApplicationWindow {
   /* Create the setlock view panel */
   private void add_setlock_view( Box box ) {
 
-    var lbl1 = new Label( "Enter Lock Password:" );
-    var lbl2 = new Label( "Confirm Lock Password:" );
+    var lbl1 = new Label( Utils.make_title( "Enter Lock Password:" ) ) {
+      xalign = (float)1.0,
+      use_markup = true
+    };
+    var lbl2 = new Label( Utils.make_title( "Confirm Lock Password:" ) ) {
+      xalign = (float)1.0,
+      use_markup = true
+    };
     var entry1 = new Entry() {
-      visibility = false
+      input_hints   = InputHints.PRIVATE,
+      input_purpose = InputPurpose.PASSWORD,
+      visibility    = false
     };
     var entry2 = new Entry() {
-      visibility = false
+      input_hints   = InputHints.PRIVATE,
+      input_purpose = InputPurpose.PASSWORD,
+      visibility    = false,
+      sensitive     = false
     };
+
+    var cancel = new Button.with_label( _( "Cancel" ) ) {
+      halign = Align.START
+    };
+    cancel.clicked.connect(() => {
+      _lock_stack.visible_child_name = "entry-view";
+    });
+
+    var save = new Button.with_label( _( "Set Password" ) ) {
+      halign = Align.END,
+      sensitive = false
+    };
+    save.add_css_class( "suggested-action" );
+    save.clicked.connect(() => {
+      Security.create_password_file( entry2.text );
+      _lock_stack.visible_child_name = "entry-view";
+    });
+
+    var bbox = new Box( Orientation.HORIZONTAL, 5 ) {
+      halign = Align.END,
+      hexpand = true
+    };
+    bbox.append( cancel );
+    bbox.append( save );
+
+    entry1.changed.connect(() => {
+      entry2.text = "";
+      entry2.sensitive = (entry1.text != "");
+    });
+
+    entry2.changed.connect(() => {
+      save.sensitive = (entry1.text == entry2.text);
+    });
+    entry2.activate.connect(() => {
+      if( save.sensitive ) {
+        save.clicked();
+      }
+    });
+
+    var grid = new Grid() {
+      row_spacing    = 5,
+      column_spacing = 5,
+      halign         = Align.CENTER,
+      valign         = Align.CENTER
+    };
+    grid.attach( lbl1,   0, 0 );
+    grid.attach( entry1, 1, 0 );
+    grid.attach( lbl2,   0, 1 );
+    grid.attach( entry2, 1, 1 );
+    grid.attach( bbox,   0, 2, 2 );
+
+    box.append( grid );
 
   }
 
@@ -218,14 +285,16 @@ public class MainWindow : Gtk.ApplicationWindow {
       input_hints   = InputHints.PRIVATE
     };
     entry.activate.connect(() => {
-      var input_password = entry.text;
-      stdout.printf( "Checking password %s\n", input_password );
-      // TBD
+      if( Security.does_password_match( entry.text ) ) {
+        _lock_stack.visible_child_name = "entry-view";
+      }
       entry.text = "";
-      _lock_stack.visible_child_name = "entry-view";
     });
 
-    var pbox = new Box( Orientation.HORIZONTAL, 5 );
+    var pbox = new Box( Orientation.HORIZONTAL, 5 ) {
+      halign = Align.CENTER,
+      valign = Align.CENTER
+    };
     pbox.append( lbl );
     pbox.append( entry );
 

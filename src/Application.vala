@@ -32,7 +32,6 @@ public class Journaler : Gtk.Application {
 
   public  static GLib.Settings settings;
   public  static string version = "1.0";
-  public  static Crypt crypt;
 
   private MainWindow appwin;
 
@@ -59,9 +58,6 @@ public class Journaler : Gtk.Application {
     /* Add the application-specific icons */
     weak IconTheme default_theme = IconTheme.get_for_display( Display.get_default() );
     default_theme.add_resource_path( "/com/github/phase1geo/journaler" );
-
-    /* Initialize the cryptography engine */
-    crypt = new Crypt();
 
     /* Create the main window */
     appwin = new MainWindow( this, settings );
