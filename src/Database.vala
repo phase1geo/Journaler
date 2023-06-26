@@ -1,4 +1,5 @@
 using Gtk;
+using Gdk;
 
 public enum DBLoadResult {
   FAILED,
@@ -10,10 +11,11 @@ public class DBEntry {
 
   private List<string> _tags = new List<string>();
 
-  public string       title { get; set; default = ""; }
-  public string       text  { get; set; default = ""; }
-  public string       date  { get; set; default = ""; }
-  public Image?       image { get; set; default = null; }
+  public string  title         { get; set; default = ""; }
+  public string  text          { get; set; default = ""; }
+  public string  date          { get; set; default = ""; }
+  public Pixbuf? image         { get; set; default = null; }
+  public bool    image_changed { get; set; default = false; }
   public List<string> tags  {
     get {
       return( _tags );
@@ -40,11 +42,12 @@ public class DBEntry {
   }
 
   /* Constructor */
-  public DBEntry.with_date( string title, string text, Image? image, string tag_list, string date ) {
-    this.title = title;
-    this.text  = text;
-    this.date  = date;
-    this.image = image;
+  public DBEntry.with_date( string title, string text, Pixbuf? image, bool image_changed, string tag_list, string date ) {
+    this.title         = title;
+    this.text          = text;
+    this.date          = date;
+    this.image         = image;
+    this.image_changed = image_changed;
     store_tag_list( tag_list );
   }
 
@@ -92,18 +95,6 @@ public class DBEntry {
       add_tag( tag.strip() );
     }
   }
-
-  /* Sets the image with the given byte array data */
-  /*
-  public void set_image_byte_array( byte[] barray ) {
-  }
-
-  public byte[] get_image_byte_array() {
-    var outputStream = new ByteArrayOutputStream();
-    bitmap.compress(CompressFormat.PNG, 0, outputStream);
-    return( outputStream.toByteArray() );
-  }
-  */
 
   /* Returns the title of this entry */
   public string gen_title() {
@@ -169,7 +160,8 @@ public class Database {
 
   private Sqlite.Database? _db = null;
 
-  private bool debug = false;  // Useful for debugging database issues by displaying the table contents
+  /* Useful for debugging database issues by displaying the table contents */
+  private bool debug = false;
 
   /* Default constructor */
   public Database( string db_file ) {
@@ -200,11 +192,11 @@ public class Database {
     // Create the table if it doesn't already exist
     var entry_query = """
       CREATE TABLE IF NOT EXISTS Entry (
-        id    INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
-        title TEXT                              NOT NULL,
-        txt   TEXT                              NOT NULL,
-        date  TEXT                              NOT NULL,
-        image BLOB
+        id         INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
+        title      TEXT                              NOT NULL,
+        txt        TEXT                              NOT NULL,
+        date       TEXT                              NOT NULL,
+        image      BLOB
       );
       """;
 
@@ -264,7 +256,8 @@ public class Database {
 
     /* Insert the entry */
     var entry_query = """
-      INSERT INTO Entry (title, txt, date) VALUES ('', '', '%s');
+      INSERT INTO Entry (title, txt, date, image)
+      VALUES ('', '', '%s', NULL);
       """.printf( entry.date );
 
     if( !exec_query( entry_query ) ) {
@@ -297,6 +290,16 @@ public class Database {
     exec_query( query, (ncols, vals, names) => {
       entry.title = vals[1];
       entry.text  = vals[2];
+      if( vals[4] != null ) {
+        try {
+          var pixload = new PixbufLoader.with_type( "png" );
+          pixload.write( (uint8[])Base64.decode( vals[4] ) );
+          pixload.close();
+          entry.image = pixload.get_pixbuf();
+        } catch( Error e ) {
+          stderr.printf( "ERROR: %s\n", e.message );
+        }
+      }
       var tag = vals[5];
       if( tag != null ) {
         entry.add_tag( tag );
@@ -330,12 +333,33 @@ public class Database {
   /* Saves the entry to the database */
   public bool save_entry( DBEntry entry ) {
 
-    var entry_query = """
+    var image_query = "";
+
+    if( entry.image_changed ) {
+      if( entry.image == null ) {
+        image_query = ", image = NULL";
+      } else {
+        try {
+          uint8[]  buffer  = {};
+          string[] options = {};
+          string[] values  = {};
+          options += "compression";  values += "7";  // TODO - Make this value configurable?
+          entry.image.save_to_bufferv( out buffer, "png", options, values );
+          image_query = ", image = '%s'".printf( Base64.encode( (uchar[])buffer ) );
+        } catch( Error e ) {
+          stderr.printf( "ERROR: %s\n", e.message );
+        }
+      }
+    }
+
+    stdout.printf( "image_query: %s\n", image_query );
+
+    var entry_query = """ 
       UPDATE Entry
-      SET title = '%s', txt = '%s'
+      SET title = '%s', txt = '%s' %s
       WHERE date = '%s'
       RETURNING id;
-      """.printf( entry.title.replace("'", "''"), entry.text.replace("'", "''"), entry.date );
+      """.printf( entry.title.replace("'", "''"), entry.text.replace("'", "''"), image_query, entry.date );
 
     var entry_id = -1;
     var res = exec_query( entry_query, (ncols, vals, names) => {

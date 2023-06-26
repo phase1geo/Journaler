@@ -24,6 +24,7 @@ using Gdk;
 
 public class TextArea : Box {
 
+  private MainWindow       _win;
   private Journals         _journals;
   private Journal?         _journal = null;
   private DBEntry?         _entry = null;
@@ -35,6 +36,11 @@ public class TextArea : Box {
   private int              _font_size = 12;
   private int              _text_margin = 20;
   private string           _theme = "cobalt-light";
+  private Revealer         _image_revealer;
+  private Revealer         _burger_add_revealer;
+  private Revealer         _burger_change_revealer;
+  private Pixbuf?          _pixbuf = null;
+  private bool             _pixbuf_changed = false;
 
   public int font_size {
     get {
@@ -61,10 +67,11 @@ public class TextArea : Box {
   }
 
   /* Create the main window UI */
-  public TextArea( Journals journals ) {
+  public TextArea( MainWindow win, Journals journals ) {
 
     Object( orientation: Orientation.VERTICAL, spacing: 0 );
 
+    _win = win;
     _journals = journals;
 
     /* Add the UI components */
@@ -83,6 +90,8 @@ public class TextArea : Box {
     /* Add the title */
     var title_focus = new EventControllerFocus();
     _title = new Entry() {
+      halign                  = Align.FILL,
+      hexpand                 = true,
       placeholder_text        = _( "Title (Optional)" ),
       has_frame               = false,
       enable_emoji_completion = true
@@ -91,6 +100,12 @@ public class TextArea : Box {
     _title.add_css_class( "title" );
     _title.add_css_class( "text-background" );
     _title.add_css_class( "text-padding" );
+
+    var tbox = new Box( Orientation.HORIZONTAL, 5 );
+    tbox.add_css_class( "title-box" );
+    tbox.add_css_class( "text-background" );
+    tbox.append( _title );
+    tbox.append( create_burger_menu() );
 
     /* Add the date */
     _date = new Label( "" ) {
@@ -106,6 +121,10 @@ public class TextArea : Box {
     _tags.add_class( "text-background" );
 
     var sep = new Separator( Orientation.HORIZONTAL );
+
+    _image_revealer = new Revealer() {
+      reveal_child = false
+    };
 
     /* Now let's setup some stuff related to the text field */
     var lang_mgr = GtkSource.LanguageManager.get_default();
@@ -149,17 +168,153 @@ public class TextArea : Box {
     });
     */
 
+    var scroll_box = new Box( Orientation.VERTICAL, 0 );
+    scroll_box.append( _image_revealer );
+    scroll_box.append( _text );
+
     var scroll = new ScrolledWindow() {
       vscrollbar_policy = PolicyType.AUTOMATIC,
-      child = _text
+      child = scroll_box
     };
 
-    append( _title );
+    append( tbox );
     append( _date );
     append( _tags );
     append( sep );
     append( scroll );
 
+  }
+
+  /* Creates burger menu and populates it with features */
+  private MenuButton create_burger_menu() {
+
+    /* Create the menubutton itself */
+    var mb = new MenuButton() {
+      icon_name = "view-more-symbolic",
+      halign    = Align.END,
+    };
+
+    var add_image = new Button.with_label( _( "Add Image" ) );
+    add_image.clicked.connect(() => {
+      mb.popdown();
+      add_entry_image();
+    });
+
+    var add_box = new Box( Orientation.VERTICAL, 0 );
+    add_box.append( add_image );
+
+    _burger_add_revealer = new Revealer() {
+      reveal_child = true,
+      child = add_box
+    };
+
+    var change_image = new Button.with_label( _( "Change Image" ) );
+    change_image.clicked.connect(() => {
+      mb.popdown();
+      add_entry_image();
+    });
+
+    var remove_image = new Button.with_label( _( "Remove Image" ) );
+    remove_image.clicked.connect(() => {
+      mb.popdown();
+      remove_entry_image();
+    });
+
+    var change_box = new Box( Orientation.VERTICAL, 0 );
+    change_box.append( change_image );
+    change_box.append( remove_image );
+
+    _burger_change_revealer = new Revealer() {
+      reveal_child = false,
+      child = change_box
+    };
+
+    var menu_box = new Box( Orientation.VERTICAL, 0 );
+    menu_box.append( _burger_add_revealer );
+    menu_box.append( _burger_change_revealer );
+
+    var burger_popover = new Popover() {
+      has_arrow = false,
+      child = menu_box
+    };
+    mb.popover = burger_popover;
+    mb.add_css_class( "text-background" );
+
+    return( mb );
+
+  }
+
+  /* Adds or changes the image associated with the current entry */
+  private void add_entry_image() {
+
+    var dialog = new FileChooserDialog( _( "Select an image" ), _win, FileChooserAction.OPEN,
+                                        _( "Cancel" ), ResponseType.CANCEL,
+                                        _( "Open" ), ResponseType.ACCEPT );
+
+    /* Add filters */
+    var filter = new FileFilter() {
+      name = _( "PNG Images" )
+    };
+    filter.add_suffix( "png" );
+    dialog.add_filter( filter );
+
+    dialog.response.connect((id) => {
+      if( id == ResponseType.ACCEPT ) {
+        var file = dialog.get_file();
+        if( file != null ) {
+          try {
+            _pixbuf = new Pixbuf.from_file( file.get_path() );
+            _pixbuf_changed = true;
+            display_pixbuf();
+            save();
+          } catch( Error e ) {
+            stdout.printf( "ERROR:  Unable to convert image file to pixbuf: %s\n", e.message );
+          }
+        }
+      }
+      dialog.close();
+    });
+
+    dialog.show();
+
+  }
+
+  /* Handles the proper display of the current pixbuf */
+  private void display_pixbuf() {
+    if( _pixbuf == null ) {
+      _image_revealer.child = null;
+      _image_revealer.reveal_child = false;
+      image_removed();
+    } else {
+      var img = new Picture.for_pixbuf( _pixbuf ) {
+        halign = Align.FILL,
+        hexpand = true,
+        can_shrink = false
+      };
+      _image_revealer.child = img;
+      _image_revealer.reveal_child = true;
+      image_added();
+    }
+  }
+
+  /* Removes the image associated with the current entry */
+  private void remove_entry_image() {
+    _pixbuf = null;
+    _pixbuf_changed = true;
+    display_pixbuf();
+    save();
+  }
+
+  /* Updates the UI when an image is added to the current entry */
+  private void image_added() {
+    _burger_add_revealer.reveal_child = false;
+    _burger_change_revealer.reveal_child = true;
+  }
+
+  /* Updates the UI when an image is removed from the current entry */
+  private void image_removed() {
+    _burger_add_revealer.reveal_child = true;
+    _burger_change_revealer.reveal_child = false;
   }
 
   /* Sets the theme and CSS classes */
@@ -180,6 +335,10 @@ public class TextArea : Box {
         font-size: %dpt;
         border: none;
         box-shadow: none;
+      }
+      .title-box {
+        padding-top: 5px;
+        padding-right: 5px;
       }
       .title-bold {
         font-weight: bold;
@@ -212,11 +371,11 @@ public class TextArea : Box {
   public void save() {
 
     /* If the text area is not editable or has not changed, there's no need to save */
-    if( (_journal == null) || (_entry == null) || ((!_title.editable || (_title.text == _entry.title)) && (!_text.editable || !_text.buffer.get_modified()))) {
+    if( (_journal == null) || (_entry == null) || !_pixbuf_changed || ((!_title.editable || (_title.text == _entry.title)) && (!_text.editable || !_text.buffer.get_modified()))) {
       return;
     }
 
-    var entry = new DBEntry.with_date( _title.text, _text.buffer.text, null, _tags.entry.get_tag_list(), _entry.date );
+    var entry = new DBEntry.with_date( _title.text, _text.buffer.text, _pixbuf, _pixbuf_changed, _tags.entry.get_tag_list(), _entry.date );
 
     if( _journal.db.save_entry( entry ) ) {
       if( (_journals.current == _journal) && (_title.text != _entry.text) ) {
@@ -244,6 +403,11 @@ public class TextArea : Box {
     /* Set the date */
     var dt = entry.datetime();
     _date.label = dt.format( "%A, %B %e, %Y" );
+
+    /* Set the image */
+    _pixbuf = entry.image;
+    _pixbuf_changed = false;
+    display_pixbuf();
 
     /* Set the tags */
     _tags.journal = _journal;
