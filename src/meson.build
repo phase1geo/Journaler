@@ -1,5 +1,6 @@
 sources += files(
     'Application.vala',
+    'Crypt.vala',
     'Database.vala',
     'Journal.vala',
     'Journals.vala',
