@@ -183,7 +183,8 @@ public class Database {
 
   private Sqlite.Database? _db = null;
 
-  private bool debug = true;  // Useful for debugging database issues by displaying the table contents
+  /* Useful for debugging database issues by displaying the table contents */
+  private bool debug = false;
 
   /* Default constructor */
   public Database( string db_file ) {
