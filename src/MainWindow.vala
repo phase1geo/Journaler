@@ -27,6 +27,7 @@ public class MainWindow : Gtk.ApplicationWindow {
   private const int _sidebar_width = 300;
 
   private GLib.Settings  _settings;
+  private Stack          _lock_stack;
   private TextArea       _text_area;
   private Stack          _sidebar_stack;
   private Journals       _journals;
@@ -38,6 +39,7 @@ public class MainWindow : Gtk.ApplicationWindow {
   private const GLib.ActionEntry[] action_entries = {
     { "action_today", action_today },
     { "action_save",  action_save },
+    { "action_lock",  action_lock },
     { "action_quit",  action_quit },
   };
 
@@ -98,8 +100,17 @@ public class MainWindow : Gtk.ApplicationWindow {
     today_btn.clicked.connect( action_today );
     header.pack_start( today_btn );
 
+    /* Create lock */
+    var lock_btn = new Button.from_icon_name( "changes-prevent" );
+    lock_btn.set_tooltip_markup( Utils.tooltip_with_accel( _( "Lock Journaler" ), "<Control>l" ) );
+    lock_btn.clicked.connect( action_lock );
+    header.pack_end( lock_btn );
+
     var lbox = new Box( Orientation.VERTICAL, 0 );
     var rbox = new Box( Orientation.VERTICAL, 0 );
+
+    add_text_area( lbox );
+    add_sidebar( rbox );
 
     var pw = new Paned( Orientation.HORIZONTAL ) {
       start_child        = lbox,
@@ -109,12 +120,41 @@ public class MainWindow : Gtk.ApplicationWindow {
       shrink_start_child = true,
       shrink_end_child   = false
     };
-    child = pw;
 
-    add_text_area( lbox );
-    add_sidebar( rbox );
+    var sbox = new Box( Orientation.VERTICAL, 0 ) {
+      halign  = Align.FILL,
+      hexpand = true,
+      valign  = Align.FILL,
+      vexpand = true
+    };
+
+    add_setlock_view( sbox );
+
+    var pbox = new Box( Orientation.VERTICAL, 0 ) {
+      halign  = Align.FILL,
+      hexpand = true,
+      valign  = Align.FILL,
+      vexpand = true
+    };
+
+    add_locked_view( pbox );
+
+    /* Create primary stack */
+    _lock_stack = new Stack();
+    _lock_stack.add_named( sbox, "setlock-view" );
+    _lock_stack.add_named( pbox, "lock-view" );
+    _lock_stack.add_named( pw,   "entry-view" );
+
+    child = _lock_stack;
 
     show();
+
+    /* If the user has set a password, show the journal as locked immediately */
+    if( Security.does_password_exist() ) {
+      _lock_stack.visible_child_name = "lock-view";
+    } else {
+      _lock_stack.visible_child_name = "entry-view";
+    }
 
     /* Handle any request to close the window */
     close_request.connect(() => {
@@ -151,6 +191,45 @@ public class MainWindow : Gtk.ApplicationWindow {
     _sidebar_stack.add_named( add_journal_edit(),    "editor" );
 
     box.append( _sidebar_stack );
+
+  }
+
+  /* Create the setlock view panel */
+  private void add_setlock_view( Box box ) {
+
+    var lbl1 = new Label( "Enter Lock Password:" );
+    var lbl2 = new Label( "Confirm Lock Password:" );
+    var entry1 = new Entry() {
+      visibility = false
+    };
+    var entry2 = new Entry() {
+      visibility = false
+    };
+
+  }
+
+  /* Displays the locked view pane */
+  private void add_locked_view( Box box ) {
+
+    var lbl = new Label( "Password:" );
+    var entry = new Entry() {
+      visibility    = false,
+      input_purpose = InputPurpose.PASSWORD,
+      input_hints   = InputHints.PRIVATE
+    };
+    entry.activate.connect(() => {
+      var input_password = entry.text;
+      stdout.printf( "Checking password %s\n", input_password );
+      // TBD
+      entry.text = "";
+      _lock_stack.visible_child_name = "entry-view";
+    });
+
+    var pbox = new Box( Orientation.HORIZONTAL, 5 );
+    pbox.append( lbl );
+    pbox.append( entry );
+
+    box.append( pbox );
 
   }
 
@@ -204,6 +283,7 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     app.set_accels_for_action( "win.action_today", { "<Control>t" } );
     app.set_accels_for_action( "win.action_save",  { "<Control>s" } );
+    app.set_accels_for_action( "win.action_lock",  { "<Control>l" } );
     app.set_accels_for_action( "win.action_quit",  { "<Control>q" } );
 
   }
@@ -216,6 +296,15 @@ public class MainWindow : Gtk.ApplicationWindow {
   /* Save the current entry to the database */
   public void action_save() {
     _text_area.save();
+  }
+
+  /* Locks the application */
+  public void action_lock() {
+    if( Security.does_password_exist() ) {
+      _lock_stack.visible_child_name = "lock-view";
+    } else {
+      _lock_stack.visible_child_name = "setlock-view";
+    }
   }
 
   /* Called when the user uses the Control-q keyboard shortcut */
