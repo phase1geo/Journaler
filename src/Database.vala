@@ -11,23 +11,11 @@ public class DBEntry {
 
   private List<string> _tags = new List<string>();
 
-  private bool    _image_changed = false;
-  private Pixbuf? _image         = null;
-
-  public string  title { get; set; default = ""; }
-  public string  text  { get; set; default = ""; }
-  public string  date  { get; set; default = ""; }
-  public Pixbuf? image {
-    get {
-      return( _image );
-    }
-    set {
-      _image_changed = (_image != value);
-      if( _image_changed ) {
-        _image = value;
-      }
-    }
-  }
+  public string  title         { get; set; default = ""; }
+  public string  text          { get; set; default = ""; }
+  public string  date          { get; set; default = ""; }
+  public Pixbuf? image         { get; set; default = null; }
+  public bool    image_changed { get; set; default = false; }
   public List<string> tags  {
     get {
       return( _tags );
@@ -54,11 +42,12 @@ public class DBEntry {
   }
 
   /* Constructor */
-  public DBEntry.with_date( string title, string text, Pixbuf? image, string tag_list, string date ) {
-    this.title = title;
-    this.text  = text;
-    this.date  = date;
-    this.image = image;
+  public DBEntry.with_date( string title, string text, Pixbuf? image, bool image_changed, string tag_list, string date ) {
+    this.title         = title;
+    this.text          = text;
+    this.date          = date;
+    this.image         = image;
+    this.image_changed = image_changed;
     store_tag_list( tag_list );
   }
 
@@ -106,18 +95,6 @@ public class DBEntry {
       add_tag( tag.strip() );
     }
   }
-
-  /* Sets the image with the given byte array data */
-  /*
-  public void set_image_byte_array( byte[] barray ) {
-  }
-
-  public byte[] get_image_byte_array() {
-    var outputStream = new ByteArrayOutputStream();
-    bitmap.compress(CompressFormat.PNG, 0, outputStream);
-    return( outputStream.toByteArray() );
-  }
-  */
 
   /* Returns the title of this entry */
   public string gen_title() {
@@ -358,19 +335,24 @@ public class Database {
 
     var image_query = "";
 
-    if( entry.image != null ) {
-      try {
-        uint8[]  buffer  = {};
-        string[] options = {};
-        string[] values  = {};
-        options += "compression";  values += "7";
-
-        entry.image.save_to_buffer( out buffer, "png", null, null );
-        image_query = ", image = '%s'".printf( Base64.encode( (uchar[])buffer ) );
-      } catch( Error e ) {
-        stderr.printf( "ERROR: %s\n", e.message );
+    if( entry.image_changed ) {
+      if( entry.image == null ) {
+        image_query = ", image = NULL";
+      } else {
+        try {
+          uint8[]  buffer  = {};
+          string[] options = {};
+          string[] values  = {};
+          options += "compression";  values += "7";  // TODO - Make this value configurable?
+          entry.image.save_to_bufferv( out buffer, "png", options, values );
+          image_query = ", image = '%s'".printf( Base64.encode( (uchar[])buffer ) );
+        } catch( Error e ) {
+          stderr.printf( "ERROR: %s\n", e.message );
+        }
       }
     }
+
+    stdout.printf( "image_query: %s\n", image_query );
 
     var entry_query = """ 
       UPDATE Entry

@@ -375,7 +375,7 @@ public class TextArea : Box {
       return;
     }
 
-    var entry = new DBEntry.with_date( _title.text, _text.buffer.text, (_pixbuf_changed ? _pixbuf : null), _tags.entry.get_tag_list(), _entry.date );
+    var entry = new DBEntry.with_date( _title.text, _text.buffer.text, _pixbuf, _pixbuf_changed, _tags.entry.get_tag_list(), _entry.date );
 
     if( _journal.db.save_entry( entry ) ) {
       if( (_journals.current == _journal) && (_title.text != _entry.text) ) {
