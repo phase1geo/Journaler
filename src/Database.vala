@@ -1,4 +1,5 @@
 using Gtk;
+using Gdk;
 
 public enum DBLoadResult {
   FAILED,
@@ -10,10 +11,23 @@ public class DBEntry {
 
   private List<string> _tags = new List<string>();
 
-  public string       title { get; set; default = ""; }
-  public string       text  { get; set; default = ""; }
-  public string       date  { get; set; default = ""; }
-  public Image?       image { get; set; default = null; }
+  private bool    _image_changed = false;
+  private Pixbuf? _image         = null;
+
+  public string  title { get; set; default = ""; }
+  public string  text  { get; set; default = ""; }
+  public string  date  { get; set; default = ""; }
+  public Pixbuf? image {
+    get {
+      return( _image );
+    }
+    set {
+      _image_changed = (_image != value);
+      if( _image_changed ) {
+        _image = value;
+      }
+    }
+  }
   public List<string> tags  {
     get {
       return( _tags );
@@ -40,7 +54,7 @@ public class DBEntry {
   }
 
   /* Constructor */
-  public DBEntry.with_date( string title, string text, Image? image, string tag_list, string date ) {
+  public DBEntry.with_date( string title, string text, Pixbuf? image, string tag_list, string date ) {
     this.title = title;
     this.text  = text;
     this.date  = date;
@@ -169,7 +183,7 @@ public class Database {
 
   private Sqlite.Database? _db = null;
 
-  private bool debug = false;  // Useful for debugging database issues by displaying the table contents
+  private bool debug = true;  // Useful for debugging database issues by displaying the table contents
 
   /* Default constructor */
   public Database( string db_file ) {
@@ -200,11 +214,11 @@ public class Database {
     // Create the table if it doesn't already exist
     var entry_query = """
       CREATE TABLE IF NOT EXISTS Entry (
-        id    INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
-        title TEXT                              NOT NULL,
-        txt   TEXT                              NOT NULL,
-        date  TEXT                              NOT NULL,
-        image BLOB
+        id         INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
+        title      TEXT                              NOT NULL,
+        txt        TEXT                              NOT NULL,
+        date       TEXT                              NOT NULL,
+        image      BLOB
       );
       """;
 
@@ -264,7 +278,8 @@ public class Database {
 
     /* Insert the entry */
     var entry_query = """
-      INSERT INTO Entry (title, txt, date) VALUES ('', '', '%s');
+      INSERT INTO Entry (title, txt, date, image)
+      VALUES ('', '', '%s', NULL);
       """.printf( entry.date );
 
     if( !exec_query( entry_query ) ) {
@@ -297,6 +312,16 @@ public class Database {
     exec_query( query, (ncols, vals, names) => {
       entry.title = vals[1];
       entry.text  = vals[2];
+      if( vals[4] != null ) {
+        try {
+          var pixload = new PixbufLoader.with_type( "png" );
+          pixload.write( (uint8[])Base64.decode( vals[4] ) );
+          pixload.close();
+          entry.image = pixload.get_pixbuf();
+        } catch( Error e ) {
+          stderr.printf( "ERROR: %s\n", e.message );
+        }
+      }
       var tag = vals[5];
       if( tag != null ) {
         entry.add_tag( tag );
@@ -330,12 +355,28 @@ public class Database {
   /* Saves the entry to the database */
   public bool save_entry( DBEntry entry ) {
 
-    var entry_query = """
+    var image_query = "";
+
+    if( entry.image != null ) {
+      try {
+        uint8[]  buffer  = {};
+        string[] options = {};
+        string[] values  = {};
+        options += "compression";  values += "7";
+
+        entry.image.save_to_buffer( out buffer, "png", null, null );
+        image_query = ", image = '%s'".printf( Base64.encode( (uchar[])buffer ) );
+      } catch( Error e ) {
+        stderr.printf( "ERROR: %s\n", e.message );
+      }
+    }
+
+    var entry_query = """ 
       UPDATE Entry
-      SET title = '%s', txt = '%s'
+      SET title = '%s', txt = '%s' %s
       WHERE date = '%s'
       RETURNING id;
-      """.printf( entry.title.replace("'", "''"), entry.text.replace("'", "''"), entry.date );
+      """.printf( entry.title.replace("'", "''"), entry.text.replace("'", "''"), image_query, entry.date );
 
     var entry_id = -1;
     var res = exec_query( entry_query, (ncols, vals, names) => {

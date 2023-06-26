@@ -39,6 +39,8 @@ public class TextArea : Box {
   private Revealer         _image_revealer;
   private Revealer         _burger_add_revealer;
   private Revealer         _burger_change_revealer;
+  private Pixbuf?          _pixbuf = null;
+  private bool             _pixbuf_changed = false;
 
   public int font_size {
     get {
@@ -261,14 +263,12 @@ public class TextArea : Box {
         var file = dialog.get_file();
         if( file != null ) {
           try {
-            var img = new Picture.for_file( file ) {
-              // content_fit = ContentFit.CONTAIN
-            };
-            _image_revealer.child = img;
-            _image_revealer.reveal_child = true;
-            image_added();
+            _pixbuf = new Pixbuf.from_file( file.get_path() );
+            _pixbuf_changed = true;
+            display_pixbuf();
+            save();
           } catch( Error e ) {
-            stderr.printf( "ERROR: %s\n", e.message );
+            stdout.printf( "ERROR:  Unable to convert image file to pixbuf: %s\n", e.message );
           }
         }
       }
@@ -279,18 +279,39 @@ public class TextArea : Box {
 
   }
 
-  /* Removes the image associated with the current entry */
-  private void remove_entry_image() {
-
-    stdout.printf( "Removing entry image\n" );
-
+  /* Handles the proper display of the current pixbuf */
+  private void display_pixbuf() {
+    if( _pixbuf == null ) {
+      _image_revealer.child = null;
+      _image_revealer.reveal_child = false;
+      image_removed();
+    } else {
+      var img = new Picture.for_pixbuf( _pixbuf ) {
+        halign = Align.FILL,
+        hexpand = true,
+        can_shrink = false
+      };
+      _image_revealer.child = img;
+      _image_revealer.reveal_child = true;
+      image_added();
+    }
   }
 
+  /* Removes the image associated with the current entry */
+  private void remove_entry_image() {
+    _pixbuf = null;
+    _pixbuf_changed = true;
+    display_pixbuf();
+    save();
+  }
+
+  /* Updates the UI when an image is added to the current entry */
   private void image_added() {
     _burger_add_revealer.reveal_child = false;
     _burger_change_revealer.reveal_child = true;
   }
 
+  /* Updates the UI when an image is removed from the current entry */
   private void image_removed() {
     _burger_add_revealer.reveal_child = true;
     _burger_change_revealer.reveal_child = false;
@@ -350,11 +371,11 @@ public class TextArea : Box {
   public void save() {
 
     /* If the text area is not editable or has not changed, there's no need to save */
-    if( (_journal == null) || (_entry == null) || ((!_title.editable || (_title.text == _entry.title)) && (!_text.editable || !_text.buffer.get_modified()))) {
+    if( (_journal == null) || (_entry == null) || !_pixbuf_changed || ((!_title.editable || (_title.text == _entry.title)) && (!_text.editable || !_text.buffer.get_modified()))) {
       return;
     }
 
-    var entry = new DBEntry.with_date( _title.text, _text.buffer.text, null, _tags.entry.get_tag_list(), _entry.date );
+    var entry = new DBEntry.with_date( _title.text, _text.buffer.text, (_pixbuf_changed ? _pixbuf : null), _tags.entry.get_tag_list(), _entry.date );
 
     if( _journal.db.save_entry( entry ) ) {
       if( (_journals.current == _journal) && (_title.text != _entry.text) ) {
@@ -382,6 +403,11 @@ public class TextArea : Box {
     /* Set the date */
     var dt = entry.datetime();
     _date.label = dt.format( "%A, %B %e, %Y" );
+
+    /* Set the image */
+    _pixbuf = entry.image;
+    _pixbuf_changed = false;
+    display_pixbuf();
 
     /* Set the tags */
     _tags.journal = _journal;
