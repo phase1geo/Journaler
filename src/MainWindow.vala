@@ -31,6 +31,7 @@ public class MainWindow : Gtk.ApplicationWindow {
   private TextArea               _text_area;
   private Stack                  _sidebar_stack;
   private Journals               _journals;
+  private Templates              _templates;
   private SidebarEntries         _entries;
   private SidebarEditor          _editor;
   private Gee.HashMap<string,Widget> _stack_focus_widgets;
@@ -68,6 +69,9 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     /* Create and load the journals */
     _journals = new Journals();
+
+    /* Create and load the templates */
+    _templates = new Templates();
 
     /* Create the hash map for the focus widgets */
     _stack_focus_widgets = new Gee.HashMap<string,Widget>();
@@ -179,6 +183,9 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     /* Load the available journals */
     _journals.load();
+
+    /* Load the available templates */
+    _templates.load();
 
     /* Make sure that we display today's entry */
     action_today();

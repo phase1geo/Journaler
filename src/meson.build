@@ -10,6 +10,9 @@ sources += files(
     'SidebarEntries.vala',
     'TagBox.vala',
     'TagEntry.vala',
+    'Template.vala',
+    'Templater.vala',
+    'Templates.vala',
     'TextArea.vala',
     'Utils.vala'
     #    'TextCompletion.vala',
