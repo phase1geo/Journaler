@@ -2,6 +2,40 @@
    font-size: 12pt;
 }
 
+.login-pane {
+   background-image: linear-gradient(lightblue, pink);
+}
+
+.login-frame {
+  padding: 20px;
+  border-style: solid;
+  border-width: 1px;
+  border-radius: 10px;
+  border-color: rgba(0, 0, 0, 0.3);
+  background-color: #fff;
+  box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes shake {
+  0% {
+    margin-left: 0rem;
+  }
+  25% {
+    margin-left: 0.5rem;
+  }
+  75% {
+    margin-left: -0.5rem;
+  }
+  100% {
+    margin-left: 0rem;
+  }
+}
+
+.password-invalid {
+  animation: shake 0.2s ease-in-out 0s 2;
+  box-shadow: 0 0 0.6rem #ff0000;
+}
+
 calendar > grid > label.day-number:checked {
    background-color: rgba(0, 0, 255, 0.1);
 }

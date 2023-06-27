@@ -2,7 +2,7 @@ public class Security {
 
   /* Gets the pathname of the password file */
   private static string get_password_file() {
-    return( GLib.Path.build_filename( Environment.get_user_data_dir(), "journaler", "security.txt" ) );
+    return( GLib.Path.build_filename( Environment.get_user_data_dir(), "journaler", "security" ) );
   }
 
   /* Returns true if the password has been previously set */

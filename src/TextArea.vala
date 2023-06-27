@@ -82,6 +82,13 @@ public class TextArea : Box {
 
   }
 
+  /* Returns the widget that should receive the grab focus when this pane is placed into view */
+  public Widget get_focus_widget() {
+
+    return( _title );
+
+  }
+
   /* Creates the textbox with today's entry. */
   private void add_text_area() {
 

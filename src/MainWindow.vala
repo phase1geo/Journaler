@@ -26,13 +26,14 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   private const int _sidebar_width = 300;
 
-  private GLib.Settings  _settings;
-  private Stack          _lock_stack;
-  private TextArea       _text_area;
-  private Stack          _sidebar_stack;
-  private Journals       _journals;
-  private SidebarEntries _entries;
-  private SidebarEditor  _editor;
+  private GLib.Settings          _settings;
+  private Stack                  _lock_stack;
+  private TextArea               _text_area;
+  private Stack                  _sidebar_stack;
+  private Journals               _journals;
+  private SidebarEntries         _entries;
+  private SidebarEditor          _editor;
+  private Gee.HashMap<string,Widget> _stack_focus_widgets;
 
   // private UnicodeInsert   _unicoder;
 
@@ -68,6 +69,9 @@ public class MainWindow : Gtk.ApplicationWindow {
     /* Create and load the journals */
     _journals = new Journals();
 
+    /* Create the hash map for the focus widgets */
+    _stack_focus_widgets = new Gee.HashMap<string,Widget>();
+
     // var window_x = settings.get_int( "window-x" );
     // var window_y = settings.get_int( "window-y" );
     var window_w = settings.get_int( "window-w" );
@@ -94,6 +98,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     /* Create title toolbar */
     var today_img = new Image.from_resource( "/com/github/phase1geo/journaler/today.svg" );
     var today_btn = new Button() {
+      has_frame = false,
       child = today_img
     };
     today_btn.set_tooltip_markup( Utils.tooltip_with_accel( _( "Go To Today" ), "<Control>t" ) );
@@ -127,6 +132,7 @@ public class MainWindow : Gtk.ApplicationWindow {
       valign  = Align.FILL,
       vexpand = true
     };
+    sbox.add_css_class( "login-pane" );
 
     add_setlock_view( sbox );
 
@@ -136,6 +142,7 @@ public class MainWindow : Gtk.ApplicationWindow {
       valign  = Align.FILL,
       vexpand = true
     };
+    pbox.add_css_class( "login-pane" );
 
     add_locked_view( pbox );
 
@@ -146,9 +153,9 @@ public class MainWindow : Gtk.ApplicationWindow {
       hexpand = true,
       vexpand = true
     };
-    _lock_stack.add_named( sbox, "setlock-view" );
     _lock_stack.add_named( pbox, "lock-view" );
     _lock_stack.add_named( pw,   "entry-view" );
+    _lock_stack.add_named( sbox, "setlock-view" );
 
     child = _lock_stack;
 
@@ -156,9 +163,9 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     /* If the user has set a password, show the journal as locked immediately */
     if( Security.does_password_exist() ) {
-      _lock_stack.visible_child_name = "lock-view";
+      show_pane( "lock-view", true );
     } else {
-      _lock_stack.visible_child_name = "entry-view";
+      show_pane( "entry-view", true );
     }
 
     /* Handle any request to close the window */
@@ -178,12 +185,44 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   }
 
+  /* Displays the given pane in the main window */
+  private void show_pane( string name, bool on_start = false ) {
+
+    /* Set the transition type */
+    switch( name ) {
+      case "entry-view" :
+        _lock_stack.transition_type = StackTransitionType.SLIDE_UP;
+        get_titlebar().sensitive = true;
+        break;
+      default :
+        _lock_stack.transition_type = StackTransitionType.SLIDE_DOWN;
+        get_titlebar().sensitive = false;
+        break;
+    }
+
+    if( on_start ) {
+      _lock_stack.transition_type = StackTransitionType.NONE;
+    }
+
+    /* Perform the transition */
+    _lock_stack.visible_child_name = name;
+
+    /* Make sure that the proper widget is given the focus */
+    Idle.add(() => {
+      _stack_focus_widgets.get( name ).grab_focus();
+      return( false );
+    });
+
+  }
+
   /* Creates the textbox with today's entry. */
   private void add_text_area( Box box ) {
 
     _text_area = new TextArea( this, _journals );
 
     box.append( _text_area );
+
+    _stack_focus_widgets.set( "entry-view", _text_area.get_focus_widget() );
 
   }
 
@@ -225,7 +264,7 @@ public class MainWindow : Gtk.ApplicationWindow {
       halign = Align.START
     };
     cancel.clicked.connect(() => {
-      _lock_stack.visible_child_name = "entry-view";
+      show_pane( "entry-view" );
     });
 
     var save = new Button.with_label( _( "Set Password" ) ) {
@@ -235,7 +274,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     save.add_css_class( "suggested-action" );
     save.clicked.connect(() => {
       Security.create_password_file( entry2.text );
-      _lock_stack.visible_child_name = "entry-view";
+      show_pane( "entry-view" );
     });
 
     var bbox = new Box( Orientation.HORIZONTAL, 5 ) {
@@ -249,6 +288,9 @@ public class MainWindow : Gtk.ApplicationWindow {
       entry2.text = "";
       entry2.sensitive = (entry1.text != "");
     });
+    entry1.activate.connect(() => {
+      entry2.grab_focus();
+    });
 
     entry2.changed.connect(() => {
       save.sensitive = (entry1.text == entry2.text);
@@ -256,6 +298,13 @@ public class MainWindow : Gtk.ApplicationWindow {
     entry2.activate.connect(() => {
       if( save.sensitive ) {
         save.clicked();
+      } else {
+        entry2.add_css_class( "password-invalid" );
+        Timeout.add( 200, () => {
+          entry2.remove_css_class( "password-invalid" );
+          entry2.text = "";
+          return( false );
+        });
       }
     });
 
@@ -263,8 +312,10 @@ public class MainWindow : Gtk.ApplicationWindow {
       row_spacing    = 5,
       column_spacing = 5,
       halign         = Align.CENTER,
-      valign         = Align.CENTER
+      valign         = Align.CENTER,
+      vexpand        = true
     };
+    grid.add_css_class( "login-frame" );
     grid.attach( lbl1,   0, 0 );
     grid.attach( entry1, 1, 0 );
     grid.attach( lbl2,   0, 1 );
@@ -273,12 +324,16 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     box.append( grid );
 
+    _stack_focus_widgets.set( "setlock-view", entry1 );
+
   }
 
   /* Displays the locked view pane */
   private void add_locked_view( Box box ) {
 
-    var lbl = new Label( "Password:" );
+    var lbl = new Label( Utils.make_title( "Password:" ) ) {
+      use_markup = true
+    };
     var entry = new Entry() {
       visibility    = false,
       input_purpose = InputPurpose.PASSWORD,
@@ -286,19 +341,29 @@ public class MainWindow : Gtk.ApplicationWindow {
     };
     entry.activate.connect(() => {
       if( Security.does_password_match( entry.text ) ) {
-        _lock_stack.visible_child_name = "entry-view";
+        show_pane( "entry-view" );
+      } else {
+        entry.add_css_class( "password-invalid" );
       }
-      entry.text = "";
+      Timeout.add( 200, () => {
+        entry.text = "";
+        entry.remove_css_class( "password-invalid" );
+        return( false );
+      });
     });
 
     var pbox = new Box( Orientation.HORIZONTAL, 5 ) {
       halign = Align.CENTER,
-      valign = Align.CENTER
+      valign = Align.CENTER,
+      vexpand = true
     };
+    pbox.add_css_class( "login-frame" );
     pbox.append( lbl );
     pbox.append( entry );
 
     box.append( pbox );
+
+    _stack_focus_widgets.set( "lock-view", entry );
 
   }
 
@@ -370,9 +435,9 @@ public class MainWindow : Gtk.ApplicationWindow {
   /* Locks the application */
   public void action_lock() {
     if( Security.does_password_exist() ) {
-      _lock_stack.visible_child_name = "lock-view";
+      show_pane( "lock-view" );
     } else {
-      _lock_stack.visible_child_name = "setlock-view";
+      show_pane( "setlock-view" );
     }
   }
 
