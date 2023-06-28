@@ -72,6 +72,9 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     /* Create and load the templates */
     _templates = new Templates();
+    _templates.changed.connect(() => {
+      _editor.update_templates();
+    });
 
     /* Create the hash map for the focus widgets */
     _stack_focus_widgets = new Gee.HashMap<string,Widget>();
@@ -395,7 +398,7 @@ public class MainWindow : Gtk.ApplicationWindow {
   /* Adds the journal editor to the sidebar */
   private Box add_journal_edit() {
 
-    _editor = new SidebarEditor( _journals );
+    _editor = new SidebarEditor( _journals, _templates );
 
     _editor.done.connect(() => {
       _sidebar_stack.visible_child_name = "entries";

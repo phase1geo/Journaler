@@ -136,7 +136,7 @@ public class Journals {
 
     /* Set the current journal */
     if( _journals.length == 0 ) {
-      _current = new Journal( "Journal", "" );
+      _current = new Journal( "Journal", "", "" );
       add_journal( _current );
     } else {
       _current = _journals.index( current_index );

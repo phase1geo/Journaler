@@ -24,29 +24,36 @@ using Gdk;
 
 public class SidebarEditor : Box {
 
-  private Journals _journals;
-  private Journal  _journal;
-  private Entry    _name;
-  private TextView _description;
-  private Revealer _del_revealer;
-  private Button   _save;
-  private string   _orig_name;
-  private string   _orig_description;
-  private bool     _save_name;
-  private bool     _save_description;
+  private Journals   _journals;
+  private Templates  _templates;
+  private Journal    _journal;
+  private Entry      _name;
+  private MenuButton _template;
+  private ListBox    _template_list;
+  private TextView   _description;
+  private Revealer   _del_revealer;
+  private Button     _save;
+  private string     _orig_name;
+  private string     _orig_template;
+  private string     _orig_description;
+  private bool       _save_name;
+  private bool       _save_template;
+  private bool       _save_description;
 
   /* Indicates that the editing process hsa completed */
   public signal void done();
 
   /* Create the main window UI */
-  public SidebarEditor( Journals journals ) {
+  public SidebarEditor( Journals journals, Templates templates ) {
 
     Object( orientation: Orientation.VERTICAL, spacing: 5, margin_start: 5, margin_end: 5, margin_top: 5, margin_bottom: 5 );
 
-    _journals = journals;
+    _journals  = journals;
+    _templates = templates;
 
     /* Add the UI elements */
     add_name();
+    add_templates();
     add_description();
     add_button_bar();
 
@@ -68,12 +75,54 @@ public class SidebarEditor : Box {
     _name.changed.connect(() => {
       var name = _name.buffer.text;
       _save_name = (name != _orig_name) && (_journals.get_journal_by_name( name ) == null);
-      _save.sensitive = (name != "") && (_save_name || _save_description);
+      _save.sensitive = (name != "") && (_save_name || _save_template || _save_description);
     });
 
     var box = new Box( Orientation.HORIZONTAL, 5 );
     box.append( lbl );
     box.append( _name );
+
+    append( box );
+
+  }
+
+  /* Returns the name of the currently selected template */
+  private string get_template_name() {
+    return( (_template.label == _( "None" )) ? "" : _template.label );
+  }
+
+  /* Allows the user to choose a default template to use with the journal when a new entry is added */
+  private void add_templates() {
+
+    var lbl = new Label( Utils.make_title( _( "Use Template:" ) ) ) {
+      use_markup = true
+    };
+
+    var popover = new Popover();
+
+    _template_list = new ListBox();
+    _template_list.row_activated.connect((row) => {
+      var index = row.get_index();
+      _template.label = _templates.templates.nth_data( index ).name;
+      _save_template  = (get_template_name() != _orig_template);
+      _save.sensitive = (_name.buffer.text != "") && (_save_name || _save_template || _save_description);
+      popover.popdown();
+    });
+
+    popover.child = _template_list;
+    _template.popover = popover;
+
+    _template = new MenuButton() {
+      halign    = Align.FILL,
+      hexpand   = true,
+      label     = _( "None" ),
+      popover   = popover,
+      sensitive = false
+    };
+
+    var box = new Box( Orientation.HORIZONTAL, 5 );
+    box.append( lbl );
+    box.append( _template );
 
     append( box );
 
@@ -85,7 +134,8 @@ public class SidebarEditor : Box {
     /* Edit description */
     var lbl = new Label( Utils.make_title( _( "Description:" ) ) ) {
       halign     = Align.START,
-      use_markup = true
+      use_markup = true,
+      margin_top = 5
     };
 
     _description = new TextView() {
@@ -97,7 +147,7 @@ public class SidebarEditor : Box {
     };
     _description.buffer.changed.connect(() => {
       _save_description = (_description.buffer.text != _orig_description);
-      _save.sensitive   = (_name.buffer.text != "") && (_save_name || _save_description);
+      _save.sensitive   = (_name.buffer.text != "") && (_save_name || _save_template || _save_description);
     });
 
     var box = new Box( Orientation.VERTICAL, 5 );
@@ -137,10 +187,11 @@ public class SidebarEditor : Box {
 
     _save.clicked.connect(() => {
       if( _journal == null ) {
-        var journal = new Journal( _name.buffer.text, _description.buffer.text );
+        var journal = new Journal( _name.buffer.text, get_template_name(), _description.buffer.text );
         _journals.add_journal( journal );
       } else {
         _journal.name        = _name.buffer.text;
+        _journal.template    = get_template_name();
         _journal.description = _description.buffer.text;
         _journals.save();
       }
@@ -162,6 +213,33 @@ public class SidebarEditor : Box {
 
   }
 
+  /* Updates the available templates in the template list */
+  public void update_templates() {
+
+    /* Clear the box */
+    var row = _template_list.get_row_at_index( 0 );
+    while( row != null ) {
+      _template_list.remove( row );
+      row = _template_list.get_row_at_index( 0 );
+    }
+
+    _template.sensitive = false;
+
+    foreach( var template in _templates.templates ) {
+
+      var lbl = new Label( template.name ) {
+        halign  = Align.FILL,
+        hexpand = true,
+        xalign  = (float)0
+      };
+
+      _template_list.append( lbl );
+      _template.sensitive = true;
+
+    }
+
+  }
+
   /* Sets up the journal editor panel and then switches to it */
   public void edit_journal( Journal? journal ) {
 
@@ -169,20 +247,24 @@ public class SidebarEditor : Box {
 
     if( journal == null ) {
       _name.text = "";
+      _template.label = _( "None" );
       _description.buffer.text = "";
       _save.sensitive = false;
       _del_revealer.reveal_child = false;
     } else {
       _name.text = journal.name;
+      _template.label = (journal.template == "") ? _( "None" ) : journal.template;
       _description.buffer.text = journal.description;
       _save.sensitive = true;
       _del_revealer.reveal_child = true;
     }
 
     _orig_name        = _name.text;
+    _orig_template    = _template.label;
     _orig_description = _description.buffer.text;
     _save.sensitive   = false;
     _save_name        = false;
+    _save_template    = false;
     _save_description = false;
 
   }

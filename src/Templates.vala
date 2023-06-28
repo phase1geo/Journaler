@@ -8,6 +8,8 @@ public class Templates {
     }
   }
 
+  public signal void changed();
+
   /* Default constructor */
   public Templates() {
     
@@ -18,6 +20,45 @@ public class Templates {
   /* Returns the pathname of the journals.xml file */
   private string xml_file() {
     return( GLib.Path.build_filename( Environment.get_user_data_dir(), "journaler", "templates.xml" ) );
+  }
+
+  /* Adds the given template and sorts the result */
+  public void add_template( Template template ) {
+
+    _templates.append( template );
+    _templates.sort((a, b) => {
+      return( strcmp( a.name, b.name ) );
+    });
+
+    changed();
+
+  }
+
+  /* Removes the given template based on its name */
+  public bool remove_template( string name ) {
+
+    var template = find_by_name( name );
+    if( template != null ) {
+      _templates.remove( template );
+      changed();
+      return( true );
+    }
+
+    return( false );
+
+  }
+
+  /* Returns the template associated with the given name.  If was not found, returns null */
+  public Template? find_by_name( string name ) {
+
+    foreach( var template in _templates ) {
+      if( template.name == name ) {
+        return( template );
+      }
+    }
+
+    return( null );
+
   }
 
   /* Saves the current templates in XML format */
