@@ -15,6 +15,9 @@ public class DBEntry {
   public string  text          { get; set; default = ""; }
   public string  date          { get; set; default = ""; }
   public Pixbuf? image         { get; set; default = null; }
+  public int     image_pos     { get; set; default = 200; }
+  public double  image_vadj    { get; set; default = 0.0; }
+  public double  image_hadj    { get; set; default = 0.0; }
   public bool    image_changed { get; set; default = false; }
   public List<string> tags  {
     get {
@@ -42,11 +45,14 @@ public class DBEntry {
   }
 
   /* Constructor */
-  public DBEntry.with_date( string title, string text, Pixbuf? image, bool image_changed, string tag_list, string date ) {
+  public DBEntry.with_date( string title, string text, Pixbuf? image, int image_pos, double image_vadj, double image_hadj, bool image_changed, string tag_list, string date ) {
     this.title         = title;
     this.text          = text;
     this.date          = date;
     this.image         = image;
+    this.image_pos     = image_pos;
+    this.image_vadj    = image_vadj;
+    this.image_hadj    = image_hadj;
     this.image_changed = image_changed;
     store_tag_list( tag_list );
   }
@@ -196,7 +202,10 @@ public class Database {
         title      TEXT                              NOT NULL,
         txt        TEXT                              NOT NULL,
         date       TEXT                              NOT NULL,
-        image      BLOB
+        image      BLOB,
+        image_pos  INTEGER,
+        image_vadj REAL,
+        image_hadj REAL
       );
       """;
 
@@ -256,8 +265,8 @@ public class Database {
 
     /* Insert the entry */
     var entry_query = """
-      INSERT INTO Entry (title, txt, date, image)
-      VALUES ('', '', '%s', NULL);
+      INSERT INTO Entry (title, txt, date, image, image_pos, image_vadj, image_hadj)
+      VALUES ('', '', '%s', NULL, NULL, NULL, NULL);
       """.printf( entry.date );
 
     if( !exec_query( entry_query ) ) {
@@ -295,12 +304,15 @@ public class Database {
           var pixload = new PixbufLoader.with_type( "png" );
           pixload.write( (uint8[])Base64.decode( vals[4] ) );
           pixload.close();
-          entry.image = pixload.get_pixbuf();
+          entry.image      = pixload.get_pixbuf();
+          entry.image_pos  = int.parse( vals[5] );
+          entry.image_vadj = double.parse( vals[6] );
+          entry.image_hadj = double.parse( vals[7] );
         } catch( Error e ) {
           stderr.printf( "ERROR: %s\n", e.message );
         }
       }
-      var tag = vals[5];
+      var tag = vals[8];
       if( tag != null ) {
         entry.add_tag( tag );
       }
@@ -352,14 +364,13 @@ public class Database {
       }
     }
 
-    stdout.printf( "image_query: %s\n", image_query );
-
     var entry_query = """ 
       UPDATE Entry
-      SET title = '%s', txt = '%s' %s
+      SET title = '%s', txt = '%s' %s, image_pos = %d, image_vadj = %g, image_hadj = %g
       WHERE date = '%s'
       RETURNING id;
-      """.printf( entry.title.replace("'", "''"), entry.text.replace("'", "''"), image_query, entry.date );
+      """.printf( entry.title.replace("'", "''"), entry.text.replace("'", "''"), image_query,
+                  entry.image_pos, entry.image_vadj, entry.image_hadj,entry.date );
 
     var entry_id = -1;
     var res = exec_query( entry_query, (ncols, vals, names) => {
