@@ -110,7 +110,6 @@ public class SidebarEditor : Box {
     });
 
     popover.child = _template_list;
-    _template.popover = popover;
 
     _template = new MenuButton() {
       halign    = Align.FILL,

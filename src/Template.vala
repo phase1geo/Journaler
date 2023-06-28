@@ -4,14 +4,14 @@ public class Template {
   public string text { get; set; default = ""; }
 
   /* Default constructor */
-  public Template() {
+  public Template( string name, string text ) {
+    this.name = name;
+    this.text = text;
   }
 
   /* Constructor */
   public Template.from_xml( Xml.Node* node, out bool loaded ) {
-
     loaded = load( node );
-
   }
 
   /* Saves the template in XML format */

@@ -25,11 +25,14 @@ public class Templates {
   /* Adds the given template and sorts the result */
   public void add_template( Template template ) {
 
-    _templates.append( template );
-    _templates.sort((a, b) => {
-      return( strcmp( a.name, b.name ) );
-    });
+    if( find_by_name( template.name ) == null ) {
+      _templates.append( template );
+      _templates.sort((a, b) => {
+        return( strcmp( a.name, b.name ) );
+      });
+    }
 
+    save();
     changed();
 
   }
@@ -40,6 +43,7 @@ public class Templates {
     var template = find_by_name( name );
     if( template != null ) {
       _templates.remove( template );
+      save();
       changed();
       return( true );
     }

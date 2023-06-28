@@ -196,7 +196,7 @@ public class MainWindow : Gtk.ApplicationWindow {
   }
 
   /* Displays the given pane in the main window */
-  private void show_pane( string name, bool on_start = false ) {
+  public void show_pane( string name, bool on_start = false ) {
 
     /* Set the transition type */
     switch( name ) {

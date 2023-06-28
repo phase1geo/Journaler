@@ -3,12 +3,16 @@ using Gtk;
 public class Templater : Box {
 
   private Templates        _templates;
+  private Template?        _current;
   private MainWindow       _win;
   private Entry            _name;
   private GtkSource.View   _text;
   private GtkSource.Buffer _buffer;
+  private Button           _save;
+  private Revealer         _del_revealer;
   private int              _text_margin = 20;
   private string           _theme = "cobalt-light";
+  private string           _goto_pane = "";
 
   /* Default constructor */
   public Templater( MainWindow win, Templates templates ) {
@@ -17,6 +21,7 @@ public class Templater : Box {
 
     _win       = win;
     _templates = templates;
+    _current   = null;
 
     /* Add the UI components */
     add_name_frame();
@@ -37,6 +42,9 @@ public class Templater : Box {
       halign  = Align.FILL,
       hexpand = true
     };
+    _name.changed.connect(() => {
+      _save.sensitive = (_name.text != "") && ((_name.text != _current.name) || (_buffer.text != _current.text));
+    });
 
     var box = new Box( Orientation.HORIZONTAL, 5 );
     box.append( label );
@@ -74,6 +82,9 @@ public class Templater : Box {
     };
     _text.add_controller( text_focus );
     _text.add_css_class( "journal-text" );
+    _buffer.changed.connect(() => {
+      _save.sensitive = (_name.text != "") && ((_name.text != _current.name) || (_buffer.text != _current.text));
+    });
 
     var scroll = new ScrolledWindow() {
       vscrollbar_policy = PolicyType.AUTOMATIC,
@@ -99,30 +110,57 @@ public class Templater : Box {
 
     var del = new Button.with_label( _( "Delete" ) );
     del.clicked.connect(() => {
-      stdout.printf( "Deleting templates\n" );
+      _templates.remove_template( _current.name );
+      _win.show_pane( _goto_pane );
     });
+
+    _del_revealer = new Revealer() {
+      child = del,
+      reveal_child = false
+    };
 
     var cancel = new Button.with_label( _( "Cancel" ) );
     cancel.clicked.connect(() => {
-      stdout.printf( "Cancelling\n" );
+      _win.show_pane( _goto_pane );
     });
 
-    var save = new Button.with_label( _( "Save Changes" ) );
-    save.clicked.connect(() => {
-      stdout.printf( "Theme changes saved\n" );
+    _save = new Button.with_label( _( "Save Changes" ) );
+    _save.clicked.connect(() => {
+      _current.name = _name.text;
+      _current.text = _buffer.text;
+      _templates.add_template( _current );
+      _win.show_pane( _goto_pane );
     });
 
     var rbox = new Box( Orientation.HORIZONTAL, 5 ) {
       halign = Align.END
     };
     rbox.append( cancel );
-    rbox.append( save );
+    rbox.append( _save );
 
     var box = new Box( Orientation.HORIZONTAL, 5 );
-    box.append( del );
+    box.append( _del_revealer );
     box.append( rbox );
 
     append( box );
+
+  }
+
+  /* Sets the current template for editing */
+  public void set_current( Template? template, string goto_pane ) {
+
+    _goto_pane = goto_pane;
+
+    if( template == null ) {
+      _current = new Template( "", "" );
+      _del_revealer.reveal_child = false;
+    } else {
+      _current = template;
+      _del_revealer.reveal_child = true;
+    }
+
+    _name.text   = _current.name;
+    _buffer.text = _current.text;
 
   }
 
