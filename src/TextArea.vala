@@ -36,7 +36,8 @@ public class TextArea : Box {
   private int              _font_size = 12;
   private int              _text_margin = 20;
   private string           _theme = "cobalt-light";
-  private Revealer         _image_revealer;
+  private Paned            _pane;
+  private ScrolledWindow   _iscroll;
   private Revealer         _burger_add_revealer;
   private Revealer         _burger_change_revealer;
   private Pixbuf?          _pixbuf = null;
@@ -129,10 +130,6 @@ public class TextArea : Box {
 
     var sep = new Separator( Orientation.HORIZONTAL );
 
-    _image_revealer = new Revealer() {
-      reveal_child = false
-    };
-
     /* Now let's setup some stuff related to the text field */
     var lang_mgr = GtkSource.LanguageManager.get_default();
     var lang     = lang_mgr.get_language( "markdown" );
@@ -149,7 +146,8 @@ public class TextArea : Box {
       right_margin       = _text_margin,
       wrap_mode          = WrapMode.WORD,
       pixels_below_lines = line_spacing,
-      pixels_inside_wrap = line_spacing
+      pixels_inside_wrap = line_spacing,
+      cursor_visible     = true
     };
     _text.add_controller( text_focus );
     _text.add_css_class( "journal-text" );
@@ -175,20 +173,25 @@ public class TextArea : Box {
     });
     */
 
-    var scroll_box = new Box( Orientation.VERTICAL, 0 );
-    scroll_box.append( _image_revealer );
-    scroll_box.append( _text );
-
-    var scroll = new ScrolledWindow() {
+    var tscroll = new ScrolledWindow() {
       vscrollbar_policy = PolicyType.AUTOMATIC,
-      child = scroll_box
+      child = _text
+    };
+
+    _pane = new Paned( Orientation.VERTICAL ) {
+      end_child = tscroll
+    };
+
+    _iscroll = new ScrolledWindow() {
+      vscrollbar_policy = AUTOMATIC,
+      hscrollbar_policy = AUTOMATIC
     };
 
     append( tbox );
     append( _date );
     append( _tags );
     append( sep );
-    append( scroll );
+    append( _pane );
 
   }
 
@@ -272,7 +275,7 @@ public class TextArea : Box {
           try {
             _pixbuf = new Pixbuf.from_file( file.get_path() );
             _pixbuf_changed = true;
-            display_pixbuf();
+            display_pixbuf( 200, 0.0, 0.0 );
             save();
           } catch( Error e ) {
             stdout.printf( "ERROR:  Unable to convert image file to pixbuf: %s\n", e.message );
@@ -287,10 +290,9 @@ public class TextArea : Box {
   }
 
   /* Handles the proper display of the current pixbuf */
-  private void display_pixbuf() {
+  private void display_pixbuf( int pane_pos, double vadj, double hadj ) {
     if( _pixbuf == null ) {
-      _image_revealer.child = null;
-      _image_revealer.reveal_child = false;
+      _pane.start_child = null;
       image_removed();
     } else {
       var img = new Picture.for_pixbuf( _pixbuf ) {
@@ -298,8 +300,14 @@ public class TextArea : Box {
         hexpand = true,
         can_shrink = false
       };
-      _image_revealer.child = img;
-      _image_revealer.reveal_child = true;
+      img.add_css_class( "text-background" );
+      _iscroll.child = img;
+      _iscroll.vadjustment.upper = (double)img.paintable.get_intrinsic_height();
+      _iscroll.hadjustment.upper = (double)img.paintable.get_intrinsic_width();
+      _iscroll.vadjustment.value = vadj;
+      _iscroll.hadjustment.value = hadj;
+      _pane.start_child = _iscroll;
+      _pane.position = pane_pos;
       image_added();
     }
   }
@@ -308,7 +316,7 @@ public class TextArea : Box {
   private void remove_entry_image() {
     _pixbuf = null;
     _pixbuf_changed = true;
-    display_pixbuf();
+    display_pixbuf( 200, 0.0, 0.0 );
     save();
   }
 
@@ -374,15 +382,34 @@ public class TextArea : Box {
 
   }
 
+  private bool title_changed() {
+    return( _title.editable && (_title.text != _entry.title) );
+  }
+
+  private bool image_changed() {
+    return( _pixbuf_changed ||
+            (_pane.position != _entry.image_pos) ||
+            (_iscroll.vadjustment.value != _entry.image_vadj) ||
+            (_iscroll.hadjustment.value != _entry.image_hadj) );
+  }
+
+  private bool text_changed() {
+    return( _text.editable && _text.buffer.get_modified() );
+  }
+
   /* Saves the contents of the text area as an entry in the current database */
   public void save() {
 
     /* If the text area is not editable or has not changed, there's no need to save */
-    if( (_journal == null) || (_entry == null) || !_pixbuf_changed || ((!_title.editable || (_title.text == _entry.title)) && (!_text.editable || !_text.buffer.get_modified()))) {
+    if( (_journal == null) || (_entry == null) || (!title_changed() && !image_changed() && !text_changed()) ) {
       return;
     }
 
-    var entry = new DBEntry.with_date( _title.text, _text.buffer.text, _pixbuf, _pixbuf_changed, _tags.entry.get_tag_list(), _entry.date );
+    var entry = new DBEntry.with_date( 
+      _title.text, _text.buffer.text, _pixbuf, _pane.position,
+      _iscroll.vadjustment.value, _iscroll.hadjustment.value,
+      _pixbuf_changed, _tags.entry.get_tag_list(), _entry.date
+    );
 
     if( _journal.db.save_entry( entry ) ) {
       if( (_journals.current == _journal) && (_title.text != _entry.text) ) {
@@ -414,7 +441,7 @@ public class TextArea : Box {
     /* Set the image */
     _pixbuf = entry.image;
     _pixbuf_changed = false;
-    display_pixbuf();
+    display_pixbuf( entry.image_pos, entry.image_vadj, entry.image_hadj );
 
     /* Set the tags */
     _tags.journal = _journal;
