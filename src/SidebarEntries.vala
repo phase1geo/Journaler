@@ -327,10 +327,8 @@ public class SidebarEntries : Box {
     entry.date = date;
 
     /* If the current journal has a template associated with it, apply its text by default */
-    stdout.printf( "In show_entry_for_date, journal: %s, template: %s\n", _journals.current.name, _journals.current.template );
     var template = _templates.find_by_name( _journals.current.template );
     if( template != null ) {
-      stdout.printf( "In show_entry_for_date, create: %s, template: %s, text: %s\n", create_if_needed.to_string(), _journals.current.template, template.text );
       entry.text = template.text;
     }
 
