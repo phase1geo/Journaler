@@ -30,7 +30,7 @@ public class SidebarEditor : Box {
   private Journal    _journal;
   private Entry      _name;
   private MenuButton _template;
-  private ListBox    _template_list;
+  private Menu       _template_menu;
   private TextView   _description;
   private Revealer   _del_revealer;
   private Button     _save;
@@ -40,6 +40,11 @@ public class SidebarEditor : Box {
   private bool       _save_name;
   private bool       _save_template;
   private bool       _save_description;
+
+  private const GLib.ActionEntry action_entries[] = {
+    { "action_set_template", action_set_template, "s" },
+    { "action_new_template", action_new_template },
+  };
 
   /* Indicates that the editing process hsa completed */
   public signal void done();
@@ -61,6 +66,11 @@ public class SidebarEditor : Box {
     add_templates();
     add_description();
     add_button_bar();
+
+    /* Add the menu actions */
+    var actions = new SimpleActionGroup();
+    actions.add_action_entries( action_entries, this );
+    insert_action_group( "editor", actions );
 
   }
 
@@ -103,31 +113,13 @@ public class SidebarEditor : Box {
       use_markup = true
     };
 
-    var popover = new Popover() {
-      has_arrow = false
-    };
-
-    _template_list = new ListBox();
-    _template_list.row_activated.connect((row) => {
-      var index = row.get_index();
-      if( index == (_templates.templates.length() + 1) ) {
-        _win.edit_template();
-      } else {
-        _template.label = (index == 0) ? _( "None" ) : _templates.templates.nth_data( index - 1 ).name;
-        _save_template  = (get_template_name() != _orig_template);
-        _save.sensitive = (_name.buffer.text != "") && (_save_name || _save_template || _save_description);
-      }
-      popover.popdown();
-    });
-
-    popover.child = _template_list;
+    _template_menu = new GLib.Menu();
 
     _template = new MenuButton() {
-      halign    = Align.FILL,
-      hexpand   = true,
-      label     = _( "None" ),
-      popover   = popover,
-      sensitive = false
+      halign     = Align.FILL,
+      hexpand    = true,
+      label      = _( "None" ),
+      menu_model = _template_menu
     };
 
     var box = new Box( Orientation.HORIZONTAL, 5 );
@@ -224,41 +216,25 @@ public class SidebarEditor : Box {
 
   }
 
-  /* Adds list label item */
-  private void add_list_label( string name ) {
-
-    var lbl = new Label( name ) {
-      margin_top    = 5,
-      margin_bottom = 5,
-      margin_start  = 10,
-      margin_end    = 10,
-      halign        = Align.FILL,
-      hexpand       = true,
-      xalign        = (float)0
-    };
-
-    _template_list.append( lbl );
-
-  }
-
   /* Updates the available templates in the template list */
   public void update_templates( string name, bool added ) {
 
-    /* Clear the box */
-    var row = _template_list.get_row_at_index( 0 );
-    while( row != null ) {
-      _template_list.remove( row );
-      row = _template_list.get_row_at_index( 0 );
-    }
+    _template_menu.remove_all();
 
-    _template.sensitive = true;
+    var none_menu = new GLib.Menu();
+    none_menu.append( _( "None" ), "editor.action_set_template('None')" );
 
-    /* Add the list contents */
-    add_list_label( _( "None" ) );
+    var list_menu = new GLib.Menu();
     foreach( var template in _templates.templates ) {
-      add_list_label( template.name );
+      list_menu.append( template.name, "editor.action_set_template('%s')".printf( template.name ) );
     }
-    add_list_label( _( "Create new template" ) );
+
+    var new_menu = new GLib.Menu();
+    new_menu.append( _( "Create New Template" ), "editor.action_new_template" );
+
+    _template_menu.append_section( null, none_menu );
+    _template_menu.append_section( null, list_menu );
+    _template_menu.append_section( null, new_menu );
 
     /* If we just added a new template, we'll set the label */
     if( (name != "") && added ) {
@@ -266,6 +242,18 @@ public class SidebarEditor : Box {
       _save.sensitive = (_name.text != "");
     }
 
+  }
+
+  /* Sets the template to the given value and updates the UI */
+  private void action_set_template( SimpleAction action, Variant? variant ) {
+    _template.label = variant.get_string();
+    _save_template  = (get_template_name() != _orig_template);
+    _save.sensitive = (_name.buffer.text != "") && (_save_name || _save_template || _save_description);
+  }
+
+  /* Creates a new template */
+  private void action_new_template() {
+    _win.edit_template();
   }
 
   /* Sets up the journal editor panel and then switches to it */
