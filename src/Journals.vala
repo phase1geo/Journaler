@@ -7,6 +7,13 @@ public class Journals {
     get {
       return( _current );
     }
+    set {
+      if( _current != value ) {
+        _current = value;
+        current_changed( false );
+        save();
+      }
+    }
   }
 
   public signal void current_changed( bool refresh );
@@ -20,33 +27,26 @@ public class Journals {
   /* Adds the given journal to the list of journals */
   public void add_journal( Journal journal ) {
     _journals.append_val( journal );
-    _current = journal;
-    current_changed( false );
-    save();
+    current = journal;
     list_changed();
-  }
-
-  /* Sets the current journal to the given one */
-  public void set_current( int index ) {
-    var journal = get_journal( index );
-    if( _current != journal ) {
-      _current = journal;
-      current_changed( false );
-    }
-    save();
   }
 
   /* Removes the current journal entry */
   public void remove_journal( Journal journal ) {
     for( int i=0; i<_journals.length; i++ ) {
-      if( (_journals.index( i ) == journal) && (_journals.length > 1) ) {
-        if( _current == journal ) {
-          _current = get_journal( ((i + 1) == _journals.length) ? (i - 1) : i );
-          current_changed( false );
-        }
+      if( _journals.index( i ) == journal ) {
         _journals.remove_index( i );
-        save();
-        list_changed();
+        if( _journals.length == 0 ) {
+          var new_journal = new Journal( "Journal", "", "" );
+          add_journal( new_journal );
+        } else {
+          if( _current == journal ) {
+            current = get_journal( ((i + 1) == _journals.length) ? (i - 1) : i );
+          } else {
+            save();
+          }
+          list_changed();
+        }
       }
     }
   }

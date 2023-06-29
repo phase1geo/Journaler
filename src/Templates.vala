@@ -112,7 +112,6 @@ public class Templates {
     delete doc;
 
     if( _templates.length() > 0 ) {
-      stdout.printf( "Templates are now loaded (%u)\n", _templates.length() );
       changed( "", false );
     }
 
