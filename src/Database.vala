@@ -19,6 +19,7 @@ public class DBEntry {
   public double  image_vadj    { get; set; default = 0.0; }
   public double  image_hadj    { get; set; default = 0.0; }
   public bool    image_changed { get; set; default = false; }
+
   public List<string> tags  {
     get {
       return( _tags );
@@ -266,8 +267,8 @@ public class Database {
     /* Insert the entry */
     var entry_query = """
       INSERT INTO Entry (title, txt, date, image, image_pos, image_vadj, image_hadj)
-      VALUES ('', '', '%s', NULL, NULL, NULL, NULL);
-      """.printf( entry.date );
+      VALUES ('', '%s', '%s', NULL, NULL, NULL, NULL);
+      """.printf( entry.text, entry.date );
 
     if( !exec_query( entry_query ) ) {
       return( false );

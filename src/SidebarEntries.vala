@@ -27,6 +27,7 @@ public class SidebarEntries : Box {
   private const int _sidebar_width = 300;
 
   private Journals       _journals;
+  private Templates      _templates;
   private Array<DBEntry> _listbox_entries;
   private MenuButton     _journal_mb;
   private ListBox        _journal_list;
@@ -39,9 +40,11 @@ public class SidebarEntries : Box {
   public signal void show_journal_entry( DBEntry entry, bool editable );
 
   /* Create the main window UI */
-  public SidebarEntries( Journals journals ) {
+  public SidebarEntries( Journals journals, Templates templates ) {
 
     Object( orientation: Orientation.VERTICAL, spacing: 5, margin_start: 5, margin_end: 5, margin_top: 5, margin_bottom: 5 );
+
+    _templates = templates;
 
     _journals = journals;
     _journals.current_changed.connect((refresh) => {
@@ -322,6 +325,14 @@ public class SidebarEntries : Box {
 
     var entry = new DBEntry();
     entry.date = date;
+
+    /* If the current journal has a template associated with it, apply its text by default */
+    stdout.printf( "In show_entry_for_date, journal: %s, template: %s\n", _journals.current.name, _journals.current.template );
+    var template = _templates.find_by_name( _journals.current.template );
+    if( template != null ) {
+      stdout.printf( "In show_entry_for_date, create: %s, template: %s, text: %s\n", create_if_needed.to_string(), _journals.current.template, template.text );
+      entry.text = template.text;
+    }
 
     /* Attempt to load the entry */
     var load_result = _journals.current.db.load_entry( entry, create_if_needed );

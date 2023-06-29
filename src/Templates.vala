@@ -8,7 +8,7 @@ public class Templates {
     }
   }
 
-  public signal void changed();
+  public signal void changed( string name, bool added );
 
   /* Default constructor */
   public Templates() {
@@ -33,7 +33,7 @@ public class Templates {
     }
 
     save();
-    changed();
+    changed( template.name, true );
 
   }
 
@@ -44,7 +44,7 @@ public class Templates {
     if( template != null ) {
       _templates.remove( template );
       save();
-      changed();
+      changed( name, false );
       return( true );
     }
 
@@ -110,6 +110,11 @@ public class Templates {
     }
 
     delete doc;
+
+    if( _templates.length() > 0 ) {
+      stdout.printf( "Templates are now loaded (%u)\n", _templates.length() );
+      changed( "", false );
+    }
 
   }
 

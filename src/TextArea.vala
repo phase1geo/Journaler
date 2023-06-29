@@ -26,9 +26,11 @@ public class TextArea : Box {
 
   private MainWindow       _win;
   private Journals         _journals;
+  private Templates        _templates;
   private Journal?         _journal = null;
   private DBEntry?         _entry = null;
   private Entry            _title;
+  private MenuButton       _burger;
   private Label            _date;
   private TagBox           _tags;
   private GtkSource.View   _text;
@@ -38,10 +40,16 @@ public class TextArea : Box {
   private string           _theme = "cobalt-light";
   private Paned            _pane;
   private ScrolledWindow   _iscroll;
-  private Revealer         _burger_add_revealer;
-  private Revealer         _burger_change_revealer;
   private Pixbuf?          _pixbuf = null;
   private bool             _pixbuf_changed = false;
+  private GLib.Menu        _image_menu;
+  private GLib.Menu        _templates_menu;
+
+  private const GLib.ActionEntry action_entries[] = {
+    { "action_add_entry_image",    action_add_entry_image },
+    { "action_remove_entry_image", action_remove_entry_image },
+    { "action_insert_template",    action_insert_template, "s" }
+  };
 
   public int font_size {
     get {
@@ -68,15 +76,29 @@ public class TextArea : Box {
   }
 
   /* Create the main window UI */
-  public TextArea( MainWindow win, Journals journals ) {
+  public TextArea( MainWindow win, Journals journals, Templates templates ) {
 
     Object( orientation: Orientation.VERTICAL, spacing: 0 );
 
-    _win = win;
-    _journals = journals;
+    _win       = win;
+    _journals  = journals;
+    _templates = templates;
+
+    /* Update the templates menu */
+    _templates.changed.connect((name, added) => {
+      _templates_menu.remove_all();
+      foreach( var template in _templates.templates ) {
+        _templates_menu.append( template.name, "textarea.action_insert_template('%s')".printf( template.name ) );
+      }
+    });
 
     /* Add the UI components */
     add_text_area();
+
+    /* Add the menu actions */
+    var actions = new SimpleActionGroup();
+    actions.add_action_entries( action_entries, this );
+    insert_action_group( "textarea", actions );
 
     /* Set the CSS for this widget */
     update_theme();
@@ -109,11 +131,18 @@ public class TextArea : Box {
     _title.add_css_class( "text-background" );
     _title.add_css_class( "text-padding" );
 
+    /* Create the menubutton itself */
+    _burger = new MenuButton() {
+      icon_name  = "view-more-symbolic",
+      halign     = Align.END,
+      menu_model = create_burger_menu()
+    };
+
     var tbox = new Box( Orientation.HORIZONTAL, 5 );
     tbox.add_css_class( "title-box" );
     tbox.add_css_class( "text-background" );
     tbox.append( _title );
-    tbox.append( create_burger_menu() );
+    tbox.append( _burger );
 
     /* Add the date */
     _date = new Label( "" ) {
@@ -196,66 +225,28 @@ public class TextArea : Box {
   }
 
   /* Creates burger menu and populates it with features */
-  private MenuButton create_burger_menu() {
+  private MenuModel create_burger_menu() {
 
-    /* Create the menubutton itself */
-    var mb = new MenuButton() {
-      icon_name = "view-more-symbolic",
-      halign    = Align.END,
-    };
+    /* Create image menu */
+    _image_menu = new GLib.Menu();
+    _image_menu.append( _( "Add Image" ), "textarea.action_add_entry_image" );
 
-    var add_image = new Button.with_label( _( "Add Image" ) );
-    add_image.clicked.connect(() => {
-      mb.popdown();
-      add_entry_image();
-    });
+    /* Create templates menu */
+    _templates_menu = new GLib.Menu();
 
-    var add_box = new Box( Orientation.VERTICAL, 0 );
-    add_box.append( add_image );
+    var template_menu = new GLib.Menu();
+    template_menu.append_submenu( _( "Insert Template" ), _templates_menu );
 
-    _burger_add_revealer = new Revealer() {
-      reveal_child = true,
-      child = add_box
-    };
+    var menu = new GLib.Menu();
+    menu.append_section( null, _image_menu );
+    menu.append_section( null, template_menu );
 
-    var change_image = new Button.with_label( _( "Change Image" ) );
-    change_image.clicked.connect(() => {
-      mb.popdown();
-      add_entry_image();
-    });
-
-    var remove_image = new Button.with_label( _( "Remove Image" ) );
-    remove_image.clicked.connect(() => {
-      mb.popdown();
-      remove_entry_image();
-    });
-
-    var change_box = new Box( Orientation.VERTICAL, 0 );
-    change_box.append( change_image );
-    change_box.append( remove_image );
-
-    _burger_change_revealer = new Revealer() {
-      reveal_child = false,
-      child = change_box
-    };
-
-    var menu_box = new Box( Orientation.VERTICAL, 0 );
-    menu_box.append( _burger_add_revealer );
-    menu_box.append( _burger_change_revealer );
-
-    var burger_popover = new Popover() {
-      has_arrow = false,
-      child = menu_box
-    };
-    mb.popover = burger_popover;
-    mb.add_css_class( "text-background" );
-
-    return( mb );
+    return( menu );
 
   }
 
   /* Adds or changes the image associated with the current entry */
-  private void add_entry_image() {
+  private void action_add_entry_image() {
 
     var dialog = new FileChooserDialog( _( "Select an image" ), _win, FileChooserAction.OPEN,
                                         _( "Cancel" ), ResponseType.CANCEL,
@@ -313,23 +304,34 @@ public class TextArea : Box {
   }
 
   /* Removes the image associated with the current entry */
-  private void remove_entry_image() {
+  private void action_remove_entry_image() {
     _pixbuf = null;
     _pixbuf_changed = true;
     display_pixbuf( 200, 0.0, 0.0 );
     save();
   }
 
+  /* Inserts the given template text at the current insertion cursor location */
+  private void action_insert_template( SimpleAction action, Variant? variant ) {
+    foreach( var template in _templates.templates ) {
+      if( template.name == variant.get_string() ) {
+        _buffer.insert_at_cursor( template.text, template.text.length );
+        break;
+      }
+    }
+  }
+
   /* Updates the UI when an image is added to the current entry */
   private void image_added() {
-    _burger_add_revealer.reveal_child = false;
-    _burger_change_revealer.reveal_child = true;
+    _image_menu.remove_all();
+    _image_menu.append( _( "Change Image" ), "textarea.action_add_entry_image" );
+    _image_menu.append( _( "Remove Image" ), "textarea.action_remove_entry_image" );
   }
 
   /* Updates the UI when an image is removed from the current entry */
   private void image_removed() {
-    _burger_add_revealer.reveal_child = true;
-    _burger_change_revealer.reveal_child = false;
+    _image_menu.remove_all();
+    _image_menu.append( _( "Add Image" ), "textarea.action_add_entry_image" );
   }
 
   /* Sets the theme and CSS classes */

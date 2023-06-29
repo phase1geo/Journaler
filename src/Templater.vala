@@ -28,19 +28,32 @@ public class Templater : Box {
     add_text_frame();
     add_button_bar();
 
+    margin_top    = 5;
+    margin_bottom = 5;
+    margin_start  = 5;
+    margin_end    = 5;
+
     /* Update the theme used by these components */
     update_theme();
 
   }
 
+  /* Returns the widget that will receive input focus when this UI is displayed */
+  public Widget get_focus_widget() {
+    return( _name );
+  }
+
   /* Adds the name frame */
   private void add_name_frame() {
 
-    var label = new Label( Utils.make_title( _( "Template Name (required):" ) ) );
+    var label = new Label( Utils.make_title( _( "Template Name:" ) ) ) {
+      use_markup = true
+    };
 
     _name = new Entry() {
       halign  = Align.FILL,
-      hexpand = true
+      hexpand = true,
+      placeholder_text = _( "Required" )
     };
     _name.changed.connect(() => {
       _save.sensitive = (_name.text != "") && ((_name.text != _current.name) || (_buffer.text != _current.text));
@@ -61,6 +74,10 @@ public class Templater : Box {
   private void add_text_frame() {
 
     var line_spacing = 5;
+
+    var lbl = new Label( Utils.make_title( _( "Template Text" ) ) ) {
+      use_markup = true
+    };
 
     /* Now let's setup some stuff related to the text field */
     var lang_mgr = GtkSource.LanguageManager.get_default();
@@ -91,7 +108,16 @@ public class Templater : Box {
       child = _text
     };
 
-    append( scroll );
+    var box = new Box( Orientation.VERTICAL, 5 ) {
+      halign  = Align.FILL,
+      valign  = Align.FILL,
+      hexpand = true,
+      vexpand = true
+    };
+    box.append( lbl );
+    box.append( scroll );
+
+    append( box );
 
   }
 
@@ -113,6 +139,7 @@ public class Templater : Box {
       _templates.remove_template( _current.name );
       _win.show_pane( _goto_pane );
     });
+    del.add_css_class( "destructive-action" );
 
     _del_revealer = new Revealer() {
       child = del,
@@ -124,21 +151,30 @@ public class Templater : Box {
       _win.show_pane( _goto_pane );
     });
 
-    _save = new Button.with_label( _( "Save Changes" ) );
+    _save = new Button.with_label( _( "Save Changes" ) ) {
+      sensitive = false
+    };
     _save.clicked.connect(() => {
       _current.name = _name.text;
       _current.text = _buffer.text;
       _templates.add_template( _current );
       _win.show_pane( _goto_pane );
     });
+    _save.add_css_class( "suggested-action" );
 
     var rbox = new Box( Orientation.HORIZONTAL, 5 ) {
-      halign = Align.END
+      halign  = Align.END,
+      hexpand = true
     };
     rbox.append( cancel );
     rbox.append( _save );
 
-    var box = new Box( Orientation.HORIZONTAL, 5 );
+    var box = new Box( Orientation.HORIZONTAL, 5 ) {
+      halign       = Align.FILL,
+      hexpand      = true,
+      margin_start = 5,
+      margin_end   = 5
+    };
     box.append( _del_revealer );
     box.append( rbox );
 
@@ -146,10 +182,10 @@ public class Templater : Box {
 
   }
 
-  /* Sets the current template for editing */
-  public void set_current( Template? template, string goto_pane ) {
+  /* Sets the current template for editing.  We need to call this prior to showing this pane in the UI. */
+  public void set_current( string? name = null ) {
 
-    _goto_pane = goto_pane;
+    var template = _templates.find_by_name( name ?? "" );
 
     if( template == null ) {
       _current = new Template( "", "" );
@@ -161,6 +197,7 @@ public class Templater : Box {
 
     _name.text   = _current.name;
     _buffer.text = _current.text;
+    _goto_pane   = _win.get_current_pane();
 
   }
 

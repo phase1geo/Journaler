@@ -24,6 +24,7 @@ using Gdk;
 
 public class SidebarEditor : Box {
 
+  private MainWindow _win;
   private Journals   _journals;
   private Templates  _templates;
   private Journal    _journal;
@@ -44,12 +45,16 @@ public class SidebarEditor : Box {
   public signal void done();
 
   /* Create the main window UI */
-  public SidebarEditor( Journals journals, Templates templates ) {
+  public SidebarEditor( MainWindow win, Journals journals, Templates templates ) {
 
     Object( orientation: Orientation.VERTICAL, spacing: 5, margin_start: 5, margin_end: 5, margin_top: 5, margin_bottom: 5 );
 
+    _win       = win;
     _journals  = journals;
     _templates = templates;
+    _templates.changed.connect((name, added) => {
+      update_templates( name, added );
+    });
 
     /* Add the UI elements */
     add_name();
@@ -98,14 +103,20 @@ public class SidebarEditor : Box {
       use_markup = true
     };
 
-    var popover = new Popover();
+    var popover = new Popover() {
+      has_arrow = false
+    };
 
     _template_list = new ListBox();
     _template_list.row_activated.connect((row) => {
       var index = row.get_index();
-      _template.label = _templates.templates.nth_data( index ).name;
-      _save_template  = (get_template_name() != _orig_template);
-      _save.sensitive = (_name.buffer.text != "") && (_save_name || _save_template || _save_description);
+      if( index == (_templates.templates.length() + 1) ) {
+        _win.edit_template();
+      } else {
+        _template.label = (index == 0) ? _( "None" ) : _templates.templates.nth_data( index - 1 ).name;
+        _save_template  = (get_template_name() != _orig_template);
+        _save.sensitive = (_name.buffer.text != "") && (_save_name || _save_template || _save_description);
+      }
       popover.popdown();
     });
 
@@ -192,6 +203,7 @@ public class SidebarEditor : Box {
         _journal.name        = _name.buffer.text;
         _journal.template    = get_template_name();
         _journal.description = _description.buffer.text;
+        stdout.printf( "name: %s, template: %s\n", _journal.name, _journal.template );
         _journals.save();
       }
       done();
@@ -212,8 +224,25 @@ public class SidebarEditor : Box {
 
   }
 
+  /* Adds list label item */
+  private void add_list_label( string name ) {
+
+    var lbl = new Label( name ) {
+      margin_top    = 5,
+      margin_bottom = 5,
+      margin_start  = 10,
+      margin_end    = 10,
+      halign        = Align.FILL,
+      hexpand       = true,
+      xalign        = (float)0
+    };
+
+    _template_list.append( lbl );
+
+  }
+
   /* Updates the available templates in the template list */
-  public void update_templates() {
+  public void update_templates( string name, bool added ) {
 
     /* Clear the box */
     var row = _template_list.get_row_at_index( 0 );
@@ -222,19 +251,19 @@ public class SidebarEditor : Box {
       row = _template_list.get_row_at_index( 0 );
     }
 
-    _template.sensitive = false;
+    _template.sensitive = true;
 
+    /* Add the list contents */
+    add_list_label( _( "None" ) );
     foreach( var template in _templates.templates ) {
+      add_list_label( template.name );
+    }
+    add_list_label( _( "Create new template" ) );
 
-      var lbl = new Label( template.name ) {
-        halign  = Align.FILL,
-        hexpand = true,
-        xalign  = (float)0
-      };
-
-      _template_list.append( lbl );
-      _template.sensitive = true;
-
+    /* If we just added a new template, we'll set the label */
+    if( (name != "") && added ) {
+      _template.label = name;
+      _save.sensitive = (_name.text != "");
     }
 
   }
@@ -261,6 +290,7 @@ public class SidebarEditor : Box {
     _orig_name        = _name.text;
     _orig_template    = _template.label;
     _orig_description = _description.buffer.text;
+
     _save.sensitive   = false;
     _save_name        = false;
     _save_template    = false;
