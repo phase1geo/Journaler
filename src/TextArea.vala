@@ -176,7 +176,8 @@ public class TextArea : Box {
       wrap_mode          = WrapMode.WORD,
       pixels_below_lines = line_spacing,
       pixels_inside_wrap = line_spacing,
-      cursor_visible     = true
+      cursor_visible     = true,
+      enable_snippets    = true
     };
     _text.add_controller( text_focus );
     _text.add_css_class( "journal-text" );
@@ -313,18 +314,14 @@ public class TextArea : Box {
 
   /* Inserts the given template text at the current insertion cursor location */
   private void action_insert_template( SimpleAction action, Variant? variant ) {
-    foreach( var template in _templates.templates ) {
-      if( template.name == variant.get_string() ) {
-        var snippet = Utils.make_snippet( template.text );
-        if( snippet != null ) {
-          TextIter iter;
-          _buffer.get_iter_at_offset( out iter, _buffer.cursor_position );
-          _text.push_snippet( snippet, ref iter );
-        } else {
-          _buffer.insert_at_cursor( template.text, template.text.length );
-        }
-        break;
-      }
+    var snippet = _templates.get_snippet( variant.get_string() );
+    if( snippet != null ) {
+      TextIter iter;
+      _buffer.get_iter_at_offset( out iter, _buffer.cursor_position );
+      _text.push_snippet( snippet, ref iter );
+      _text.grab_focus();
+    } else {
+      stderr.printf( "Unable to find snippet for %s\n", variant.get_string() );
     }
   }
 

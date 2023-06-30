@@ -17,9 +17,14 @@ public class Templates {
 
   }
 
-  /* Returns the pathname of the journals.xml file */
+  /* Returns the directory containing the templates.snippets file */
+  private string xml_dir() {
+    return( GLib.Path.build_filename( Environment.get_user_data_dir(), "journaler" ) );
+  }
+
+  /* Returns the pathname of the templates.snippets file */
   private string xml_file() {
-    return( GLib.Path.build_filename( Environment.get_user_data_dir(), "journaler", "templates.xml" ) );
+    return( GLib.Path.build_filename( xml_dir(), "templates.snippets" ) );
   }
 
   /* Adds the given template and sorts the result */
@@ -65,16 +70,28 @@ public class Templates {
 
   }
 
+  /* Returns the snippet associated with the given template name */
+  public GtkSource.Snippet? get_snippet( string name ) {
+
+    var mgr = GtkSource.SnippetManager.get_default();
+    var search_path = mgr.search_path;
+    search_path += xml_dir();
+    mgr.search_path = search_path;
+
+    return( mgr.get_snippet( "journaler-templates", null, Template.get_snippet_trigger( name ) ) );
+
+  }
+
   /* Saves the current templates in XML format */
   public void save() {
 
     Xml.Doc*  doc  = new Xml.Doc( "1.0" );
-    Xml.Node* root = new Xml.Node( null, "templates" );
+    Xml.Node* root = new Xml.Node( null, "snippets" );
 
-    root->set_prop( "version", Journaler.version );
+    root->set_prop( "_group", "journaler-templates" );
 
     foreach( var template in _templates ) {
-      root->add_child( template.save() );
+      root->add_child( template.save( doc ) );
     }
 
     doc->set_root_element( root );
@@ -94,13 +111,8 @@ public class Templates {
 
     Xml.Node* root = doc->get_root_element();
 
-    var v = root->get_prop( "version" );
-    if( v != null ) {
-      check_version( v );
-    }
-
     for( Xml.Node* it = doc->get_root_element()->children; it != null; it = it->next ) {
-      if( (it->type == Xml.ElementType.ELEMENT_NODE) && (it->name == "template") ) {
+      if( (it->type == Xml.ElementType.ELEMENT_NODE) && (it->name == "snippet") ) {
         var loaded   = false;
         var template = new Template.from_xml( it, out loaded );
         if( loaded ) {
@@ -114,13 +126,6 @@ public class Templates {
     if( _templates.length() > 0 ) {
       changed( "", false );
     }
-
-  }
-
-  /* Allows us to check the stored version against our own to do any necessary updates */
-  private void check_version( string version ) {
-
-    // TBD
 
   }
 

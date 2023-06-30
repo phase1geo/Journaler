@@ -14,13 +14,25 @@ public class Template {
     loaded = load( node );
   }
 
+  /* Returns the snippet trigger for this template */
+  public static string get_snippet_trigger( string str ) {
+    return( "%" + str.down().replace( " ", "-" ) + "%" );
+  }
+
   /* Saves the template in XML format */
-  public Xml.Node* save() {
+  public Xml.Node* save( Xml.Doc* doc ) {
 
-    Xml.Node* node = new Xml.Node( null, "template" );
+    Xml.Node* node  = new Xml.Node( null, "snippet" );
+    Xml.Node* tnode = new Xml.Node( null, "text" );
 
-    node->set_prop( "name", name );
-    node->set_content( text );
+    node->set_prop( "_name", name );
+    node->set_prop( "_description", "" );
+    node->set_prop( "trigger", get_snippet_trigger( name ) );
+
+    tnode->set_prop( "languages", "markdown" );
+    tnode->add_child( doc->new_cdata_block( text, text.length ) );
+
+    node->add_child( tnode );
 
     return( node );
 
@@ -31,14 +43,17 @@ public class Template {
 
     var loaded = false;
 
-    var n = node->get_prop( "name" );
+    var n = node->get_prop( "_name" );
     if( n != null ) {
       name   = n;
       loaded = true;
     }
 
-    if( (node->children != null) && (node->children->type == Xml.ElementType.TEXT_NODE) ) {
-      text = node->children->get_content();
+    if( (node->children != null) && (node->children->type == Xml.ElementType.ELEMENT_NODE) ) {
+      var tnode = node->children;
+      if( (tnode->children != null) && (tnode->children->type == Xml.ElementType.CDATA_SECTION_NODE) ) {
+        text = tnode->get_content();
+      }
     }
 
     return( loaded );
