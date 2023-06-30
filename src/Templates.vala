@@ -78,7 +78,23 @@ public class Templates {
     search_path += xml_dir();
     mgr.search_path = search_path;
 
-    return( mgr.get_snippet( "journaler-templates", null, Template.get_snippet_trigger( name ) ) );
+    var snippet = mgr.get_snippet( "journaler-templates", null, Template.get_snippet_trigger( name ) );
+    set_variables( snippet );
+
+    return( snippet );
+
+  }
+
+  public void set_variables( GtkSource.Snippet snippet ) {
+
+    try {
+      var weather_cmd = "curl 'wttr.in?1uTFq'";
+      var output      = "";
+      Process.spawn_command_line_sync( weather_cmd, out output );
+      snippet.get_context().set_constant( "WEATHER", output );
+    } catch( SpawnError e ) {
+      stderr.printf( "ERROR: %s\n", e.message );
+    }
 
   }
 
