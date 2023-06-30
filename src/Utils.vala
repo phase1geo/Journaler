@@ -243,4 +243,41 @@ public class Utils {
     Journaler.settings.set_string( "last-directory", dir );
   }
 
+  /* Creates a snippet that can be inserted into a GtkSource.Buffer */
+  public static GtkSource.Snippet? make_snippet( string text ) {
+
+    Xml.Doc*  doc       = new Xml.Doc( "1.0" );
+    Xml.Node* root      = new Xml.Node( null, "snippet" );
+    Xml.Node* text_node = new Xml.Node( null, "text" );
+
+    var snippet_text = "";
+
+    root->set_prop( "_name", "" );
+    root->set_prop( "trigger", "" );
+    root->set_prop( "_description", "" );
+
+    text_node->add_child( doc->new_cdata_block( text, text.length ) );
+
+    root->add_child( text_node );
+
+    doc->set_root_element( root );
+    doc->dump_memory_format( out snippet_text );
+
+    delete doc;
+
+    stdout.printf( "snippet:\n%s\n", snippet_text );
+
+    /*
+    try {
+      var snippet = new GtkSource.Snippet.parsed( snippet_text );
+      return( snippet );
+    } catch( Error e ) {
+      stderr.printf( "ERROR: %s\n", e.message );
+    }
+    */
+
+    return( null );
+
+  }
+
 }

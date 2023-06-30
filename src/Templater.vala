@@ -14,6 +14,10 @@ public class Templater : Box {
   private string           _theme = "cobalt-light";
   private string           _goto_pane = "";
 
+  private const GLib.ActionEntry action_entries[] = {
+    { "action_insert_tab_position", action_insert_tab_position },
+  };
+
   /* Default constructor */
   public Templater( MainWindow win, Templates templates ) {
 
@@ -35,6 +39,11 @@ public class Templater : Box {
 
     /* Update the theme used by these components */
     update_theme();
+
+    /* Add the menu actions */
+    var actions = new SimpleActionGroup();
+    actions.add_action_entries( action_entries, this );
+    insert_action_group( "templater", actions );
 
   }
 
@@ -75,7 +84,9 @@ public class Templater : Box {
 
     var line_spacing = 5;
 
-    var lbl = new Label( Utils.make_title( _( "Template Text" ) ) ) {
+    var lbl = new Label( Utils.make_title( _( "Template Text:" ) ) ) {
+      halign     = Align.START,
+      xalign     = (float)0,
       use_markup = true
     };
 
@@ -95,7 +106,8 @@ public class Templater : Box {
       right_margin       = _text_margin,
       wrap_mode          = WrapMode.WORD,
       pixels_below_lines = line_spacing,
-      pixels_inside_wrap = line_spacing
+      pixels_inside_wrap = line_spacing,
+      extra_menu         = create_insertion_menu()
     };
     _text.add_controller( text_focus );
     _text.add_css_class( "journal-text" );
@@ -118,6 +130,27 @@ public class Templater : Box {
     box.append( scroll );
 
     append( box );
+
+  }
+
+  /* Creates the insertion menu */
+  private GLib.Menu create_insertion_menu() {
+
+    var menu = new GLib.Menu();
+
+    menu.append( _( "Insert Tab Position" ), "templater.action_insert_tab_position" );
+
+    return( menu );
+
+  }
+
+  /* Inserts a tab position string */
+  private void action_insert_tab_position() {
+
+    var tab_pos = 0;
+    var tab_str = "${%d}".printf( tab_pos );
+
+    _buffer.insert_at_cursor( tab_str, tab_str.length );
 
   }
 

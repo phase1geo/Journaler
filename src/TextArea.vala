@@ -95,13 +95,13 @@ public class TextArea : Box {
     /* Add the UI components */
     add_text_area();
 
+    /* Set the CSS for this widget */
+    update_theme();
+
     /* Add the menu actions */
     var actions = new SimpleActionGroup();
     actions.add_action_entries( action_entries, this );
     insert_action_group( "textarea", actions );
-
-    /* Set the CSS for this widget */
-    update_theme();
 
   }
 
@@ -315,7 +315,14 @@ public class TextArea : Box {
   private void action_insert_template( SimpleAction action, Variant? variant ) {
     foreach( var template in _templates.templates ) {
       if( template.name == variant.get_string() ) {
-        _buffer.insert_at_cursor( template.text, template.text.length );
+        var snippet = Utils.make_snippet( template.text );
+        if( snippet != null ) {
+          TextIter iter;
+          _buffer.get_iter_at_offset( out iter, _buffer.cursor_position );
+          _text.push_snippet( snippet, ref iter );
+        } else {
+          _buffer.insert_at_cursor( template.text, template.text.length );
+        }
         break;
       }
     }
