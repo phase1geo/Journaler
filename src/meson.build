@@ -5,6 +5,7 @@ sources += files(
     'Journal.vala',
     'Journals.vala',
     'MainWindow.vala',
+    'RSS.vala',
     'Security.vala',
     'SidebarEditor.vala',
     'SidebarEntries.vala',

@@ -351,6 +351,7 @@ public class TextArea : Box {
     var css_data = """
       .journal-text {
         font-size: %dpt;
+        font-family: monospace;
       }
       .title {
         font-size: %dpt;

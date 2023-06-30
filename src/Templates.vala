@@ -2,6 +2,9 @@ public class Templates {
 
   private List<Template> _templates;
 
+  private string _weather_var;
+  private string _news_var;
+
   public List<Template> templates {
     get {
       return( _templates );
@@ -14,6 +17,9 @@ public class Templates {
   public Templates() {
     
     _templates = new List<Template>();
+
+    /* TODO - I don't really want to do this here */
+    collect_variables();
 
   }
 
@@ -85,16 +91,46 @@ public class Templates {
 
   }
 
-  public void set_variables( GtkSource.Snippet snippet ) {
+  /* Retrieves the daily weather */
+  public void get_weather() {
 
     try {
-      var weather_cmd = "curl 'wttr.in?1uTFq'";
+      var weather_cmd = "curl 'wttr.in/54703?1uTFQn&lang=fr'";
       var output      = "";
       Process.spawn_command_line_sync( weather_cmd, out output );
-      snippet.get_context().set_constant( "WEATHER", output );
+      _weather_var = "```" + output.strip() + "\n```";
     } catch( SpawnError e ) {
       stderr.printf( "ERROR: %s\n", e.message );
     }
+
+  }
+
+  /* Gets the daily news from the stored RSS feeds */
+  public void get_news() {
+
+    try {
+      var rss_cmd = "curl 'macworld.com/feed'";
+      var output  = "";
+      Process.spawn_command_line_sync( rss_cmd, out output );
+      var rss = new RSS( output );
+      _news_var = rss.items;
+    } catch( SpawnError e ) {
+      stderr.printf( "ERROR: %s\n", e.message );
+    }
+
+  }
+
+  /* Collects the available variables */
+  public void collect_variables() {
+    get_weather();
+    get_news();
+  }
+
+  /* Adds the available variable values to the provided snippet */
+  public void set_variables( GtkSource.Snippet snippet ) {
+
+    snippet.get_context().set_constant( "WEATHER", _weather_var );
+    snippet.get_context().set_constant( "NEWS",    _news_var );
 
   }
 
@@ -124,8 +160,6 @@ public class Templates {
     if( doc == null ) {
       return;
     }
-
-    Xml.Node* root = doc->get_root_element();
 
     for( Xml.Node* it = doc->get_root_element()->children; it != null; it = it->next ) {
       if( (it->type == Xml.ElementType.ELEMENT_NODE) && (it->name == "snippet") ) {
