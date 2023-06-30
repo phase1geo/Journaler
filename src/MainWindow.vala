@@ -26,24 +26,29 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   private const int _sidebar_width = 300;
 
-  private GLib.Settings          _settings;
-  private Stack                  _lock_stack;
-  private TextArea               _text_area;
-  private Stack                  _sidebar_stack;
-  private Journals               _journals;
-  private Templates              _templates;
-  private Templater              _templater;
-  private SidebarEntries         _entries;
-  private SidebarEditor          _editor;
+  private GLib.Settings              _settings;
+  private Stack                      _lock_stack;
+  private TextArea                   _text_area;
+  private Stack                      _sidebar_stack;
+  private Journals                   _journals;
+  private Templates                  _templates;
+  private Templater                  _templater;
+  private SidebarEntries             _entries;
+  private SidebarEditor              _editor;
   private Gee.HashMap<string,Widget> _stack_focus_widgets;
+  private GLib.Menu                  _templates_menu;
 
   // private UnicodeInsert   _unicoder;
 
   private const GLib.ActionEntry[] action_entries = {
-    { "action_today", action_today },
-    { "action_save",  action_save },
-    { "action_lock",  action_lock },
-    { "action_quit",  action_quit },
+    { "action_today",         action_today },
+    { "action_save",          action_save },
+    { "action_lock",          action_lock },
+    { "action_quit",          action_quit },
+    { "action_new_template",  action_new_template },
+    { "action_edit_template", action_edit_template, "s" },
+    { "action_shortcuts",     action_shortcuts },
+    { "action_preferences",   action_preferences },
   };
 
   private bool on_elementary = Gtk.Settings.get_default().gtk_icon_theme_name == "elementary";
@@ -70,6 +75,9 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     /* Create and load the templates */
     _templates = new Templates();
+    _templates.changed.connect((name, added) => {
+      update_templates();
+    });
 
     /* Create and load the journals */
     _journals = new Journals();
@@ -110,8 +118,17 @@ public class MainWindow : Gtk.ApplicationWindow {
     today_btn.clicked.connect( action_today );
     header.pack_start( today_btn );
 
+    /* Create gear menu */
+    var misc_img = new Image.from_icon_name( get_header_icon_name( "emblem-system" ) );
+    var misc_btn = new MenuButton() {
+      has_frame  = false,
+      child      = misc_img,
+      menu_model = create_misc_menu() 
+    };
+    header.pack_end( misc_btn );
+
     /* Create lock */
-    var lock_btn = new Button.from_icon_name( "changes-prevent" );
+    var lock_btn = new Button.from_icon_name( get_header_icon_name( "changes-prevent" ) );
     lock_btn.set_tooltip_markup( Utils.tooltip_with_accel( _( "Lock Journaler" ), "<Control>l" ) );
     lock_btn.clicked.connect( action_lock );
     header.pack_end( lock_btn );
@@ -201,6 +218,35 @@ public class MainWindow : Gtk.ApplicationWindow {
     /* Make sure that we display today's entry */
     action_today();
 
+  }
+
+  /* Create the miscellaneous menu */
+  private GLib.Menu create_misc_menu() {
+
+    _templates_menu = new GLib.Menu();
+
+    var new_template = new GLib.Menu();
+    new_template.append( _( "Create New Template" ), "win.action_new_template" );
+
+    var template_menu = new GLib.Menu();
+    template_menu.append_section( null, _templates_menu );
+    template_menu.append_section( null, new_template );
+
+    var misc_menu = new GLib.Menu();
+    misc_menu.append_submenu( _( "Manage Templates" ), template_menu );
+    misc_menu.append( _( "Shortcut Cheatsheet" ), "win.action_shortcuts" );
+    misc_menu.append( _( "Preferences…" ), "win.action_preferences" );
+
+    return( misc_menu );
+
+  }
+
+  /* Updates the templates to manage */
+  private void update_templates() {
+    _templates_menu.remove_all();
+    foreach( var template in _templates.templates ) {
+      _templates_menu.append( template.name, "win.action_edit_template('%s')".printf( template.name ) );
+    }
   }
 
   /* Returns the currently visibile lock stack pane */
@@ -496,6 +542,16 @@ public class MainWindow : Gtk.ApplicationWindow {
     destroy();
   }
 
+  /* Creates a new template */
+  private void action_new_template() {
+    edit_template();
+  }
+
+  /* Edits an existing template by the given name */
+  private void action_edit_template( SimpleAction action, Variant? variant ) {
+    edit_template( variant.get_string() );
+  }
+
   /* Displays the shortcuts cheatsheet */
   private void action_shortcuts() {
 
@@ -519,6 +575,12 @@ public class MainWindow : Gtk.ApplicationWindow {
     */
 
     win.show();
+
+  }
+
+  private void action_preferences() {
+
+    /* TBD */
 
   }
 

@@ -123,12 +123,9 @@ public class Templater : Box {
 
   /* Sets the theme and CSS classes */
   private void update_theme() {
-
-    /* Update the text buffer theme */
     var style_mgr = GtkSource.StyleSchemeManager.get_default();
     var style = style_mgr.get_scheme( _theme );
     _buffer.style_scheme = style;
-
   }
 
   /* Creates the button bar */
