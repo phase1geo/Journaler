@@ -20,8 +20,16 @@ public class Journals {
   public signal void list_changed();
 
   /* Default constructor */
-  public Journals() {
+  public Journals( Templates templates ) {
+
     _journals = new Array<Journal>();
+
+    templates.changed.connect((name, added) => {
+      if( !added ) {
+        remove_template_from_journals( name );
+      }
+    });
+
   }
 
   /* Adds the given journal to the list of journals */
@@ -70,6 +78,25 @@ public class Journals {
       }
     }
     return( null );
+  }
+
+  /* Returns true if at least one journal is using the given template */
+  public bool does_journal_use_template( string template ) {
+    for( int i=0; i<_journals.length; i++ ) {
+      if( get_journal( i ).template == template ) {
+        return( true );
+      }
+    }
+    return( false );
+  }
+
+  /* Removes the template from any journals that use it be default */
+  private void remove_template_from_journals( string template ) {
+    for( int i=0; i<_journals.length; i++ ) {
+      if( get_journal( i ).template == template ) {
+        get_journal( i ).template = "";
+      }
+    }
   }
 
   /* Returns the pathname of the journals.xml file */

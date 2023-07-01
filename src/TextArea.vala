@@ -97,7 +97,8 @@ public class TextArea : Box {
 
     /* Set the CSS for this widget */
     win.dark_mode_changed.connect((mode) => {
-      theme = mode ? "cobalt" : "cobalt-light";
+      _theme = mode ? "cobalt" : "cobalt-light";
+      update_theme();
     });
 
     /* Add the menu actions */
@@ -350,13 +351,8 @@ public class TextArea : Box {
 
     /* Update the text buffer theme */
     var style_mgr = GtkSource.StyleSchemeManager.get_default();
-    stdout.printf( "theme: %s\n", _theme );
     var style = style_mgr.get_scheme( _theme );
     _buffer.style_scheme = style;
-
-    foreach( var id in style_mgr.get_scheme_ids() ) {
-      stdout.printf( "scheme: %s\n", id );
-    }
 
     /* Set the CSS */
     var provider = new CssProvider();
