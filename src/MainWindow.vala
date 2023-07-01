@@ -37,6 +37,7 @@ public class MainWindow : Gtk.ApplicationWindow {
   private SidebarEditor              _editor;
   private Gee.HashMap<string,Widget> _stack_focus_widgets;
   private GLib.Menu                  _templates_menu;
+  private List<Widget>               _header_buttons;
 
   // private UnicodeInsert   _unicoder;
 
@@ -74,6 +75,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     Object( application: app );
 
     _settings = settings;
+    _header_buttons = new List<Widget>();
 
     /* Create and load the templates */
     _templates = new Templates();
@@ -118,6 +120,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     };
     today_btn.set_tooltip_markup( Utils.tooltip_with_accel( _( "Go To Today" ), "<Control>t" ) );
     today_btn.clicked.connect( action_today );
+    _header_buttons.append( today_btn );
     header.pack_start( today_btn );
 
     /* Create gear menu */
@@ -127,12 +130,14 @@ public class MainWindow : Gtk.ApplicationWindow {
       child      = misc_img,
       menu_model = create_misc_menu() 
     };
+    _header_buttons.append( misc_btn );
     header.pack_end( misc_btn );
 
     /* Create lock */
     var lock_btn = new Button.from_icon_name( get_header_icon_name( "changes-prevent" ) );
     lock_btn.set_tooltip_markup( Utils.tooltip_with_accel( _( "Lock Journaler" ), "<Control>l" ) );
     lock_btn.clicked.connect( action_lock );
+    _header_buttons.append( lock_btn );
     header.pack_end( lock_btn );
 
     var lbox = new Box( Orientation.VERTICAL, 0 );
@@ -261,6 +266,13 @@ public class MainWindow : Gtk.ApplicationWindow {
     return( _lock_stack.visible_child_name );
   }
 
+  /* Sets the sensitivity of all header bar buttons placed by the application to the given value */
+  private void set_header_bar_sensitivity( bool sensitive ) {
+    foreach( var btn in _header_buttons ) {
+      btn.sensitive = sensitive;
+    }
+  }
+
   /* Displays the given pane in the main window */
   public void show_pane( string name, bool on_start = false ) {
 
@@ -272,15 +284,15 @@ public class MainWindow : Gtk.ApplicationWindow {
         } else {
           _lock_stack.transition_type = StackTransitionType.SLIDE_UP;
         }
-        get_titlebar().sensitive = true;
+        set_header_bar_sensitivity( true );
         break;
       case "template-view" :
         _lock_stack.transition_type = StackTransitionType.SLIDE_RIGHT;
-        get_titlebar().sensitive = false;
+        set_header_bar_sensitivity( false );
         break;
       default :
         _lock_stack.transition_type = StackTransitionType.SLIDE_DOWN;
-        get_titlebar().sensitive = false;
+        set_header_bar_sensitivity( false );
         break;
     }
 
