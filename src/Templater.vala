@@ -10,12 +10,16 @@ public class Templater : Box {
   private GtkSource.Buffer _buffer;
   private Button           _save;
   private Revealer         _del_revealer;
+  private GLib.Menu        _var_menu;
   private int              _text_margin = 20;
   private string           _theme = "cobalt-light";
   private string           _goto_pane = "";
+  private int              _tab_pos = 1;
 
   private const GLib.ActionEntry action_entries[] = {
-    { "action_insert_tab_position", action_insert_tab_position },
+    { "action_insert_next_tab_position", action_insert_next_tab_position },
+    { "action_insert_last_tab_position", action_insert_last_tab_position },
+    { "action_insert_variable",          action_insert_variable, "s" },
   };
 
   /* Default constructor */
@@ -26,6 +30,10 @@ public class Templater : Box {
     _win       = win;
     _templates = templates;
     _current   = null;
+
+    _templates.vars_available.connect(() => {
+      update_insert_var_menu();
+    });
 
     /* Add the UI components */
     add_name_frame();
@@ -136,22 +144,55 @@ public class Templater : Box {
   /* Creates the insertion menu */
   private GLib.Menu create_insertion_menu() {
 
-    var menu = new GLib.Menu();
+    var tab_menu = new GLib.Menu();
+    tab_menu.append( _( "Insert Next Tab Position" ), "templater.action_insert_next_tab_position" );
+    tab_menu.append( _( "Insert Last Tab Position" ), "templater.action_insert_last_tab_position" );
 
-    menu.append( _( "Insert Tab Position" ), "templater.action_insert_tab_position" );
+    _var_menu = new GLib.Menu();
+
+    var submenu = new GLib.Menu();
+    submenu.append_section( null, tab_menu );
+    submenu.append_section( null, _var_menu );
+
+    var ins_menu = new GLib.Menu();
+    ins_menu.append_submenu( _( "Insert Snippet" ), submenu );
+
+    var menu = new GLib.Menu();
+    menu.append_section( null, ins_menu );
 
     return( menu );
 
   }
 
+  /* Updates the insertion variable menu */
+  public void update_insert_var_menu() {
+
+    for( int i=0; i<_templates.num_variables(); i++ ) {
+      var variable = _templates.get_variable( i );
+      _var_menu.append( _( "Insert %s" ).printf( variable.down() ), "templater.action_insert_variable('%s')".printf( variable ) );
+    }
+
+  }
+
+  /* Inserts the given text */
+  private void insert_text( string text ) {
+    _buffer.insert_at_cursor( text, text.length );
+    _text.grab_focus();
+  }
+
   /* Inserts a tab position string */
-  private void action_insert_tab_position() {
+  private void action_insert_next_tab_position() {
+    insert_text( "${%d}".printf( _tab_pos++ ) );
+  }
 
-    var tab_pos = 0;
-    var tab_str = "${%d}".printf( tab_pos );
+  /* Inserts the last tab position */
+  private void action_insert_last_tab_position() {
+    insert_text( "${0}" );
+  }
 
-    _buffer.insert_at_cursor( tab_str, tab_str.length );
-
+  /* Inserts the given variable */
+  private void action_insert_variable( SimpleAction action, Variant? variant ) {
+    insert_text( "$%s".printf( variant.get_string() ) );
   }
 
   /* Sets the theme and CSS classes */
@@ -228,6 +269,9 @@ public class Templater : Box {
     _name.text   = _current.name;
     _buffer.text = _current.text;
     _goto_pane   = _win.get_current_pane();
+
+    // TBD - We probably need to get the last tab position if we are editing an existing template
+    _tab_pos     = 1;
 
   }
 

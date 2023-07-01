@@ -2,8 +2,7 @@ public class Templates {
 
   private List<Template> _templates;
 
-  private string _weather_var;
-  private string _news_var;
+  private Gee.HashMap<string,string> _snippet_vars;
 
   public List<Template> templates {
     get {
@@ -14,11 +13,13 @@ public class Templates {
   public int    news_max_items { get; set; default = 5; }
 
   public signal void changed( string name, bool added );
+  public signal void vars_available();
 
   /* Default constructor */
   public Templates() {
     
-    _templates = new List<Template>();
+    _templates    = new List<Template>();
+    _snippet_vars = new Gee.HashMap<string,string>();
 
     /* TODO - I don't really want to do this here */
     Idle.add(() => {
@@ -106,7 +107,8 @@ public class Templates {
       var weather_cmd = "wget -q -O - wttr.in/54703?1uTFQn&lang=%s".printf( lang );
       var output      = "";
       Process.spawn_command_line_sync( weather_cmd, out output );
-      _weather_var = "```\n" + output.chomp() + "\n```";
+      _snippet_vars.set( "WEATHER", "```\n" + output.chomp() + "\n```" );
+      stdout.printf( "WEATHER, snippet_vars.size: %d\n", num_variables() );
     } catch( SpawnError e ) {
       stderr.printf( "ERROR: %s\n", e.message );
     }
@@ -121,8 +123,23 @@ public class Templates {
       var output  = "";
       Process.spawn_command_line_sync( rss_cmd, out output );
       var rss = new RSS( output, news_max_items );
-      _news_var = rss.items;
+      _snippet_vars.set( "NEWS", rss.items );
+      stdout.printf( "NEWS, snippet_vars.size: %d\n", num_variables() );
     } catch( SpawnError e ) {
+      stderr.printf( "ERROR: %s\n", e.message );
+    }
+
+  }
+
+  /* Gets the current location */
+  public void get_location() {
+
+    try {
+      var simple   = new GClue.Simple.sync( "com.github.phase1geo.journaler", GClue.AccuracyLevel.STREET );
+      var location = simple.get_location();
+      _snippet_vars.set( "LOCATION", "lat: %g, long: %g".printf( location.latitude, location.longitude ) );
+      stdout.printf( "LOCATION, snippet_vars.size: %d\n", num_variables() );
+    } catch( Error e ) {
       stderr.printf( "ERROR: %s\n", e.message );
     }
 
@@ -130,16 +147,41 @@ public class Templates {
 
   /* Collects the available variables */
   public void collect_variables() {
+
     get_weather();
     get_news();
+    // get_location();
+
+    /* Indicate that the variables are now available */
+    vars_available();
+
+  }
+
+  /* Returns the number of available variables */
+  public int num_variables() {
+    return( _snippet_vars.size );
+  }
+
+  /* Returns the variable at the given location */
+  public string get_variable( int index ) {
+    var name = "";
+    var num  = 0;
+    _snippet_vars.map_iterator().foreach((key, val) => {
+      if( num++ == index ) {
+        name = key;
+        return( false );
+      }
+      return( true );
+    });
+    return( name );
   }
 
   /* Adds the available variable values to the provided snippet */
   public void set_variables( GtkSource.Snippet snippet ) {
-
-    snippet.get_context().set_constant( "WEATHER", _weather_var );
-    snippet.get_context().set_constant( "NEWS",    _news_var );
-
+    _snippet_vars.map_iterator().foreach((key, val) => {
+      snippet.get_context().set_constant( key, val );
+      return( true );
+    });
   }
 
   /* Saves the current templates in XML format */
