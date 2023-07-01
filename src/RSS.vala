@@ -9,13 +9,13 @@ public class RSS {
   }
 
   /* Default constructor */
-  public RSS( string str ) {
+  public RSS( string str, int max_items ) {
 
-    parse_rss( str );
+    parse_rss( str, max_items );
 
   }
 
-  void parse_rss( string str ) {
+  void parse_rss( string str, int max_items ) {
 
     Xml.Doc* doc = Xml.Parser.parse_memory( str, str.length );
     if( doc == null ) {
@@ -24,7 +24,7 @@ public class RSS {
 
     for( Xml.Node* it = doc->get_root_element()->children; it != null; it = it->next ) {
       if( (it->type == Xml.ElementType.ELEMENT_NODE) && (it->name == "channel") ) {
-        _items = parse_channel( it );
+        _items = parse_channel( it, max_items );
         break;
       }
     }
@@ -33,14 +33,14 @@ public class RSS {
 
   }
 
-  private string parse_channel( Xml.Node* node ) {
+  private string parse_channel( Xml.Node* node, int max_items ) {
     string[] items = {};
     for( Xml.Node* it = node->children; it != null; it = it->next ) {
       if( (it->type == Xml.ElementType.ELEMENT_NODE) && (it->name == "item") ) {
         items += parse_item( it );
       }
     }
-    return( string.joinv( "\n", items ) );
+    return( string.joinv( "\n", items[0:max_items] ) );
   }
 
   private string parse_item( Xml.Node* node ) {

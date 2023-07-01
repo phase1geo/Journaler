@@ -10,6 +10,8 @@ public class Templates {
       return( _templates );
     }
   }
+  public string news_feed_url  { get; set; default = "macworld.com/feed"; }
+  public int    news_max_items { get; set; default = 5; }
 
   public signal void changed( string name, bool added );
 
@@ -19,7 +21,10 @@ public class Templates {
     _templates = new List<Template>();
 
     /* TODO - I don't really want to do this here */
-    collect_variables();
+    Idle.add(() => {
+      collect_variables();
+      return( false );
+    });
 
   }
 
@@ -95,10 +100,11 @@ public class Templates {
   public void get_weather() {
 
     try {
-      var weather_cmd = "curl 'wttr.in/54703?1uTFQn&lang=fr'";
+      var lang        = Environment.get_variable( "LANGUAGE" );
+      var weather_cmd = "curl 'wttr.in/54703?1uTFQn&lang=%s'".printf( lang );
       var output      = "";
       Process.spawn_command_line_sync( weather_cmd, out output );
-      _weather_var = "```" + output.strip() + "\n```";
+      _weather_var = "```\n" + output.chomp() + "\n```";
     } catch( SpawnError e ) {
       stderr.printf( "ERROR: %s\n", e.message );
     }
@@ -109,10 +115,10 @@ public class Templates {
   public void get_news() {
 
     try {
-      var rss_cmd = "curl 'macworld.com/feed'";
+      var rss_cmd = "wget -q -O - %s".printf( news_feed_url );
       var output  = "";
       Process.spawn_command_line_sync( rss_cmd, out output );
-      var rss = new RSS( output );
+      var rss = new RSS( output, news_max_items );
       _news_var = rss.items;
     } catch( SpawnError e ) {
       stderr.printf( "ERROR: %s\n", e.message );
