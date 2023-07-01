@@ -90,7 +90,9 @@ public class Templates {
     mgr.search_path = search_path;
 
     var snippet = mgr.get_snippet( "journaler-templates", null, Template.get_snippet_trigger( name ) );
-    set_variables( snippet );
+    if( snippet != null ) {
+      set_variables( snippet );
+    }
 
     return( snippet );
 
@@ -101,7 +103,7 @@ public class Templates {
 
     try {
       var lang        = Environment.get_variable( "LANGUAGE" );
-      var weather_cmd = "curl 'wttr.in/54703?1uTFQn&lang=%s'".printf( lang );
+      var weather_cmd = "wget -q -O - wttr.in/54703?1uTFQn&lang=%s".printf( lang );
       var output      = "";
       Process.spawn_command_line_sync( weather_cmd, out output );
       _weather_var = "```\n" + output.chomp() + "\n```";

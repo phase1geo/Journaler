@@ -314,15 +314,20 @@ public class TextArea : Box {
 
   /* Inserts the given template text at the current insertion cursor location */
   private void action_insert_template( SimpleAction action, Variant? variant ) {
-    var snippet = _templates.get_snippet( variant.get_string() );
+    insert_template( variant.get_string() );
+  }
+
+  /* Inserts the given snippet name */
+  private bool insert_template( string name ) {
+    var snippet = _templates.get_snippet( name );
     if( snippet != null ) {
       TextIter iter;
       _buffer.get_iter_at_offset( out iter, _buffer.cursor_position );
       _text.push_snippet( snippet, ref iter );
       _text.grab_focus();
-    } else {
-      stderr.printf( "Unable to find snippet for %s\n", variant.get_string() );
+      return( true );
     }
+    return( false );
   }
 
   /* Updates the UI when an image is added to the current entry */
@@ -455,9 +460,12 @@ public class TextArea : Box {
     _tags.entry   = entry;
     _tags.update_tags();
 
-    /* Set the buffer text to the entry text */
+    /* Set the buffer text to the entry text or insert the snippet */
     _text.buffer.begin_irreversible_action();
-    _text.buffer.text = entry.text;
+    _text.buffer.text = "";
+    if( (entry.text != "") || !insert_template( _journals.current.template ) ) {
+      _text.buffer.text = entry.text;
+    }
     _text.buffer.end_irreversible_action();
 
     /* Set the editable bit */

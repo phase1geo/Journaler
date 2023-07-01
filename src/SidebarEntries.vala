@@ -311,12 +311,6 @@ public class SidebarEntries : Box {
     var entry = new DBEntry();
     entry.date = date;
 
-    /* If the current journal has a template associated with it, apply its text by default */
-    var template = _templates.find_by_name( _journals.current.template );
-    if( template != null ) {
-      entry.text = template.text;
-    }
-
     /* Attempt to load the entry */
     var load_result = _journals.current.db.load_entry( entry, create_if_needed );
 
