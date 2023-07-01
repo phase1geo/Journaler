@@ -62,6 +62,22 @@ public class Journaler : Gtk.Application {
     /* Create the main window */
     appwin = new MainWindow( this, settings );
 
+    var granite_settings = Granite.Settings.get_default();
+    var gtk_settings = Gtk.Settings.get_default();
+
+    /* Handle dark mode changes */
+    gtk_settings.gtk_application_prefer_dark_theme = (
+      granite_settings.prefers_color_scheme == Granite.Settings.ColorScheme.DARK
+    );
+    appwin.change_dark_theme( gtk_settings.gtk_application_prefer_dark_theme );
+
+    granite_settings.notify["prefers-color-scheme"].connect (() => {
+      gtk_settings.gtk_application_prefer_dark_theme = (
+        granite_settings.prefers_color_scheme == Granite.Settings.ColorScheme.DARK
+      );
+      appwin.change_dark_theme( gtk_settings.gtk_application_prefer_dark_theme );
+    });
+
     /* Handle any changes to the position of the window */
     /* DONT_KNOW_HOW_TO_HANDLE_YET
     appwin.configure_event.connect(() => {

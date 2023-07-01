@@ -220,6 +220,11 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   }
 
+  public void change_dark_theme( bool dark_mode ) {
+    _text_area.change_dark_theme( dark_mode );
+    _templater.change_dark_theme( dark_mode );
+  }
+ 
   /* Create the miscellaneous menu */
   private GLib.Menu create_misc_menu() {
 

@@ -105,6 +105,11 @@ public class TextArea : Box {
 
   }
 
+  /* Set the theme based on the dark mode setting */
+  public void change_dark_theme( bool dark_mode ) {
+    theme = dark_mode ? "cobalt" : "cobalt-light";
+  }
+
   /* Returns the widget that should receive the grab focus when this pane is placed into view */
   public Widget get_focus_widget() {
 
@@ -350,6 +355,10 @@ public class TextArea : Box {
     var style_mgr = GtkSource.StyleSchemeManager.get_default();
     var style = style_mgr.get_scheme( _theme );
     _buffer.style_scheme = style;
+
+    foreach( var id in style_mgr.get_scheme_ids() ) {
+      stdout.printf( "scheme: %s\n", id );
+    }
 
     /* Set the CSS */
     var provider = new CssProvider();

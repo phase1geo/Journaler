@@ -55,6 +55,12 @@ public class Templater : Box {
 
   }
 
+  /* Updates the theme based on the dark mode setting */
+  public void change_dark_theme( bool dark_mode ) {
+    _theme = dark_mode ? "cobalt" : "cobalt-light";
+    update_theme();
+  }
+
   /* Returns the widget that will receive input focus when this UI is displayed */
   public Widget get_focus_widget() {
     return( _name );
