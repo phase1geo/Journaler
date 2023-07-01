@@ -41,12 +41,13 @@ public class Journals {
           add_journal( new_journal );
         } else {
           if( _current == journal ) {
-            current = get_journal( ((i + 1) == _journals.length) ? (i - 1) : i );
+            current = get_journal( (i == _journals.length) ? (i - 1) : i );
           } else {
             save();
           }
           list_changed();
         }
+        break;
       }
     }
   }
