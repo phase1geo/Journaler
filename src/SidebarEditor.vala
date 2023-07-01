@@ -24,31 +24,53 @@ using Gdk;
 
 public class SidebarEditor : Box {
 
-  private Journals _journals;
-  private Journal  _journal;
-  private Entry    _name;
-  private TextView _description;
-  private Revealer _del_revealer;
-  private Button   _save;
-  private string   _orig_name;
-  private string   _orig_description;
-  private bool     _save_name;
-  private bool     _save_description;
+  private MainWindow _win;
+  private Journals   _journals;
+  private Templates  _templates;
+  private Journal    _journal;
+  private Entry      _name;
+  private MenuButton _template;
+  private Menu       _template_menu;
+  private TextView   _description;
+  private Revealer   _del_revealer;
+  private Button     _save;
+  private string     _orig_name;
+  private string     _orig_template;
+  private string     _orig_description;
+  private bool       _save_name;
+  private bool       _save_template;
+  private bool       _save_description;
+
+  private const GLib.ActionEntry action_entries[] = {
+    { "action_set_template", action_set_template, "s" },
+    { "action_new_template", action_new_template },
+  };
 
   /* Indicates that the editing process hsa completed */
   public signal void done();
 
   /* Create the main window UI */
-  public SidebarEditor( Journals journals ) {
+  public SidebarEditor( MainWindow win, Journals journals, Templates templates ) {
 
     Object( orientation: Orientation.VERTICAL, spacing: 5, margin_start: 5, margin_end: 5, margin_top: 5, margin_bottom: 5 );
 
-    _journals = journals;
+    _win       = win;
+    _journals  = journals;
+    _templates = templates;
+    _templates.changed.connect((name, added) => {
+      update_templates( name, added );
+    });
 
     /* Add the UI elements */
     add_name();
+    add_templates();
     add_description();
     add_button_bar();
+
+    /* Add the menu actions */
+    var actions = new SimpleActionGroup();
+    actions.add_action_entries( action_entries, this );
+    insert_action_group( "editor", actions );
 
   }
 
@@ -68,12 +90,41 @@ public class SidebarEditor : Box {
     _name.changed.connect(() => {
       var name = _name.buffer.text;
       _save_name = (name != _orig_name) && (_journals.get_journal_by_name( name ) == null);
-      _save.sensitive = (name != "") && (_save_name || _save_description);
+      _save.sensitive = (name != "") && (_save_name || _save_template || _save_description);
     });
 
     var box = new Box( Orientation.HORIZONTAL, 5 );
     box.append( lbl );
     box.append( _name );
+
+    append( box );
+
+  }
+
+  /* Returns the name of the currently selected template */
+  private string get_template_name() {
+    return( (_template.label == _( "None" )) ? "" : _template.label );
+  }
+
+  /* Allows the user to choose a default template to use with the journal when a new entry is added */
+  private void add_templates() {
+
+    var lbl = new Label( Utils.make_title( _( "Use Template:" ) ) ) {
+      use_markup = true
+    };
+
+    _template_menu = new GLib.Menu();
+
+    _template = new MenuButton() {
+      halign     = Align.FILL,
+      hexpand    = true,
+      label      = _( "None" ),
+      menu_model = _template_menu
+    };
+
+    var box = new Box( Orientation.HORIZONTAL, 5 );
+    box.append( lbl );
+    box.append( _template );
 
     append( box );
 
@@ -85,7 +136,8 @@ public class SidebarEditor : Box {
     /* Edit description */
     var lbl = new Label( Utils.make_title( _( "Description:" ) ) ) {
       halign     = Align.START,
-      use_markup = true
+      use_markup = true,
+      margin_top = 5
     };
 
     _description = new TextView() {
@@ -97,7 +149,7 @@ public class SidebarEditor : Box {
     };
     _description.buffer.changed.connect(() => {
       _save_description = (_description.buffer.text != _orig_description);
-      _save.sensitive   = (_name.buffer.text != "") && (_save_name || _save_description);
+      _save.sensitive   = (_name.buffer.text != "") && (_save_name || _save_template || _save_description);
     });
 
     var box = new Box( Orientation.VERTICAL, 5 );
@@ -137,11 +189,13 @@ public class SidebarEditor : Box {
 
     _save.clicked.connect(() => {
       if( _journal == null ) {
-        var journal = new Journal( _name.buffer.text, _description.buffer.text );
+        var journal = new Journal( _name.buffer.text, get_template_name(), _description.buffer.text );
         _journals.add_journal( journal );
       } else {
         _journal.name        = _name.buffer.text;
+        _journal.template    = get_template_name();
         _journal.description = _description.buffer.text;
+        stdout.printf( "name: %s, template: %s\n", _journal.name, _journal.template );
         _journals.save();
       }
       done();
@@ -162,6 +216,46 @@ public class SidebarEditor : Box {
 
   }
 
+  /* Updates the available templates in the template list */
+  public void update_templates( string name, bool added ) {
+
+    _template_menu.remove_all();
+
+    var none_menu = new GLib.Menu();
+    none_menu.append( _( "None" ), "editor.action_set_template('None')" );
+
+    var list_menu = new GLib.Menu();
+    foreach( var template in _templates.templates ) {
+      list_menu.append( template.name, "editor.action_set_template('%s')".printf( template.name ) );
+    }
+
+    var new_menu = new GLib.Menu();
+    new_menu.append( _( "Create New Template" ), "editor.action_new_template" );
+
+    _template_menu.append_section( null, none_menu );
+    _template_menu.append_section( null, list_menu );
+    _template_menu.append_section( null, new_menu );
+
+    /* If we just added a new template, we'll set the label */
+    if( (name != "") && added ) {
+      _template.label = name;
+      _save.sensitive = (_name.text != "");
+    }
+
+  }
+
+  /* Sets the template to the given value and updates the UI */
+  private void action_set_template( SimpleAction action, Variant? variant ) {
+    _template.label = variant.get_string();
+    _save_template  = (get_template_name() != _orig_template);
+    _save.sensitive = (_name.buffer.text != "") && (_save_name || _save_template || _save_description);
+  }
+
+  /* Creates a new template */
+  private void action_new_template() {
+    _win.edit_template();
+  }
+
   /* Sets up the journal editor panel and then switches to it */
   public void edit_journal( Journal? journal ) {
 
@@ -169,20 +263,25 @@ public class SidebarEditor : Box {
 
     if( journal == null ) {
       _name.text = "";
+      _template.label = _( "None" );
       _description.buffer.text = "";
       _save.sensitive = false;
       _del_revealer.reveal_child = false;
     } else {
       _name.text = journal.name;
+      _template.label = (journal.template == "") ? _( "None" ) : journal.template;
       _description.buffer.text = journal.description;
       _save.sensitive = true;
       _del_revealer.reveal_child = true;
     }
 
     _orig_name        = _name.text;
+    _orig_template    = _template.label;
     _orig_description = _description.buffer.text;
+
     _save.sensitive   = false;
     _save_name        = false;
+    _save_template    = false;
     _save_description = false;
 
   }

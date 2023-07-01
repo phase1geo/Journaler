@@ -26,22 +26,29 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   private const int _sidebar_width = 300;
 
-  private GLib.Settings          _settings;
-  private Stack                  _lock_stack;
-  private TextArea               _text_area;
-  private Stack                  _sidebar_stack;
-  private Journals               _journals;
-  private SidebarEntries         _entries;
-  private SidebarEditor          _editor;
+  private GLib.Settings              _settings;
+  private Stack                      _lock_stack;
+  private TextArea                   _text_area;
+  private Stack                      _sidebar_stack;
+  private Journals                   _journals;
+  private Templates                  _templates;
+  private Templater                  _templater;
+  private SidebarEntries             _entries;
+  private SidebarEditor              _editor;
   private Gee.HashMap<string,Widget> _stack_focus_widgets;
+  private GLib.Menu                  _templates_menu;
 
   // private UnicodeInsert   _unicoder;
 
   private const GLib.ActionEntry[] action_entries = {
-    { "action_today", action_today },
-    { "action_save",  action_save },
-    { "action_lock",  action_lock },
-    { "action_quit",  action_quit },
+    { "action_today",         action_today },
+    { "action_save",          action_save },
+    { "action_lock",          action_lock },
+    { "action_quit",          action_quit },
+    { "action_new_template",  action_new_template },
+    { "action_edit_template", action_edit_template, "s" },
+    { "action_shortcuts",     action_shortcuts },
+    { "action_preferences",   action_preferences },
   };
 
   private bool on_elementary = Gtk.Settings.get_default().gtk_icon_theme_name == "elementary";
@@ -65,6 +72,12 @@ public class MainWindow : Gtk.ApplicationWindow {
     Object( application: app );
 
     _settings = settings;
+
+    /* Create and load the templates */
+    _templates = new Templates();
+    _templates.changed.connect((name, added) => {
+      update_templates();
+    });
 
     /* Create and load the journals */
     _journals = new Journals();
@@ -105,8 +118,17 @@ public class MainWindow : Gtk.ApplicationWindow {
     today_btn.clicked.connect( action_today );
     header.pack_start( today_btn );
 
+    /* Create gear menu */
+    var misc_img = new Image.from_icon_name( get_header_icon_name( "emblem-system" ) );
+    var misc_btn = new MenuButton() {
+      has_frame  = false,
+      child      = misc_img,
+      menu_model = create_misc_menu() 
+    };
+    header.pack_end( misc_btn );
+
     /* Create lock */
-    var lock_btn = new Button.from_icon_name( "changes-prevent" );
+    var lock_btn = new Button.from_icon_name( get_header_icon_name( "changes-prevent" ) );
     lock_btn.set_tooltip_markup( Utils.tooltip_with_accel( _( "Lock Journaler" ), "<Control>l" ) );
     lock_btn.clicked.connect( action_lock );
     header.pack_end( lock_btn );
@@ -146,6 +168,15 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     add_locked_view( pbox );
 
+    var tbox = new Box( Orientation.VERTICAL, 0 ) {
+      halign  = Align.FILL,
+      hexpand = true,
+      valign  = Align.FILL,
+      vexpand = true
+    };
+
+    add_template_view( tbox );
+
     /* Create primary stack */
     _lock_stack = new Stack() {
       halign = Align.FILL,
@@ -156,6 +187,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     _lock_stack.add_named( pbox, "lock-view" );
     _lock_stack.add_named( pw,   "entry-view" );
     _lock_stack.add_named( sbox, "setlock-view" );
+    _lock_stack.add_named( tbox, "template-view" );
 
     child = _lock_stack;
 
@@ -177,6 +209,9 @@ public class MainWindow : Gtk.ApplicationWindow {
     /* Loads the application-wide CSS */
     load_css();
 
+    /* Load the available templates */
+    _templates.load();
+
     /* Load the available journals */
     _journals.load();
 
@@ -185,14 +220,56 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   }
 
+  /* Create the miscellaneous menu */
+  private GLib.Menu create_misc_menu() {
+
+    _templates_menu = new GLib.Menu();
+
+    var new_template = new GLib.Menu();
+    new_template.append( _( "Create New Template" ), "win.action_new_template" );
+
+    var template_menu = new GLib.Menu();
+    template_menu.append_section( null, _templates_menu );
+    template_menu.append_section( null, new_template );
+
+    var misc_menu = new GLib.Menu();
+    misc_menu.append_submenu( _( "Manage Templates" ), template_menu );
+    misc_menu.append( _( "Shortcut Cheatsheet" ), "win.action_shortcuts" );
+    misc_menu.append( _( "Preferences…" ), "win.action_preferences" );
+
+    return( misc_menu );
+
+  }
+
+  /* Updates the templates to manage */
+  private void update_templates() {
+    _templates_menu.remove_all();
+    foreach( var template in _templates.templates ) {
+      _templates_menu.append( template.name, "win.action_edit_template('%s')".printf( template.name ) );
+    }
+  }
+
+  /* Returns the currently visibile lock stack pane */
+  public string get_current_pane() {
+    return( _lock_stack.visible_child_name );
+  }
+
   /* Displays the given pane in the main window */
-  private void show_pane( string name, bool on_start = false ) {
+  public void show_pane( string name, bool on_start = false ) {
 
     /* Set the transition type */
     switch( name ) {
       case "entry-view" :
-        _lock_stack.transition_type = StackTransitionType.SLIDE_UP;
+        if( _lock_stack.visible_child_name == "template-view" ) {
+          _lock_stack.transition_type = StackTransitionType.SLIDE_LEFT;
+        } else {
+          _lock_stack.transition_type = StackTransitionType.SLIDE_UP;
+        }
         get_titlebar().sensitive = true;
+        break;
+      case "template-view" :
+        _lock_stack.transition_type = StackTransitionType.SLIDE_RIGHT;
+        get_titlebar().sensitive = false;
         break;
       default :
         _lock_stack.transition_type = StackTransitionType.SLIDE_DOWN;
@@ -218,7 +295,7 @@ public class MainWindow : Gtk.ApplicationWindow {
   /* Creates the textbox with today's entry. */
   private void add_text_area( Box box ) {
 
-    _text_area = new TextArea( this, _journals );
+    _text_area = new TextArea( this, _journals, _templates );
 
     box.append( _text_area );
 
@@ -367,10 +444,29 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   }
 
+  /* Creates the template editor pane */
+  private void add_template_view( Box box ) {
+
+    _templater = new Templater( this, _templates );
+
+    box.append( _templater );
+
+    _stack_focus_widgets.set( "template-view", _templater.get_focus_widget() );
+
+  }
+
+  /* Edits the given template name.  If name is not specified, a new template will be created. */
+  public void edit_template( string? name = null ) {
+
+    _templater.set_current( name );
+    show_pane( "template-view" );
+
+  }
+
   /* Creates the current journal sidebar */
   private Box add_current_sidebar() {
 
-    _entries = new SidebarEntries( _journals );
+    _entries = new SidebarEntries( _journals, _templates );
 
     _entries.edit_journal.connect((journal) => {
       _editor.edit_journal( journal );
@@ -388,7 +484,7 @@ public class MainWindow : Gtk.ApplicationWindow {
   /* Adds the journal editor to the sidebar */
   private Box add_journal_edit() {
 
-    _editor = new SidebarEditor( _journals );
+    _editor = new SidebarEditor( this, _journals, _templates );
 
     _editor.done.connect(() => {
       _sidebar_stack.visible_child_name = "entries";
@@ -446,6 +542,16 @@ public class MainWindow : Gtk.ApplicationWindow {
     destroy();
   }
 
+  /* Creates a new template */
+  private void action_new_template() {
+    edit_template();
+  }
+
+  /* Edits an existing template by the given name */
+  private void action_edit_template( SimpleAction action, Variant? variant ) {
+    edit_template( variant.get_string() );
+  }
+
   /* Displays the shortcuts cheatsheet */
   private void action_shortcuts() {
 
@@ -469,6 +575,12 @@ public class MainWindow : Gtk.ApplicationWindow {
     */
 
     win.show();
+
+  }
+
+  private void action_preferences() {
+
+    /* TBD */
 
   }
 

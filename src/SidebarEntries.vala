@@ -27,21 +27,29 @@ public class SidebarEntries : Box {
   private const int _sidebar_width = 300;
 
   private Journals       _journals;
+  private Templates      _templates;
   private Array<DBEntry> _listbox_entries;
   private MenuButton     _journal_mb;
-  private ListBox        _journal_list;
+  private GLib.Menu      _journals_menu;
   private ListBox        _listbox;
   private ScrolledWindow _lb_scroll;
   private Calendar       _cal;
   private bool           _ignore_select = false;
 
+  private const GLib.ActionEntry action_entries[] = {
+    { "action_select_journal", action_select_journal, "s" },
+    { "action_new_journal",    action_new_journal },
+  };
+
   public signal void edit_journal( Journal? journal );
   public signal void show_journal_entry( DBEntry entry, bool editable );
 
   /* Create the main window UI */
-  public SidebarEntries( Journals journals ) {
+  public SidebarEntries( Journals journals, Templates templates ) {
 
     Object( orientation: Orientation.VERTICAL, spacing: 5, margin_start: 5, margin_end: 5, margin_top: 5, margin_bottom: 5 );
+
+    _templates = templates;
 
     _journals = journals;
     _journals.current_changed.connect((refresh) => {
@@ -51,7 +59,7 @@ public class SidebarEntries : Box {
       }
     });
     _journals.list_changed.connect(() => {
-      populate_journal_list();
+      populate_journal_menu();
       show_entry_for_date( DBEntry.todays_date(), true );
     });
     _listbox_entries = new Array<DBEntry>();
@@ -61,42 +69,54 @@ public class SidebarEntries : Box {
     add_current_list();
     add_calendar();
 
+    /* Add the menu actions */
+    var actions = new SimpleActionGroup();
+    actions.add_action_entries( action_entries, this );
+    insert_action_group( "entries", actions );
+
   }
 
   /* Creates the current journal sidebar */
   private void add_journals() {
 
-    var journal_popover = new Popover() {
-      has_arrow = false
-    };
+    _journals_menu = new GLib.Menu();
+
+    var new_menu = new GLib.Menu();
+    new_menu.append( _( "Create New Journal" ), "entries.action_new_journal" );
+
+    var journal_menu = new GLib.Menu();
+    journal_menu.append_section( null, _journals_menu );
+    journal_menu.append_section( null, new_menu );
 
     _journal_mb = new MenuButton() {
-      halign  = Align.FILL,
-      hexpand = true,
-      popover = journal_popover
+      halign     = Align.FILL,
+      hexpand    = true,
+      menu_model = journal_menu
     };
 
-    _journal_list = new ListBox();
-    _journal_list.row_activated.connect((row) => {
-      var index = row.get_index();
-      _journals.set_current( index );
-      journal_popover.popdown();
-    });
-
-    journal_popover.child = _journal_list;
-
-    var add = new Button.from_icon_name( "list-add-symbolic" );
-    add.clicked.connect(() => {
-      edit_journal( null );
-      tooltip_text = _( "Add new journal" );
+    var edit = new Button.from_icon_name( "edit-symbolic" ) {
+      tooltip_text = _( "Edit Current Journal" )
+    };
+    edit.clicked.connect(() => {
+      edit_journal( _journals.current );
     });
 
     var box = new Box( Orientation.HORIZONTAL, 5 );
     box.append( _journal_mb );
-    box.append( add );
+    box.append( edit );
 
     append( box );
 
+  }
+
+  /* Called when a journal is selected in the dropdown menu */
+  private void action_select_journal( SimpleAction action, Variant? variant ) {
+    _journals.current = _journals.get_journal_by_name( variant.get_string() );
+  }
+
+  /* Called when a new journal needs to be created on behalf of the user */
+  private void action_new_journal() {
+    edit_journal( null );
   }
 
   /* Adds the current listbox UI */
@@ -166,45 +186,13 @@ public class SidebarEntries : Box {
   }
 
   /* Populates the list of journal entries in the menubutton dropdown list */
-  public void populate_journal_list() {
+  public void populate_journal_menu() {
 
-    /* Clear the box */
-    var row = _journal_list.get_row_at_index( 0 );
-    while( row != null ) {
-      _journal_list.remove( row );
-      row = _journal_list.get_row_at_index( 0 );
-    }
+    _journals_menu.remove_all();
 
     for( int i=0; i<_journals.num_journals(); i++ ) {
-
       var journal = _journals.get_journal( i );
-
-      var lbl = new Label( journal.name ) {
-        halign  = Align.FILL,
-        hexpand = true,
-        xalign  = (float)0
-      };
-
-      var edit = new Button.from_icon_name( "edit-symbolic" ) {
-        halign = Align.END
-      };
-
-      edit.clicked.connect(() => {
-        edit_journal( journal );
-      });
-
-      var box = new Box( Orientation.HORIZONTAL, 5 ) {
-        margin_start = 5,
-        margin_end = 5,
-        margin_top = 5,
-        margin_bottom = 5
-      };
-
-      box.append( lbl );
-      box.append( edit );
-
-      _journal_list.append( box );
-
+      _journals_menu.append( journal.name, "entries.action_select_journal('%s')".printf( journal.name ) );
     }
 
   }
@@ -322,6 +310,12 @@ public class SidebarEntries : Box {
 
     var entry = new DBEntry();
     entry.date = date;
+
+    /* If the current journal has a template associated with it, apply its text by default */
+    var template = _templates.find_by_name( _journals.current.template );
+    if( template != null ) {
+      entry.text = template.text;
+    }
 
     /* Attempt to load the entry */
     var load_result = _journals.current.db.load_entry( entry, create_if_needed );

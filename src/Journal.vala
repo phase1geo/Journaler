@@ -1,6 +1,7 @@
 public class Journal {
 
   private string    _name        = "";
+  private string    _template    = "";
   private string    _description = "";
   private Database? _db          = null;
 
@@ -19,14 +20,20 @@ public class Journal {
       }
     }
   }
+  public string template {
+    get {
+      return( _template );
+    }
+    set {
+      _template = value;
+    }
+  }
   public string description {
     get {
       return( _description );
     }
     set {
-      if( _description != value ) {
-        _description = value;
-      }
+      _description = value;
     }
   }
   public Database? db {
@@ -36,8 +43,9 @@ public class Journal {
   }
 
   /* Default constructor */
-  public Journal( string name, string description ) {
+  public Journal( string name, string template, string description ) {
     _name        = name;
+    _template    = template;
     _description = description;
     _db          = new Database( db_path() );
   }
@@ -64,6 +72,7 @@ public class Journal {
     Xml.Node* node = new Xml.Node( null, "journal" );
 
     node->set_prop( "name", _name );
+    node->set_prop( "template", _template );
     node->set_prop( "description", _description );
 
     return( node );
@@ -76,6 +85,11 @@ public class Journal {
     var n = node->get_prop( "name" );
     if( n != null ) {
       _name = n;
+    }
+
+    var t = node->get_prop( "template" );
+    if( t != null ) {
+      _template = t;
     }
 
     var d = node->get_prop( "description" );
