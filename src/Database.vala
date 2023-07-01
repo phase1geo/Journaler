@@ -14,6 +14,7 @@ public class DBEntry {
   public string  title         { get; set; default = ""; }
   public string  text          { get; set; default = ""; }
   public string  date          { get; set; default = ""; }
+  public string  time          { get; set; default = ""; }
   public Pixbuf? image         { get; set; default = null; }
   public int     image_pos     { get; set; default = 200; }
   public double  image_vadj    { get; set; default = 0.0; }
@@ -29,6 +30,7 @@ public class DBEntry {
   /* Default constructor */
   public DBEntry() {
     this.date = todays_date();
+    this.time = todays_time();
   }
 
   /* Constructor */
@@ -46,10 +48,11 @@ public class DBEntry {
   }
 
   /* Constructor */
-  public DBEntry.with_date( string title, string text, Pixbuf? image, int image_pos, double image_vadj, double image_hadj, bool image_changed, string tag_list, string date ) {
+  public DBEntry.with_date( string title, string text, Pixbuf? image, int image_pos, double image_vadj, double image_hadj, bool image_changed, string tag_list, string date, string time ) {
     this.title         = title;
     this.text          = text;
     this.date          = date;
+    this.time          = time;
     this.image         = image;
     this.image_pos     = image_pos;
     this.image_vadj    = image_vadj;
@@ -120,10 +123,22 @@ public class DBEntry {
     return( int.parse( date_bits[1] ) );
   }
 
-  /* Returns the date in DateTime form */
+  /* Returns the day in DateTime form */
   public uint get_day() {
     var date_bits = date.split( "-" );
     return( (uint)int.parse( date_bits[2] ) );
+  }
+
+  /* Returns the stored hour */
+  public int get_hour() {
+    var time_bits = time.split( ":" );
+    return( int.parse( time_bits[0] ) );
+  }
+
+  /* Returns the stored minute */
+  public int get_minute() {
+    var time_bits = time.split( ":" );
+    return( int.parse( time_bits[1] ) );
   }
 
   /* Returns the string version of today's date */
@@ -132,15 +147,26 @@ public class DBEntry {
     return( datetime_date( today ) );
   }
 
+  /* Returns the string version of the current time */
+  public static string todays_time() {
+    var today = new DateTime.now_local();
+    return( datetime_time( today ) );
+  }
+
   /* Returns the DateTime version of the date */
   public DateTime datetime() {
-    var dt = new DateTime.local( get_year(), get_month(), (int)get_day(), 0, 0, 0 );
+    var dt = new DateTime.local( get_year(), get_month(), (int)get_day(), get_hour(), get_month(), 0 );
     return( dt );
   }
 
   /* Returns the string date for the given DateTime object */
-  public static string datetime_date( DateTime date ) {
-    return( "%04d-%02d-%02d".printf( date.get_year(), date.get_month(), date.get_day_of_month() ) );
+  public static string datetime_date( DateTime dt ) {
+    return( "%04d-%02d-%02d".printf( dt.get_year(), dt.get_month(), dt.get_day_of_month() ) );
+  }
+
+  /* Returns the string time for the given DateTime object */
+  public static string datetime_time( DateTime dt ) {
+    return( "%02d:%02d".printf( dt.get_hour(), dt.get_minute() ) );
   }
  
   /* Compares two DBEntries for sorting purposes (by date) */
@@ -203,6 +229,7 @@ public class Database {
         title      TEXT                              NOT NULL,
         txt        TEXT                              NOT NULL,
         date       TEXT                              NOT NULL,
+        time       TEXT                              NOT NULL,
         image      BLOB,
         image_pos  INTEGER,
         image_vadj REAL,
@@ -266,9 +293,9 @@ public class Database {
 
     /* Insert the entry */
     var entry_query = """
-      INSERT INTO Entry (title, txt, date, image, image_pos, image_vadj, image_hadj)
-      VALUES ('', '%s', '%s', NULL, NULL, NULL, NULL);
-      """.printf( entry.text, entry.date );
+      INSERT INTO Entry (title, txt, date, time, image, image_pos, image_vadj, image_hadj)
+      VALUES ('', '%s', '%s', '%s', NULL, NULL, NULL, NULL);
+      """.printf( entry.text, entry.date, entry.time );
 
     if( !exec_query( entry_query ) ) {
       return( false );
@@ -300,20 +327,21 @@ public class Database {
     exec_query( query, (ncols, vals, names) => {
       entry.title = vals[1];
       entry.text  = vals[2];
-      if( vals[4] != null ) {
+      entry.time  = vals[4];
+      if( vals[5] != null ) {
         try {
           var pixload = new PixbufLoader.with_type( "png" );
-          pixload.write( (uint8[])Base64.decode( vals[4] ) );
+          pixload.write( (uint8[])Base64.decode( vals[5] ) );
           pixload.close();
           entry.image      = pixload.get_pixbuf();
-          entry.image_pos  = int.parse( vals[5] );
-          entry.image_vadj = double.parse( vals[6] );
-          entry.image_hadj = double.parse( vals[7] );
+          entry.image_pos  = int.parse( vals[6] );
+          entry.image_vadj = double.parse( vals[7] );
+          entry.image_hadj = double.parse( vals[8] );
         } catch( Error e ) {
           stderr.printf( "ERROR: %s\n", e.message );
         }
       }
-      var tag = vals[8];
+      var tag = vals[9];
       if( tag != null ) {
         entry.add_tag( tag );
       }

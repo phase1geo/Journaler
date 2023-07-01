@@ -420,7 +420,7 @@ public class TextArea : Box {
     var entry = new DBEntry.with_date( 
       _title.text, _text.buffer.text, _pixbuf, _pane.position,
       _iscroll.vadjustment.value, _iscroll.hadjustment.value,
-      _pixbuf_changed, _tags.entry.get_tag_list(), _entry.date
+      _pixbuf_changed, _tags.entry.get_tag_list(), _entry.date, _entry.time
     );
 
     if( _journal.db.save_entry( entry ) ) {
@@ -448,7 +448,7 @@ public class TextArea : Box {
 
     /* Set the date */
     var dt = entry.datetime();
-    _date.label = dt.format( "%A, %B %e, %Y" );
+    _date.label = dt.format( "%A, %B %e, %Y  %I:%M %p" );
 
     /* Set the image */
     _pixbuf = entry.image;
