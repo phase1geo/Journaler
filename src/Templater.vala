@@ -253,6 +253,30 @@ public class Templater : Box {
 
   }
 
+  private int get_last_tab_pos() {
+
+    try {
+      var re  = new Regex( """\${(\d+)""" );
+      var max = 0;
+      MatchInfo match;
+
+      if( re.match( _buffer.text, 0, out match ) ) {
+        do {
+          var num = int.parse( match.fetch( 1 ) );
+          if( num > max ) {
+            max = num;
+          }
+        } while( match.next() );
+      }
+      return( max + 1 );
+    } catch( RegexError e ) {
+      stderr.printf( "ERROR: %s\n", e.message );
+    }
+
+    return( 1 );
+
+  }
+
   /* Sets the current template for editing.  We need to call this prior to showing this pane in the UI. */
   public void set_current( string? name = null ) {
 
@@ -269,9 +293,7 @@ public class Templater : Box {
     _name.text   = _current.name;
     _buffer.text = _current.text;
     _goto_pane   = _win.get_current_pane();
-
-    // TBD - We probably need to get the last tab position if we are editing an existing template
-    _tab_pos     = 1;
+    _tab_pos     = get_last_tab_pos();
 
   }
 

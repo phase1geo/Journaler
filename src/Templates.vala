@@ -108,7 +108,6 @@ public class Templates {
       var output      = "";
       Process.spawn_command_line_sync( weather_cmd, out output );
       _snippet_vars.set( "WEATHER", "```\n" + output.chomp() + "\n```" );
-      stdout.printf( "WEATHER, snippet_vars.size: %d\n", num_variables() );
     } catch( SpawnError e ) {
       stderr.printf( "ERROR: %s\n", e.message );
     }
@@ -124,7 +123,6 @@ public class Templates {
       Process.spawn_command_line_sync( rss_cmd, out output );
       var rss = new RSS( output, news_max_items );
       _snippet_vars.set( "NEWS", rss.items );
-      stdout.printf( "NEWS, snippet_vars.size: %d\n", num_variables() );
     } catch( SpawnError e ) {
       stderr.printf( "ERROR: %s\n", e.message );
     }
@@ -138,7 +136,6 @@ public class Templates {
       var simple   = new GClue.Simple.sync( "com.github.phase1geo.journaler", GClue.AccuracyLevel.STREET );
       var location = simple.get_location();
       _snippet_vars.set( "LOCATION", "lat: %g, long: %g".printf( location.latitude, location.longitude ) );
-      stdout.printf( "LOCATION, snippet_vars.size: %d\n", num_variables() );
     } catch( Error e ) {
       stderr.printf( "ERROR: %s\n", e.message );
     }
