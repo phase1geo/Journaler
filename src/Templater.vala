@@ -46,19 +46,16 @@ public class Templater : Box {
     margin_end    = 5;
 
     /* Update the theme used by these components */
-    update_theme();
+    win.dark_mode_changed.connect((mode) => {
+      _theme = mode ? "cobalt" : "cobalt-light";
+      update_theme();
+    });
 
     /* Add the menu actions */
     var actions = new SimpleActionGroup();
     actions.add_action_entries( action_entries, this );
     insert_action_group( "templater", actions );
 
-  }
-
-  /* Updates the theme based on the dark mode setting */
-  public void change_dark_theme( bool dark_mode ) {
-    _theme = dark_mode ? "cobalt" : "cobalt-light";
-    update_theme();
   }
 
   /* Returns the widget that will receive input focus when this UI is displayed */

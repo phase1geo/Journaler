@@ -96,18 +96,15 @@ public class TextArea : Box {
     add_text_area();
 
     /* Set the CSS for this widget */
-    update_theme();
+    win.dark_mode_changed.connect((mode) => {
+      theme = mode ? "cobalt" : "cobalt-light";
+    });
 
     /* Add the menu actions */
     var actions = new SimpleActionGroup();
     actions.add_action_entries( action_entries, this );
     insert_action_group( "textarea", actions );
 
-  }
-
-  /* Set the theme based on the dark mode setting */
-  public void change_dark_theme( bool dark_mode ) {
-    theme = dark_mode ? "cobalt" : "cobalt-light";
   }
 
   /* Returns the widget that should receive the grab focus when this pane is placed into view */
@@ -353,6 +350,7 @@ public class TextArea : Box {
 
     /* Update the text buffer theme */
     var style_mgr = GtkSource.StyleSchemeManager.get_default();
+    stdout.printf( "theme: %s\n", _theme );
     var style = style_mgr.get_scheme( _theme );
     _buffer.style_scheme = style;
 

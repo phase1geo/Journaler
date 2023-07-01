@@ -66,6 +66,8 @@ public class MainWindow : Gtk.ApplicationWindow {
   }
   */
 
+  public signal void dark_mode_changed( bool mode );
+
   /* Create the main window UI */
   public MainWindow( Gtk.Application app, GLib.Settings settings ) {
 
@@ -154,7 +156,6 @@ public class MainWindow : Gtk.ApplicationWindow {
       valign  = Align.FILL,
       vexpand = true
     };
-    sbox.add_css_class( "login-pane" );
 
     add_setlock_view( sbox );
 
@@ -164,7 +165,6 @@ public class MainWindow : Gtk.ApplicationWindow {
       valign  = Align.FILL,
       vexpand = true
     };
-    pbox.add_css_class( "login-pane" );
 
     add_locked_view( pbox );
 
@@ -193,6 +193,13 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     show();
 
+    dark_mode_changed.connect((mode) => {
+      pbox.remove_css_class( mode ? "login-pane-light" : "login-pane-dark" );
+      sbox.remove_css_class( mode ? "login-pane-light" : "login-pane-dark" );
+      pbox.add_css_class( mode ? "login-pane-dark" : "login-pane-light" );
+      sbox.add_css_class( mode ? "login-pane-dark" : "login-pane-light" );
+    });
+
     /* If the user has set a password, show the journal as locked immediately */
     if( Security.does_password_exist() ) {
       show_pane( "lock-view", true );
@@ -220,11 +227,6 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   }
 
-  public void change_dark_theme( bool dark_mode ) {
-    _text_area.change_dark_theme( dark_mode );
-    _templater.change_dark_theme( dark_mode );
-  }
- 
   /* Create the miscellaneous menu */
   private GLib.Menu create_misc_menu() {
 
@@ -408,6 +410,11 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     _stack_focus_widgets.set( "setlock-view", entry1 );
 
+    dark_mode_changed.connect((mode) => {
+      grid.remove_css_class( mode ? "login-frame-light" : "login-frame-dark" );
+      grid.add_css_class( mode ? "login-frame-dark" : "login-frame-light" );
+    });
+
   }
 
   /* Displays the locked view pane */
@@ -447,6 +454,11 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     _stack_focus_widgets.set( "lock-view", entry );
 
+    dark_mode_changed.connect((mode) => {
+      pbox.remove_css_class( mode ? "login-frame-light" : "login-frame-dark" );
+      pbox.add_css_class( mode ? "login-frame-dark" : "login-frame-light" );
+    });
+
   }
 
   /* Creates the template editor pane */
@@ -471,7 +483,7 @@ public class MainWindow : Gtk.ApplicationWindow {
   /* Creates the current journal sidebar */
   private Box add_current_sidebar() {
 
-    _entries = new SidebarEntries( _journals, _templates );
+    _entries = new SidebarEntries( this, _journals, _templates );
 
     _entries.edit_journal.connect((journal) => {
       _editor.edit_journal( journal );

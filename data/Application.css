@@ -2,8 +2,12 @@
    font-size: 12pt;
 }
 
-.login-pane {
-   background-image: linear-gradient(lightblue, pink);
+.login-pane-light {
+  background-image: linear-gradient(lightblue, pink);
+}
+
+.login-pane-dark {
+  background-image: linear-gradient(darkblue, darkred);
 }
 
 .login-frame {
@@ -12,8 +16,15 @@
   border-width: 1px;
   border-radius: 10px;
   border-color: rgba(0, 0, 0, 0.3);
-  background-color: #fff;
   box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.3);
+}
+
+.login-frame-dark {
+  background-color: #000;
+}
+
+.login-frame-light {
+  background-color: #fff;
 }
 
 @keyframes shake {
@@ -36,6 +47,10 @@
   box-shadow: 0 0 0.6rem #ff0000;
 }
 
-calendar > grid > label.day-number:checked {
-   background-color: rgba(0, 0, 255, 0.1);
+.calendar-light > grid > label.day-number:checked {
+   background-color: rgba(173, 216, 230, 0.5);
+}
+
+.calendar-dark > grid > label.day-number:checked {
+   background-color: rgba(173, 216, 230, 0.2);
 }

@@ -26,6 +26,7 @@ public class SidebarEntries : Box {
 
   private const int _sidebar_width = 300;
 
+  private MainWindow     _win;
   private Journals       _journals;
   private Templates      _templates;
   private Array<DBEntry> _listbox_entries;
@@ -45,10 +46,11 @@ public class SidebarEntries : Box {
   public signal void show_journal_entry( DBEntry entry, bool editable );
 
   /* Create the main window UI */
-  public SidebarEntries( Journals journals, Templates templates ) {
+  public SidebarEntries( MainWindow win, Journals journals, Templates templates ) {
 
     Object( orientation: Orientation.VERTICAL, spacing: 5, margin_start: 5, margin_end: 5, margin_top: 5, margin_bottom: 5 );
 
+    _win       = win;
     _templates = templates;
 
     _journals = journals;
@@ -182,6 +184,11 @@ public class SidebarEntries : Box {
     _cal.prev_year.connect(  populate_calendar );
 
     append( _cal );
+
+    _win.dark_mode_changed.connect((mode) => {
+      _cal.remove_css_class( mode ? "calendar-light" : "calendar-dark" );
+      _cal.add_css_class( mode ? "calendar-dark" : "calendar-light" );
+    });
 
   }
 
