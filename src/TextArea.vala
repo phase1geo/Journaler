@@ -35,8 +35,6 @@ public class TextArea : Box {
   private TagBox           _tags;
   private GtkSource.View   _text;
   private GtkSource.Buffer _buffer;
-  private int              _font_size = 12;
-  private int              _text_margin = 20;
   private string           _theme;
   private Paned            _pane;
   private ScrolledWindow   _iscroll;
@@ -50,18 +48,6 @@ public class TextArea : Box {
     { "action_remove_entry_image", action_remove_entry_image },
     { "action_insert_template",    action_insert_template, "s" }
   };
-
-  public int font_size {
-    get {
-      return( _font_size );
-    }
-    set {
-      if( _font_size != value ) {
-        _font_size = value;
-        update_theme();
-      }
-    }
-  }
 
   /* Create the main window UI */
   public TextArea( MainWindow win, Journals journals, Templates templates ) {
@@ -90,7 +76,9 @@ public class TextArea : Box {
     });
     Journaler.settings.changed.connect((key) => {
       switch( key ) {
-        case "editor-font-size" :  font_size = Journaler.settings.get_int( "editor-font-size" );  break;
+        case "editor-font-size"    :  set_font_size();     break;
+        case "editor-margin"       :  set_margin();        break;
+        case "editor-line-spacing" :  set_line_spacing();  break;
       }
     });
 
@@ -98,6 +86,37 @@ public class TextArea : Box {
     var actions = new SimpleActionGroup();
     actions.add_action_entries( action_entries, this );
     insert_action_group( "textarea", actions );
+
+  }
+
+  /* Sets the font size of the text widget */
+  private void set_font_size() {
+
+    update_theme();
+    
+  }
+
+  /* Sets the margin around the text widget */
+  private void set_margin() {
+
+    var margin = Journaler.settings.get_int( "editor-margin" );
+
+    _text.top_margin    = margin / 2;
+    _text.left_margin   = margin;
+    _text.bottom_margin = margin;
+    _text.right_margin  = margin;
+
+    update_theme();
+
+  }
+
+  /* Sets the text line spacing */
+  private void set_line_spacing() {
+
+    var line_spacing = Journaler.settings.get_int( "editor-line-spacing" );
+
+    _text.pixels_below_lines = line_spacing;
+    _text.pixels_inside_wrap = line_spacing;
 
   }
 
@@ -110,8 +129,6 @@ public class TextArea : Box {
 
   /* Creates the textbox with today's entry. */
   private void add_text_area() {
-
-    var line_spacing = 5;
 
     /* Add the title */
     var title_focus = new EventControllerFocus();
@@ -165,18 +182,15 @@ public class TextArea : Box {
     _text = new GtkSource.View.with_buffer( _buffer ) {
       valign             = Align.FILL,
       vexpand            = true,
-      top_margin         = _text_margin / 2,
-      left_margin        = _text_margin,
-      bottom_margin      = _text_margin,
-      right_margin       = _text_margin,
       wrap_mode          = WrapMode.WORD,
-      pixels_below_lines = line_spacing,
-      pixels_inside_wrap = line_spacing,
       cursor_visible     = true,
       enable_snippets    = true
     };
     _text.add_controller( text_focus );
     _text.add_css_class( "journal-text" );
+
+    set_line_spacing();
+    set_margin();
 
     _title.activate.connect(() => {
       _text.grab_focus();
@@ -347,6 +361,9 @@ public class TextArea : Box {
     var style = style_mgr.get_scheme( _theme );
     _buffer.style_scheme = style;
 
+    var font_size = Journaler.settings.get_int( "editor-font-size" );
+    var margin    = Journaler.settings.get_int( "editor-margin" );
+
     /* Set the CSS */
     var provider = new CssProvider();
     var css_data = """
@@ -384,7 +401,7 @@ public class TextArea : Box {
       .text-padding {
         padding: 0px %dpx;
       }
-    """.printf( _font_size, _font_size, _text_margin, style.get_style( "background-pattern" ).background, (_text_margin - 4) );
+    """.printf( font_size, font_size, margin, style.get_style( "background-pattern" ).background, (margin - 4) );
     provider.load_from_data( css_data.data );
     StyleContext.add_provider_for_display( get_display(), provider, STYLE_PROVIDER_PRIORITY_APPLICATION );
 

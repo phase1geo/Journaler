@@ -31,5 +31,15 @@
       <summary>Font size used in text editor areas</summary>
       <description>Font size used in text editor areas</description>
     </key>
+    <key name="editor-margin" type="i">
+      <default>20</default>
+      <summary>Margin (in pixels) used in the editor</summary>
+      <description>Margin (in pixels) used in the editor</description>
+    </key>
+    <key name="editor-line-spacing" type="i">
+      <default>5</default>
+      <summary>Amount of space between lines of the editor</summary>
+      <description>Amount of space between lines of the editor</description>
+    </key>
   </schema>
 </schemalist>

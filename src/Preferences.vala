@@ -84,6 +84,12 @@ public class Preferences : Gtk.Dialog {
     grid.attach( make_label( _( "Editor Font Size" ) ), 0, 1 );
     grid.attach( make_spinner( "editor-font-size", 8, 24, 1 ), 1, 1 );
 
+    grid.attach( make_label( _( "Editor Margin" ) ), 0, 2 );
+    grid.attach( make_spinner( "editor-margin", 5, 100, 5 ), 1, 2 );
+
+    grid.attach( make_label( _( "Editor Line Spacing" ) ), 0, 3 );
+    grid.attach( make_spinner( "editor-line-spacing", 2, 20, 1 ), 1, 3 );
+
     return( grid );
 
   }
