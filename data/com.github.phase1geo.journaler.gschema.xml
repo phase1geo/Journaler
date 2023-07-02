@@ -26,5 +26,10 @@
       <summary>Name of default theme to use in text fields</summary>
       <description>Name of default theme to use in text fields</description>
     </key>
+    <key name="editor-font-size" type="i">
+      <default>12</default>
+      <summary>Font size used in text editor areas</summary>
+      <description>Font size used in text editor areas</description>
+    </key>
   </schema>
 </schemalist>

@@ -78,8 +78,11 @@ public class Preferences : Gtk.Dialog {
       column_spacing = 5
     };
 
-    grid.attach( make_label( _( "Default theme" ) ), 0, 0 );
+    grid.attach( make_label( _( "Default Theme" ) ), 0, 0 );
     grid.attach( make_themes(), 1, 0, 2 );
+
+    grid.attach( make_label( _( "Editor Font Size" ) ), 0, 1 );
+    grid.attach( make_spinner( "editor-font-size", 8, 24, 1 ), 1, 1 );
 
     return( grid );
 

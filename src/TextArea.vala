@@ -88,6 +88,11 @@ public class TextArea : Box {
       _theme = name;
       update_theme();
     });
+    Journaler.settings.changed.connect((key) => {
+      switch( key ) {
+        case "editor-font-size" :  font_size = Journaler.settings.get_int( "editor-font-size" );  break;
+      }
+    });
 
     /* Add the menu actions */
     var actions = new SimpleActionGroup();
