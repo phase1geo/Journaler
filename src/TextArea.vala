@@ -37,7 +37,7 @@ public class TextArea : Box {
   private GtkSource.Buffer _buffer;
   private int              _font_size = 12;
   private int              _text_margin = 20;
-  private string           _theme = "cobalt-light";
+  private string           _theme;
   private Paned            _pane;
   private ScrolledWindow   _iscroll;
   private Pixbuf?          _pixbuf = null;
@@ -58,18 +58,6 @@ public class TextArea : Box {
     set {
       if( _font_size != value ) {
         _font_size = value;
-        update_theme();
-      }
-    }
-  }
-
-  public string theme {
-    get {
-      return( _theme );
-    }
-    set {
-      if( _theme != value ) {
-        _theme = value;
         update_theme();
       }
     }
@@ -96,8 +84,8 @@ public class TextArea : Box {
     add_text_area();
 
     /* Set the CSS for this widget */
-    win.dark_mode_changed.connect((mode) => {
-      _theme = mode ? "cobalt" : "cobalt-light";
+    win.themes.theme_changed.connect((name) => {
+      _theme = name;
       update_theme();
     });
 

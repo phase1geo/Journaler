@@ -5,6 +5,7 @@ sources += files(
     'Journal.vala',
     'Journals.vala',
     'MainWindow.vala',
+    'Preferences.vala',
     'RSS.vala',
     'Security.vala',
     'SidebarEditor.vala',
@@ -14,8 +15,7 @@ sources += files(
     'Template.vala',
     'Templater.vala',
     'Templates.vala',
+    'Themes.vala',
     'TextArea.vala',
     'Utils.vala'
-    #    'TextCompletion.vala',
-    #'UnicodeInsert.vala'
 )

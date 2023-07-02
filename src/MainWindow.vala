@@ -38,8 +38,7 @@ public class MainWindow : Gtk.ApplicationWindow {
   private Gee.HashMap<string,Widget> _stack_focus_widgets;
   private GLib.Menu                  _templates_menu;
   private List<Widget>               _header_buttons;
-
-  // private UnicodeInsert   _unicoder;
+  private Themes                     _themes;
 
   private const GLib.ActionEntry[] action_entries = {
     { "action_today",         action_today },
@@ -59,15 +58,11 @@ public class MainWindow : Gtk.ApplicationWindow {
       return( _settings );
     }
   }
-  /*
-  public UnicodeInsert unicoder {
+  public Themes themes {
     get {
-      return( _unicoder );
+      return( _themes );
     }
   }
-  */
-
-  public signal void dark_mode_changed( bool mode );
 
   /* Create the main window UI */
   public MainWindow( Gtk.Application app, GLib.Settings settings ) {
@@ -76,6 +71,9 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     _settings = settings;
     _header_buttons = new List<Widget>();
+
+    /* Load the available themes */
+    _themes = new Themes();
 
     /* Create and load the templates */
     _templates = new Templates();
@@ -198,11 +196,11 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     show();
 
-    dark_mode_changed.connect((mode) => {
-      pbox.remove_css_class( mode ? "login-pane-light" : "login-pane-dark" );
-      sbox.remove_css_class( mode ? "login-pane-light" : "login-pane-dark" );
-      pbox.add_css_class( mode ? "login-pane-dark" : "login-pane-light" );
-      sbox.add_css_class( mode ? "login-pane-dark" : "login-pane-light" );
+    _themes.theme_changed.connect((name) => {
+      pbox.remove_css_class( _themes.dark_mode ? "login-pane-light" : "login-pane-dark" );
+      sbox.remove_css_class( _themes.dark_mode ? "login-pane-light" : "login-pane-dark" );
+      pbox.add_css_class( _themes.dark_mode ? "login-pane-dark" : "login-pane-light" );
+      sbox.add_css_class( _themes.dark_mode ? "login-pane-dark" : "login-pane-light" );
     });
 
     /* If the user has set a password, show the journal as locked immediately */
@@ -422,9 +420,9 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     _stack_focus_widgets.set( "setlock-view", entry1 );
 
-    dark_mode_changed.connect((mode) => {
-      grid.remove_css_class( mode ? "login-frame-light" : "login-frame-dark" );
-      grid.add_css_class( mode ? "login-frame-dark" : "login-frame-light" );
+    _themes.theme_changed.connect((name) => {
+      grid.remove_css_class( _themes.dark_mode ? "login-frame-light" : "login-frame-dark" );
+      grid.add_css_class( _themes.dark_mode ? "login-frame-dark" : "login-frame-light" );
     });
 
   }
@@ -466,9 +464,9 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     _stack_focus_widgets.set( "lock-view", entry );
 
-    dark_mode_changed.connect((mode) => {
-      pbox.remove_css_class( mode ? "login-frame-light" : "login-frame-dark" );
-      pbox.add_css_class( mode ? "login-frame-dark" : "login-frame-light" );
+    _themes.theme_changed.connect((name) => {
+      pbox.remove_css_class( _themes.dark_mode ? "login-frame-light" : "login-frame-dark" );
+      pbox.add_css_class( _themes.dark_mode ? "login-frame-dark" : "login-frame-light" );
     });
 
   }
@@ -609,7 +607,9 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   private void action_preferences() {
 
-    /* TBD */
+    var prefs = new Preferences( this );
+
+    prefs.show();
 
   }
 

@@ -185,9 +185,9 @@ public class SidebarEntries : Box {
 
     append( _cal );
 
-    _win.dark_mode_changed.connect((mode) => {
-      _cal.remove_css_class( mode ? "calendar-light" : "calendar-dark" );
-      _cal.add_css_class( mode ? "calendar-dark" : "calendar-light" );
+    _win.themes.theme_changed.connect((name) => {
+      _cal.remove_css_class( _win.themes.dark_mode ? "calendar-light" : "calendar-dark" );
+      _cal.add_css_class( _win.themes.dark_mode ? "calendar-dark" : "calendar-light" );
     });
 
   }

@@ -21,5 +21,10 @@
       <summary>Most recent height of minder window</summary>
       <description>Most recent height of minder window</description>
     </key>
+    <key name="default-theme" type="s">
+      <default>"Adwaita"</default>
+      <summary>Name of default theme to use in text fields</summary>
+      <description>Name of default theme to use in text fields</description>
+    </key>
   </schema>
 </schemalist>

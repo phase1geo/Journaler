@@ -69,13 +69,13 @@ public class Journaler : Gtk.Application {
     gtk_settings.gtk_application_prefer_dark_theme = (
       granite_settings.prefers_color_scheme == Granite.Settings.ColorScheme.DARK
     );
-    appwin.dark_mode_changed( gtk_settings.gtk_application_prefer_dark_theme );
+    appwin.themes.dark_mode = gtk_settings.gtk_application_prefer_dark_theme;
 
     granite_settings.notify["prefers-color-scheme"].connect (() => {
       gtk_settings.gtk_application_prefer_dark_theme = (
         granite_settings.prefers_color_scheme == Granite.Settings.ColorScheme.DARK
       );
-      appwin.dark_mode_changed( gtk_settings.gtk_application_prefer_dark_theme );
+      appwin.themes.dark_mode = gtk_settings.gtk_application_prefer_dark_theme;
     });
 
     /* Handle any changes to the position of the window */

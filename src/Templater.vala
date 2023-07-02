@@ -12,7 +12,7 @@ public class Templater : Box {
   private Revealer         _del_revealer;
   private GLib.Menu        _var_menu;
   private int              _text_margin = 20;
-  private string           _theme = "cobalt-light";
+  private string           _theme;
   private string           _goto_pane = "";
   private int              _tab_pos = 1;
 
@@ -46,8 +46,8 @@ public class Templater : Box {
     margin_end    = 5;
 
     /* Update the theme used by these components */
-    win.dark_mode_changed.connect((mode) => {
-      _theme = mode ? "cobalt" : "cobalt-light";
+    win.themes.theme_changed.connect((name) => {
+      _theme = name;
       update_theme();
     });
 
