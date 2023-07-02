@@ -77,7 +77,7 @@ public class TextArea : Box {
     Journaler.settings.changed.connect((key) => {
       switch( key ) {
         case "editor-font-size"    :  set_font_size();     break;
-        case "editor-margin"       :  set_margin();        break;
+        case "editor-margin"       :  set_margin( false);  break;
         case "editor-line-spacing" :  set_line_spacing();  break;
       }
     });
@@ -97,7 +97,7 @@ public class TextArea : Box {
   }
 
   /* Sets the margin around the text widget */
-  private void set_margin() {
+  private void set_margin( bool init ) {
 
     var margin = Journaler.settings.get_int( "editor-margin" );
 
@@ -106,7 +106,9 @@ public class TextArea : Box {
     _text.bottom_margin = margin;
     _text.right_margin  = margin;
 
-    update_theme();
+    if( !init ) {
+      update_theme();
+    }
 
   }
 
@@ -190,7 +192,7 @@ public class TextArea : Box {
     _text.add_css_class( "journal-text" );
 
     set_line_spacing();
-    set_margin();
+    set_margin( true );
 
     _title.activate.connect(() => {
       _text.grab_focus();
