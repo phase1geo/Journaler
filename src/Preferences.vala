@@ -59,7 +59,10 @@ public class Preferences : Gtk.Dialog {
   /* Creates the behavior panel */
   private Grid create_behavior() {
 
-    var grid = new Grid();
+    var grid = new Grid() {
+      row_spacing = 5,
+      column_spacing = 5
+    };
 
     // TBD
 
@@ -70,7 +73,10 @@ public class Preferences : Gtk.Dialog {
   /* Creates the appearance panel */
   private Grid create_appearance() {
 
-    var grid = new Grid();
+    var grid = new Grid() {
+      row_spacing = 5,
+      column_spacing = 5
+    };
 
     grid.attach( make_label( _( "Default theme" ) ), 0, 0 );
     grid.attach( make_themes(), 1, 0, 2 );

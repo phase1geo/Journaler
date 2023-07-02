@@ -538,10 +538,12 @@ public class MainWindow : Gtk.ApplicationWindow {
   /* Adds keyboard shortcuts for the menu actions */
   private void add_keyboard_shortcuts( Gtk.Application app ) {
 
-    app.set_accels_for_action( "win.action_today", { "<Control>t" } );
-    app.set_accels_for_action( "win.action_save",  { "<Control>s" } );
-    app.set_accels_for_action( "win.action_lock",  { "<Control>l" } );
-    app.set_accels_for_action( "win.action_quit",  { "<Control>q" } );
+    app.set_accels_for_action( "win.action_today",       { "<Control>t" } );
+    app.set_accels_for_action( "win.action_save",        { "<Control>s" } );
+    app.set_accels_for_action( "win.action_lock",        { "<Control>l" } );
+    app.set_accels_for_action( "win.action_quit",        { "<Control>q" } );
+    app.set_accels_for_action( "win.action_shortcuts",   { "<Control>question" } );
+    app.set_accels_for_action( "win.action_preferences", { "<Control>comma" } );
 
   }
 
