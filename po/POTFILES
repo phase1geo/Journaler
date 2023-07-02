@@ -7,8 +7,8 @@ src/SidebarEditor.vala
 src/SidebarEntries.vala
 src/TagBox.vala
 src/TagEntry.vala
+src/Templater.vala
 src/Template.vala
-arc/Templater.vala
-arc/TextArea.vala
+src/TextArea.vala
 src/Utils.vala
 data/com.github.phase1geo.journaler.shortcuts.ui

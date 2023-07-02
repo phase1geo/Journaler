@@ -11,8 +11,6 @@ public class Templater : Box {
   private Button           _save;
   private Revealer         _del_revealer;
   private GLib.Menu        _var_menu;
-  private int              _text_margin = 20;
-  private string           _theme;
   private string           _goto_pane = "";
   private int              _tab_pos = 1;
 
@@ -47,8 +45,7 @@ public class Templater : Box {
 
     /* Update the theme used by these components */
     win.themes.theme_changed.connect((name) => {
-      _theme = name;
-      update_theme();
+      update_theme( name );
     });
     Journaler.settings.changed.connect((key) => {
       switch( key ) {
@@ -96,7 +93,8 @@ public class Templater : Box {
 
   }
   
-  private void set_margin( bool init ) {
+  /* Sets the margin for the text widget */
+  private void set_margin() {
   
     var margin = Journaler.settings.get_int( "editor-margin" );
     
@@ -107,6 +105,7 @@ public class Templater : Box {
   
   }
   
+  /* Sets the line spacing for the text widget */
   private void set_line_spacing() {
   
     var line_spacing = Journaler.settings.get_int( "editor-line-spacing" );
@@ -118,8 +117,6 @@ public class Templater : Box {
 
   /* Adds the text frame */
   private void add_text_frame() {
-
-    var line_spacing = 5;
 
     var lbl = new Label( Utils.make_title( _( "Template Text:" ) ) ) {
       halign     = Align.START,
@@ -223,9 +220,9 @@ public class Templater : Box {
   }
 
   /* Sets the theme and CSS classes */
-  private void update_theme() {
+  private void update_theme( string theme ) {
     var style_mgr = GtkSource.StyleSchemeManager.get_default();
-    var style = style_mgr.get_scheme( _theme );
+    var style = style_mgr.get_scheme( theme );
     _buffer.style_scheme = style;
   }
 
