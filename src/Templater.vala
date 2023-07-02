@@ -50,6 +50,12 @@ public class Templater : Box {
       _theme = name;
       update_theme();
     });
+    Journaler.settings.changed.connect((key) => {
+      switch( key ) {
+        case "editor-margin"       :  set_margin();        break;
+        case "editor-line-spacing" :  set_line_spacing();  break;
+      }
+    });
 
     /* Add the menu actions */
     var actions = new SimpleActionGroup();
@@ -89,6 +95,26 @@ public class Templater : Box {
     append( sep );
 
   }
+  
+  private void set_margin( bool init ) {
+  
+    var margin = Journaler.settings.get_int( "editor-margin" );
+    
+    _text.top_margin    = margin / 2;
+    _text.left_margin   = margin;
+    _text.bottom_margin = margin;
+    _text.right_margin  = margin;
+  
+  }
+  
+  private void set_line_spacing() {
+  
+    var line_spacing = Journaler.settings.get_int( "editor-line-spacing" );
+    
+    _text.pixels_below_lines = line_spacing;
+    _text.pixels_inside_wrap = line_spacing;
+    
+  }
 
   /* Adds the text frame */
   private void add_text_frame() {
@@ -109,19 +135,17 @@ public class Templater : Box {
     var text_focus = new EventControllerFocus();
     _buffer = new GtkSource.Buffer.with_language( lang );
     _text = new GtkSource.View.with_buffer( _buffer ) {
-      valign             = Align.FILL,
-      vexpand            = true,
-      top_margin         = _text_margin / 2,
-      left_margin        = _text_margin,
-      bottom_margin      = _text_margin,
-      right_margin       = _text_margin,
-      wrap_mode          = WrapMode.WORD,
-      pixels_below_lines = line_spacing,
-      pixels_inside_wrap = line_spacing,
-      extra_menu         = create_insertion_menu()
+      valign     = Align.FILL,
+      vexpand    = true,
+      wrap_mode  = WrapMode.WORD,
+      extra_menu = create_insertion_menu()
     };
     _text.add_controller( text_focus );
     _text.add_css_class( "journal-text" );
+    
+    set_margin();
+    set_line_spacing();
+    
     _buffer.changed.connect(() => {
       _save.sensitive = (_name.text != "") && ((_name.text != _current.name) || (_buffer.text != _current.text));
     });

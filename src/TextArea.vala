@@ -76,9 +76,9 @@ public class TextArea : Box {
     });
     Journaler.settings.changed.connect((key) => {
       switch( key ) {
-        case "editor-font-size"    :  set_font_size();     break;
-        case "editor-margin"       :  set_margin( false);  break;
-        case "editor-line-spacing" :  set_line_spacing();  break;
+        case "editor-font-size"    :  set_font_size();      break;
+        case "editor-margin"       :  set_margin( false );  break;
+        case "editor-line-spacing" :  set_line_spacing();   break;
       }
     });
 
