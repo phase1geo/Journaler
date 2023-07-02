@@ -45,7 +45,7 @@ public class Journals {
       if( _journals.index( i ) == journal ) {
         _journals.remove_index( i );
         if( _journals.length == 0 ) {
-          var new_journal = new Journal( "Journal", "", "" );
+          var new_journal = new Journal( _( "Journal" ), "", "" );
           add_journal( new_journal );
         } else {
           if( _current == journal ) {
@@ -164,7 +164,7 @@ public class Journals {
 
     /* Set the current journal */
     if( _journals.length == 0 ) {
-      _current = new Journal( "Journal", "", "" );
+      _current = new Journal( _( "Journal" ), "", "" );
       add_journal( _current );
     } else {
       _current = _journals.index( current_index );

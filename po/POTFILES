@@ -1,6 +1,14 @@
 src/Application.vala
 src/Database.vala
+src/Journals.vala
 src/MainWindow.vala
-src/UnicodeInsert.vala
+src/Preferences.vala
+src/SidebarEditor.vala
+src/SidebarEntries.vala
+src/TagBox.vala
+src/TagEntry.vala
+src/Template.vala
+arc/Templater.vala
+arc/TextArea.vala
 src/Utils.vala
 data/com.github.phase1geo.journaler.shortcuts.ui
