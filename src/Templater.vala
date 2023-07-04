@@ -29,7 +29,7 @@ public class Templater : Box {
     _templates = templates;
     _current   = null;
 
-    _templates.vars_available.connect(() => {
+    _templates.template_vars.changed.connect(() => {
       update_insert_var_menu();
     });
 
@@ -193,7 +193,6 @@ public class Templater : Box {
 
     for( int i=0; i<_templates.template_vars.num_variables(); i++ ) {
       var variable = _templates.template_vars.get_variable( i );
-      stdout.printf( "variable: %s\n", variable );
       _var_menu.append( _( "Insert %s" ).printf( variable.replace( "_", " " ).down() ), "templater.action_insert_variable('%s')".printf( variable ) );
     }
 

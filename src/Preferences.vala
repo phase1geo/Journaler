@@ -201,6 +201,11 @@ public class Preferences : Gtk.Dialog {
 
     vars.save_news_sources();
 
+    Idle.add(() => {
+      vars.update_news();
+      return( false );
+    });
+
   }
 
   /* Creates label */

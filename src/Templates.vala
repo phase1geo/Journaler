@@ -15,19 +15,12 @@ public class Templates {
   }
 
   public signal void changed( string name, bool added );
-  public signal void vars_available();
 
   /* Default constructor */
   public Templates() {
     
     _templates     = new List<Template>();
     _template_vars = new TemplateVars();
-
-    /* TODO - I don't really want to do this here */
-    Idle.add(() => {
-      _template_vars.collect_variables();
-      return( false );
-    });
 
   }
 

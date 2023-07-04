@@ -18,10 +18,19 @@ public class TemplateVars {
   private Gee.HashMap<string,string> _vars;
   private Array<NewsSource>          _news_sources;
 
+  public signal void changed();
+
   /* Default constructor */
   public TemplateVars() {
+
     _vars = new Gee.HashMap<string,string>();
     _news_sources = new Array<NewsSource>();
+
+    Idle.add(() => {
+      collect_variables();
+      return( false );
+    });
+
   }
 
   /* Retrieves the daily weather */
@@ -52,6 +61,16 @@ public class TemplateVars {
 
   }
 
+  /* Makes a valid variable */
+  private string make_variable( string str ) {
+    return( str.replace( " ", "_" ).up() );
+  }
+
+  /* Creates the NEWS_* variable name for the given feed source name */
+  private string make_news_variable( string name ) {
+    return( make_variable( "NEWS_%s".printf( name ) ) );
+  }
+
   /* Gets the daily news from the stored RSS feeds */
   private void get_news( NewsSource source ) {
 
@@ -60,17 +79,33 @@ public class TemplateVars {
       var output  = "";
       Process.spawn_command_line_sync( rss_cmd, out output );
       var rss = new RSS( output, source.num_items );
-      _vars.set( "NEWS_%s".printf( source.name ), rss.items );
+      _vars.set( make_news_variable( source.name ), rss.items );
     } catch( SpawnError e ) {
       stderr.printf( "ERROR: %s\n", e.message );
     }
 
   }
 
+  /* Updates the news items and saves them */
+  public void update_news() {
+
+    /* Loads the news source data */
+    for( int i=0; i<_news_sources.length; i++ ) {
+      get_news( _news_sources.index( i ) );
+    }
+
+    /* Saves the loaded variables */
+    save();
+
+    /* The variables could have changed, so tell everyone about it */
+    changed();
+
+  }
+
   /* Clears the current news sources */
   public void clear_news_sources() {
     for( int i=0; i<_news_sources.length; i++ ) {
-      _vars.unset( "NEWS_%s".printf( _news_sources.index( i ).name.up() ) );
+      _vars.unset( make_news_variable( _news_sources.index( i ).name ) );
     }
     _news_sources.set_size( 0 );
   }
@@ -78,21 +113,6 @@ public class TemplateVars {
   /* Adds a news source to the list (which updates the settings) */
   public void add_news_source( NewsSource source ) {
     _news_sources.append_val( source );
-  }
-
-  /* Deletes a news source from the list (which updates the settings) */
-  public void delete_news_source( int index ) {
-
-    /* Find the associated variable, remove it and save it */
-    var source = _news_sources.index( index );
-    if( _vars.unset( "NEWS_%s".printf( source.name ) ) ) {
-      save();
-    }
-
-    /* Removes the source and saves it to settings */
-    _news_sources.remove_index( index );
-    save_news_sources();
-
   }
 
   /* Returns the number of stored news sources */
@@ -159,6 +179,9 @@ public class TemplateVars {
       save();
 
     }
+
+    /* The variables could have changed, so tell everyone about it */
+    changed();
 
   }
 
