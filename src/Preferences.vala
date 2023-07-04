@@ -279,7 +279,8 @@ public class Preferences : Gtk.Dialog {
 
   /* Creates label */
   private Label make_label( string label ) {
-    var w = new Label( label ) {
+    var w = new Label( Utils.make_title( label ) ) {
+      use_markup = true,
       halign = Align.END
     };
     return( w );

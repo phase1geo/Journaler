@@ -211,12 +211,6 @@ public class TextArea : Box {
       save();
     });
 
-    /*
-    text_focus.leave.connect(() => {
-      save();
-    });
-    */
-
     var tscroll = new ScrolledWindow() {
       vscrollbar_policy = PolicyType.AUTOMATIC,
       child = _text
