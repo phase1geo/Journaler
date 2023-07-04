@@ -52,5 +52,5 @@
 }
 
 .calendar-dark > grid > label.day-number:not(.other-month):checked {
-   background-color: rgba(255, 0, 0, 0.2);
+   background-color: rgba(173, 216, 230, 0.2);
 }
