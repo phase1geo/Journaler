@@ -30,9 +30,9 @@ public class Preferences : Gtk.Dialog {
       margin_top    = 24,
       margin_bottom = 18
     };
-    stack.add_titled( create_general(),    "general",  _( "General" ) );
-    stack.add_titled( create_editor(),     "editor",   _( "Editor" ) );
-    stack.add_titled( create_news_feeds(), "feeds",    _( "News Feeds" ) );
+    stack.add_titled( create_general(),    "general", _( "General" ) );
+    stack.add_titled( create_editor(),     "editor",  _( "Editor" ) );
+    stack.add_titled( create_news_feeds(), "feeds",   _( "News Feeds" ) );
 
     var switcher = new StackSwitcher() {
       halign = Align.CENTER
@@ -101,16 +101,21 @@ public class Preferences : Gtk.Dialog {
   private void add_feed_row( Grid grid, int position, NewsSource? source = null ) {
 
     var name = new Entry() {
-      placeholder_text = _( "Name" )
+      placeholder_text = _( "Name" ),
+      max_length = 20
     };
 
     var feed = new Entry() {
-      placeholder_text = _( "Feed URL" )
+      placeholder_text = _( "Feed URL" ),
+      halign = Align.FILL,
+      hexpand = true
     };
 
-    var items = new SpinButton.with_range( 1, 10, 1 );
+    var items = new SpinButton.with_range( 1, 20, 1 );
 
-    var add = new Button.from_icon_name( "list-add-symbolic" );
+    var add = new Button.from_icon_name( "list-add-symbolic" ) {
+      margin_start = 15
+    };
     add.clicked.connect(() => {
       int col, row, wspan, hspan;;
       grid.query_child( name, out col, out row, out wspan, out hspan );
@@ -141,6 +146,8 @@ public class Preferences : Gtk.Dialog {
       feed.text   = source.feed;
       items.value = (double)source.num_items;
     }
+
+    name.grab_focus();
 
   }
 
@@ -180,7 +187,6 @@ public class Preferences : Gtk.Dialog {
     vars.clear_news_sources();
 
     do {
-      stdout.printf( "Checking row %d for add\n", row );
       if( _feed_grid.get_child_at( 0, row ) != null ) {
         var name  = (Entry)_feed_grid.get_child_at( 0, row ); 
         var feed  = (Entry)_feed_grid.get_child_at( 1, row );

@@ -69,6 +69,9 @@ public class TemplateVars {
 
   /* Clears the current news sources */
   public void clear_news_sources() {
+    for( int i=0; i<_news_sources.length; i++ ) {
+      _vars.unset( "NEWS_%s".printf( _news_sources.index( i ).name.up() ) );
+    }
     _news_sources.set_size( 0 );
   }
 
@@ -138,11 +141,11 @@ public class TemplateVars {
   /* Collects the variables into the _vars array */
   public void collect_variables() {
 
+    /* Load the new sources from settings */
+    load_news_sources();
+
     /* Attempt to load the template variable data.  If it is old or doesn't exist, reload the data */
     if( !load() ) {
-
-      /* Load the new sources from settings */
-      load_news_sources();
 
       /* Loads the weather and location data */
       get_weather_and_location();
