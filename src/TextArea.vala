@@ -442,6 +442,7 @@ public class TextArea : Box {
       if( (_journals.current == _journal) && (_title.text != _entry.text) ) {
         _journals.current_changed( true );
       }
+      _entry = entry;
       stdout.printf( "Saved successfully to journal %s\n", _journal.name );
     }
 

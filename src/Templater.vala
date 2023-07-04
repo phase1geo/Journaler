@@ -193,7 +193,8 @@ public class Templater : Box {
 
     for( int i=0; i<_templates.num_variables(); i++ ) {
       var variable = _templates.get_variable( i );
-      _var_menu.append( _( "Insert %s" ).printf( variable.down() ), "templater.action_insert_variable('%s')".printf( variable ) );
+      stdout.printf( "variable: %s\n", variable );
+      _var_menu.append( _( "Insert %s" ).printf( variable.replace( "_", " " ).down() ), "templater.action_insert_variable('%s')".printf( variable ) );
     }
 
   }

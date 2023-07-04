@@ -9,6 +9,8 @@ public class Preferences : Gtk.Dialog {
     { "action_set_current_theme", action_set_current_theme, "s" }
   };
 
+  private delegate string ValidateEntryCallback( Entry entry, string text, int position );
+
   /* Default constructor */
   public Preferences( MainWindow win ) {
 
@@ -27,8 +29,8 @@ public class Preferences : Gtk.Dialog {
       margin_top    = 24,
       margin_bottom = 18
     };
-    stack.add_titled( create_behavior(),    "behavior",  _( "Behavior" ) );
-    stack.add_titled( create_appearance(), "appearance", _( "Appearance" ) );
+    stack.add_titled( create_general(), "general",  _( "General" ) );
+    stack.add_titled( create_editor(),  "editor",   _( "Editor" ) );
 
     var switcher = new StackSwitcher() {
       halign = Align.CENTER
@@ -56,22 +58,23 @@ public class Preferences : Gtk.Dialog {
 
   }
 
-  /* Creates the behavior panel */
-  private Grid create_behavior() {
+  /* Creates the general panel */
+  private Grid create_general() {
 
     var grid = new Grid() {
       row_spacing = 5,
       column_spacing = 5
     };
 
-    // TBD
+    grid.attach( make_label( _( "Weather Location" ) ), 0, 0 );
+    grid.attach( make_entry( "weather-location", _( "Enter zip code, city or nearest 3 character airport code" ), 20 ), 1, 0 );
 
     return( grid );
 
   }
 
-  /* Creates the appearance panel */
-  private Grid create_appearance() {
+  /* Creates the editor panel */
+  private Grid create_editor() {
 
     var grid = new Grid() {
       row_spacing = 5,
@@ -117,6 +120,34 @@ public class Preferences : Gtk.Dialog {
     var w = new SpinButton.with_range( min_value, max_value, step );
     Journaler.settings.bind( setting, w, "value", SettingsBindFlags.DEFAULT );
     return( w );
+  }
+
+  /* Creates an entry */
+  private Entry make_entry( string setting, string placeholder, int max_length = 30, ValidateEntryCallback? cb = null ) {
+    var w = new Entry() {
+      placeholder_text        = placeholder,
+      max_length              = max_length,
+      enable_emoji_completion = false
+    };
+    if( cb != null ) {
+      w.insert_text.connect((new_text, new_text_length, ref position) => {
+        var cleaned = cb( w, new_text, position );
+        if( cleaned != new_text ) {
+          handle_text_insertion( w, cleaned, ref position );
+        }
+      });
+    }
+    Journaler.settings.bind( setting, w, "text", SettingsBindFlags.DEFAULT );
+    return( w );
+  }
+
+  /* Helper function for the make_entry method */
+  private void handle_text_insertion( Entry entry, string cleaned, ref int position ) {
+    var void_entry = (void*)entry;
+    SignalHandler.block_by_func( void_entry, (void*)handle_text_insertion, this );
+    entry.insert_text( cleaned, cleaned.length, ref position );
+    SignalHandler.unblock_by_func( void_entry, (void*)handle_text_insertion, this );
+    Signal.stop_emission_by_name( entry, "insert_text" );
   }
 
   /* Creates an information image */

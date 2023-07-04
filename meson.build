@@ -58,5 +58,14 @@ e = executable('com.github.phase1geo.journaler',
     install : true
 )
 
+d = executable('com.github.phase1geo.journaler.daemon',
+    files('src/Daemon.vala'),
+    dependencies: [
+      dependency('gobject-2.0'),
+      dependency('glib-2.0')
+    ],
+    install : true
+)
+
 meson.add_install_script('meson/post_install.py')
 

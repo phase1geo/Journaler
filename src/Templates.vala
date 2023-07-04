@@ -100,22 +100,36 @@ public class Templates {
   }
 
   /* Retrieves the daily weather */
-  public void get_weather() {
+  public async void get_weather_and_location() {
 
     try {
       var lang        = Environment.get_variable( "LANGUAGE" );
-      var weather_cmd = "wget -q -O - wttr.in/54703?1uTFQn&lang=%s".printf( lang );
+      // var weather_cmd = "wget -q -O - wttr.in/?1uTFqn&lang=%s".printf( lang );
+      var weather_cmd = "wget -q -O - wttr.in/?1TFqn&lang=%s".printf( lang );
       var output      = "";
       Process.spawn_command_line_sync( weather_cmd, out output );
-      _snippet_vars.set( "WEATHER", "```\n" + output.chomp() + "\n```" );
+      var lines = output.split( "\n" );
+      _snippet_vars.set( "WEATHER_TEXT", get_weather_text( lines[2:3] ) );
+      _snippet_vars.set( "WEATHER", "```\n" + string.joinv( "\n", lines[7:lines.length-1] ).chomp()  + "\n```" );
+      _snippet_vars.set( "LOCATION", lines[0].strip() );
     } catch( SpawnError e ) {
       stderr.printf( "ERROR: %s\n", e.message );
     }
 
   }
 
+  /* Returns the weather in text-only format */
+  private string get_weather_text( string[] lines ) {
+
+    var condition   = lines[0].substring( lines[0].index_of_nth_char( 16 ) ).strip();
+    var temperature = lines[1].substring( lines[1].index_of_nth_char( 16 ) ).strip(); 
+
+    return( "%s, %s".printf( condition, temperature ) );
+
+  }
+
   /* Gets the daily news from the stored RSS feeds */
-  public void get_news() {
+  public async void get_news() {
 
     try {
       var rss_cmd = "wget -q -O - %s".printf( news_feed_url );
@@ -129,28 +143,21 @@ public class Templates {
 
   }
 
-  /* Gets the current location */
-  public void get_location() {
+  public async void collect_variables_async() {
 
-    try {
-      var simple   = new GClue.Simple.sync( "com.github.phase1geo.journaler", GClue.AccuracyLevel.STREET );
-      var location = simple.get_location();
-      _snippet_vars.set( "LOCATION", "lat: %g, long: %g".printf( location.latitude, location.longitude ) );
-    } catch( Error e ) {
-      stderr.printf( "ERROR: %s\n", e.message );
-    }
+    yield get_weather_and_location();
+    yield get_news();
 
   }
 
   /* Collects the available variables */
   public void collect_variables() {
 
-    get_weather();
-    get_news();
-    // get_location();
-
-    /* Indicate that the variables are now available */
-    vars_available();
+    /* Wait for these to complete */
+    collect_variables_async.begin((obj, res) => {
+      collect_variables_async.end( res );
+      vars_available();
+    });
 
   }
 
