@@ -15,6 +15,7 @@ sources += files(
     'Template.vala',
     'Templater.vala',
     'Templates.vala',
+    'TemplateVars.vala',
     'Themes.vala',
     'TextArea.vala',
     'Utils.vala'

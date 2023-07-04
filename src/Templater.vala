@@ -191,8 +191,8 @@ public class Templater : Box {
   /* Updates the insertion variable menu */
   public void update_insert_var_menu() {
 
-    for( int i=0; i<_templates.num_variables(); i++ ) {
-      var variable = _templates.get_variable( i );
+    for( int i=0; i<_templates.snippet_vars.num_variables(); i++ ) {
+      var variable = _templates.snippet_vars.get_variable( i );
       stdout.printf( "variable: %s\n", variable );
       _var_menu.append( _( "Insert %s" ).printf( variable.replace( "_", " " ).down() ), "templater.action_insert_variable('%s')".printf( variable ) );
     }
