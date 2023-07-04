@@ -4,6 +4,7 @@ public class Preferences : Gtk.Dialog {
 
   private MainWindow _win;
   private MenuButton _theme_mb;
+  private Grid       _feed_grid;
 
   private const GLib.ActionEntry action_entries[] = {
     { "action_set_current_theme", action_set_current_theme, "s" }
@@ -29,8 +30,9 @@ public class Preferences : Gtk.Dialog {
       margin_top    = 24,
       margin_bottom = 18
     };
-    stack.add_titled( create_general(), "general",  _( "General" ) );
-    stack.add_titled( create_editor(),  "editor",   _( "Editor" ) );
+    stack.add_titled( create_general(),    "general",  _( "General" ) );
+    stack.add_titled( create_editor(),     "editor",   _( "Editor" ) );
+    stack.add_titled( create_news_feeds(), "feeds",    _( "News Feeds" ) );
 
     var switcher = new StackSwitcher() {
       halign = Align.CENTER
@@ -46,6 +48,7 @@ public class Preferences : Gtk.Dialog {
     /* Create close button at bottom of window */
     var close_button = new Button.with_label( _( "Close" ) );
     close_button.clicked.connect(() => {
+      save_news_feeds();
       destroy();
     });
 
@@ -65,9 +68,6 @@ public class Preferences : Gtk.Dialog {
       row_spacing = 5,
       column_spacing = 5
     };
-
-    grid.attach( make_label( _( "Weather Location" ) ), 0, 0 );
-    grid.attach( make_entry( "weather-location", _( "Enter zip code, city or nearest 3 character airport code" ), 20 ), 1, 0 );
 
     return( grid );
 
@@ -94,6 +94,106 @@ public class Preferences : Gtk.Dialog {
     grid.attach( make_spinner( "editor-line-spacing", 2, 20, 1 ), 1, 3 );
 
     return( grid );
+
+  }
+
+  /* Adds a feed row at the given position */
+  private void add_feed_row( Grid grid, int position, NewsSource? source = null ) {
+
+    var name = new Entry() {
+      placeholder_text = _( "Name" )
+    };
+
+    var feed = new Entry() {
+      placeholder_text = _( "Feed URL" )
+    };
+
+    var items = new SpinButton.with_range( 1, 10, 1 );
+
+    var add = new Button.from_icon_name( "list-add-symbolic" );
+    add.clicked.connect(() => {
+      int col, row, wspan, hspan;;
+      grid.query_child( name, out col, out row, out wspan, out hspan );
+      add_feed_row( grid, (row + 1) );
+    });
+
+    var del = new Button.from_icon_name( "list-remove-symbolic" );
+    del.clicked.connect(() => {
+      int col, row, wspan, hspan;
+      grid.query_child( name, out col, out row, out wspan, out hspan );
+      grid.remove_row( row );
+      if( grid.get_child_at( 0, 0 ) == null ) {
+        add_feed_row( grid, 0 );
+      }
+    });
+
+    /* Insert the new row with widgets */
+    grid.insert_row( position );
+    grid.attach( name,  0, position );
+    grid.attach( feed,  1, position );
+    grid.attach( items, 2, position );
+    grid.attach( add,   3, position );
+    grid.attach( del,   4, position );
+
+    /* Populate the widgets if we have data to show */
+    if( source != null ) {
+      name.text   = source.name;
+      feed.text   = source.feed;
+      items.value = (double)source.num_items;
+    }
+
+  }
+
+  /* Creates the news feed panel */
+  private ScrolledWindow create_news_feeds() {
+
+    _feed_grid = new Grid() {
+      row_spacing = 5,
+      column_spacing = 5
+    };
+
+    var scroll = new ScrolledWindow() {
+      vscrollbar_policy = PolicyType.AUTOMATIC,
+      hscrollbar_policy = PolicyType.NEVER,
+      child = _feed_grid
+    };
+    scroll.set_size_request( 500, 300 );
+
+    var vars = _win.templates.template_vars;
+    if( vars.num_news_source() == 0 ) {
+      add_feed_row( _feed_grid, 0 );
+    } else {
+      for( int i=0; i<vars.num_news_source(); i++ ) {
+        add_feed_row( _feed_grid, i, vars.get_news_source( i ) );
+      }
+    }
+
+    return( scroll );
+
+  }
+
+  private void save_news_feeds() {
+
+    var row = 0;
+    var vars = _win.templates.template_vars;
+
+    vars.clear_news_sources();
+
+    do {
+      stdout.printf( "Checking row %d for add\n", row );
+      if( _feed_grid.get_child_at( 0, row ) != null ) {
+        var name  = (Entry)_feed_grid.get_child_at( 0, row ); 
+        var feed  = (Entry)_feed_grid.get_child_at( 1, row );
+        var items = (SpinButton)_feed_grid.get_child_at( 2, row );
+        if( (name != null) && (name.text != "") && (feed.text != "") ) {
+          var source = new NewsSource( name.text, feed.text, (int)items.value );
+          vars.add_news_source( source );
+        }
+        row++;
+      }
+    } while( _feed_grid.get_child_at( 0, row ) != null );
+
+    vars.save_news_sources();
 
   }
 

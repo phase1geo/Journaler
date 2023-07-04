@@ -1,16 +1,16 @@
 public class Templates {
 
   private List<Template> _templates;
-  private TemplateVars   _snippet_vars;
+  private TemplateVars   _template_vars;
 
   public List<Template> templates {
     get {
       return( _templates );
     }
   }
-  public TemplateVars snippet_vars {
+  public TemplateVars template_vars {
     get {
-      return( snippet_vars );
+      return( _template_vars );
     }
   }
 
@@ -20,12 +20,12 @@ public class Templates {
   /* Default constructor */
   public Templates() {
     
-    _templates    = new List<Template>();
-    _snippet_vars = new TemplateVars();
+    _templates     = new List<Template>();
+    _template_vars = new TemplateVars();
 
     /* TODO - I don't really want to do this here */
     Idle.add(() => {
-      _snippet_vars.collect_variables();
+      _template_vars.collect_variables();
       return( false );
     });
 
@@ -94,7 +94,7 @@ public class Templates {
 
     var snippet = mgr.get_snippet( "journaler-templates", null, Template.get_snippet_trigger( name ) );
     if( snippet != null ) {
-      _snippet_vars.set_variables( snippet );
+      _template_vars.set_variables( snippet );
     }
 
     return( snippet );

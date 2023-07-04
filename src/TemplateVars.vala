@@ -1,15 +1,19 @@
-public class TemplateVars {
+public class NewsSource {
 
-  private class NewsSource {
-    public string name;
-    public string feed;
-    public int    num_items;
-    public NewsSource( string name, string feed, int num_items ) {
-      this.name      = name;
-      this.feed      = feed;
-      this.num_items = num_items;
-    }
+  public string name;
+  public string feed;
+  public int    num_items;
+
+  /* Default constructor */
+  public NewsSource( string name, string feed, int num_items ) {
+    this.name      = name;
+    this.feed      = feed;
+    this.num_items = num_items;
   }
+
+}
+
+public class TemplateVars {
 
   private Gee.HashMap<string,string> _vars;
   private Array<NewsSource>          _news_sources;
@@ -63,8 +67,43 @@ public class TemplateVars {
 
   }
 
+  /* Clears the current news sources */
+  public void clear_news_sources() {
+    _news_sources.set_size( 0 );
+  }
+
+  /* Adds a news source to the list (which updates the settings) */
+  public void add_news_source( NewsSource source ) {
+    _news_sources.append_val( source );
+  }
+
+  /* Deletes a news source from the list (which updates the settings) */
+  public void delete_news_source( int index ) {
+
+    /* Find the associated variable, remove it and save it */
+    var source = _news_sources.index( index );
+    if( _vars.unset( "NEWS_%s".printf( source.name ) ) ) {
+      save();
+    }
+
+    /* Removes the source and saves it to settings */
+    _news_sources.remove_index( index );
+    save_news_sources();
+
+  }
+
+  /* Returns the number of stored news sources */
+  public int num_news_source() {
+    return( (int)_news_sources.length );
+  }
+
+  /* Retrieves the news source from the list */
+  public NewsSource get_news_source( int index ) {
+    return( _news_sources.index( index ) );
+  }
+
   /* Saves the news sources to the glib.settings */
-  private void save_news_sources() {
+  public void save_news_sources() {
 
     Variant[] variants = {};
 
@@ -82,7 +121,6 @@ public class TemplateVars {
   /* Loads the news sources from glib.settings */
   private void load_news_sources() {
 
-    Variant[] variants = {};
     var variant = Journaler.settings.get_value( "news-feeds" );
 
     string? val1 = null;
@@ -100,12 +138,23 @@ public class TemplateVars {
   /* Collects the variables into the _vars array */
   public void collect_variables() {
 
+    /* Attempt to load the template variable data.  If it is old or doesn't exist, reload the data */
     if( !load() ) {
+
+      /* Load the new sources from settings */
       load_news_sources();
+
+      /* Loads the weather and location data */
+      get_weather_and_location();
+
+      /* Loads the news source data */
       for( int i=0; i<_news_sources.length; i++ ) {
         get_news( _news_sources.index( i ) );
       }
+
+      /* Saves the loaded variables */
       save();
+
     }
 
   }

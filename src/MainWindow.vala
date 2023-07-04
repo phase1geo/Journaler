@@ -63,6 +63,11 @@ public class MainWindow : Gtk.ApplicationWindow {
       return( _themes );
     }
   }
+  public Templates templates {
+    get {
+      return( _templates );
+    }
+  }
 
   /* Create the main window UI */
   public MainWindow( Gtk.Application app, GLib.Settings settings ) {
