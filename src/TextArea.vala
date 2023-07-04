@@ -168,7 +168,7 @@ public class TextArea : Box {
     _date.add_css_class( "text-background" );
 
     /* Add the tags */
-    _tags = new TagBox();
+    _tags = new TagBox( _win );
     _tags.add_class( "date" );
     _tags.add_class( "text-background" );
 
@@ -190,6 +190,7 @@ public class TextArea : Box {
     };
     _text.add_controller( text_focus );
     _text.add_css_class( "journal-text" );
+    _buffer.changed.connect( _win.reset_timer );
 
     set_line_spacing();
     set_margin( true );
@@ -198,6 +199,7 @@ public class TextArea : Box {
       _text.grab_focus();
     });
     _title.changed.connect(() => {
+      _win.reset_timer();
       if( _title.text == "" ) {
         _title.remove_css_class( "title-bold" );
       } else {
@@ -219,6 +221,10 @@ public class TextArea : Box {
       vscrollbar_policy = PolicyType.AUTOMATIC,
       child = _text
     };
+    tscroll.scroll_child.connect((t,h) => {
+      _win.reset_timer();
+      return( false );
+    });
 
     _pane = new Paned( Orientation.VERTICAL ) {
       end_child = tscroll
@@ -228,6 +234,10 @@ public class TextArea : Box {
       vscrollbar_policy = AUTOMATIC,
       hscrollbar_policy = AUTOMATIC
     };
+    _iscroll.scroll_child.connect((t,h) => {
+      _win.reset_timer();
+      return( false );
+    });
 
     append( tbox );
     append( _date );
@@ -261,6 +271,8 @@ public class TextArea : Box {
   /* Adds or changes the image associated with the current entry */
   private void action_add_entry_image() {
 
+    _win.reset_timer();
+
     var dialog = new FileChooserDialog( _( "Select an image" ), _win, FileChooserAction.OPEN,
                                         _( "Cancel" ), ResponseType.CANCEL,
                                         _( "Open" ), ResponseType.ACCEPT );
@@ -273,6 +285,7 @@ public class TextArea : Box {
     dialog.add_filter( filter );
 
     dialog.response.connect((id) => {
+      _win.reset_timer();
       if( id == ResponseType.ACCEPT ) {
         var file = dialog.get_file();
         if( file != null ) {
@@ -318,6 +331,7 @@ public class TextArea : Box {
 
   /* Removes the image associated with the current entry */
   private void action_remove_entry_image() {
+    _win.reset_timer();
     _pixbuf = null;
     _pixbuf_changed = true;
     display_pixbuf( 200, 0.0, 0.0 );
@@ -326,6 +340,7 @@ public class TextArea : Box {
 
   /* Inserts the given template text at the current insertion cursor location */
   private void action_insert_template( SimpleAction action, Variant? variant ) {
+    _win.reset_timer();
     insert_template( variant.get_string() );
   }
 

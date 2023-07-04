@@ -1,13 +1,16 @@
 using Gtk;
+using Gee;
 
 public class Preferences : Gtk.Dialog {
 
   private MainWindow _win;
   private MenuButton _theme_mb;
   private Grid       _feed_grid;
+  private HashMap<string,MenuButton> _menus;
 
   private const GLib.ActionEntry action_entries[] = {
-    { "action_set_current_theme", action_set_current_theme, "s" }
+    { "action_set_current_theme", action_set_current_theme, "s" },
+    { "action_lock_menu",         action_lock_menu,         "i" }
   };
 
   private delegate string ValidateEntryCallback( Entry entry, string text, int position );
@@ -23,6 +26,7 @@ public class Preferences : Gtk.Dialog {
     );
 
     _win = win;
+    _menus = new HashMap<string,MenuButton>();
 
     var stack = new Stack() {
       margin_start  = 5,
@@ -48,6 +52,7 @@ public class Preferences : Gtk.Dialog {
     /* Create close button at bottom of window */
     var close_button = new Button.with_label( _( "Close" ) );
     close_button.clicked.connect(() => {
+      _win.reset_timer();
       save_news_feeds();
       destroy();
     });
@@ -66,11 +71,64 @@ public class Preferences : Gtk.Dialog {
 
     var grid = new Grid() {
       row_spacing = 5,
-      column_spacing = 5
+      column_spacing = 5,
+      halign = Align.CENTER
     };
+
+    var preview_date  = DBEntry.todays_date();
+    var entry_preview = new Label( Journaler.settings.get_string( "entry-title-prefix" ) +
+                                   preview_date +
+                                   Journaler.settings.get_string( "entry-title-suffix" ) ) {
+      halign = Align.START
+    };
+
+    grid.attach( make_label( _( "Default Entry Title" ) ), 0, 0 );
+    grid.attach( make_entry( "entry-title-prefix", _( "Prefix" ), 30, (entry, text, position) => {
+      entry_preview.label = text + preview_date + Journaler.settings.get_string( "entry-title-suffix" );
+      return( text );
+    }), 1, 0 );
+    grid.attach( make_entry( "entry-title-suffix", _( "Suffix" ), 30, (entry, text, position) => {
+      entry_preview.label = Journaler.settings.get_string( "entry-title-prefix" ) + preview_date + text;
+      return( text );
+    }), 1, 1 );
+    grid.attach( make_label( _( "Preview:" ) ), 0, 2 );
+    grid.attach( entry_preview, 1, 2 );
+
+    grid.attach( make_label( "" ), 0, 3 );
+
+    grid.attach( make_label( _( "Automatically lock application" ) ), 0, 4 );
+    grid.attach( make_menu( "auto-lock", lock_label(), create_lock_menu() ), 1, 4 );
 
     return( grid );
 
+  }
+
+  /* Create the application auto-lock menu */
+  private GLib.Menu create_lock_menu() {
+
+    var menu = new GLib.Menu();
+
+    for( int i=0; i<AutoLockOption.NUM; i++ ) {
+      var opt = (AutoLockOption)i;
+      menu.append( opt.label(), "prefs.action_lock_menu(%d)".printf( i ) );
+    }
+
+    return( menu );
+
+  }
+
+  /* Returns the lock menubutton label */
+  private string lock_label() {
+    var opt = (AutoLockOption)Journaler.settings.get_int( "auto-lock" );
+    return( opt.label() );
+  }
+
+  /* Sets the lock menu to the given value */
+  private void action_lock_menu( SimpleAction action, Variant? variant ) {
+    _win.reset_timer();
+    var opt = (AutoLockOption)variant.get_int32();
+    _menus.get( "auto-lock" ).label = opt.label();
+    Journaler.settings.set_int( "auto-lock", variant.get_int32() );
   }
 
   /* Creates the editor panel */
@@ -78,19 +136,20 @@ public class Preferences : Gtk.Dialog {
 
     var grid = new Grid() {
       row_spacing = 5,
-      column_spacing = 5
+      column_spacing = 5,
+      halign = Align.CENTER
     };
 
     grid.attach( make_label( _( "Default Theme" ) ), 0, 0 );
     grid.attach( make_themes(), 1, 0, 2 );
 
-    grid.attach( make_label( _( "Editor Font Size" ) ), 0, 1 );
+    grid.attach( make_label( _( "Font Size" ) ), 0, 1 );
     grid.attach( make_spinner( "editor-font-size", 8, 24, 1 ), 1, 1 );
 
-    grid.attach( make_label( _( "Editor Margin" ) ), 0, 2 );
+    grid.attach( make_label( _( "Margin" ) ), 0, 2 );
     grid.attach( make_spinner( "editor-margin", 5, 100, 5 ), 1, 2 );
 
-    grid.attach( make_label( _( "Editor Line Spacing" ) ), 0, 3 );
+    grid.attach( make_label( _( "Line Spacing" ) ), 0, 3 );
     grid.attach( make_spinner( "editor-line-spacing", 2, 20, 1 ), 1, 3 );
 
     return( grid );
@@ -104,14 +163,17 @@ public class Preferences : Gtk.Dialog {
       placeholder_text = _( "Name" ),
       max_length = 20
     };
+    name.changed.connect( _win.reset_timer );
 
     var feed = new Entry() {
       placeholder_text = _( "Feed URL" ),
       halign = Align.FILL,
       hexpand = true
     };
+    feed.changed.connect( _win.reset_timer );
 
     var items = new SpinButton.with_range( 1, 20, 1 );
+    items.value_changed.connect( _win.reset_timer );
 
     var add = new Button.from_icon_name( "list-add-symbolic" ) {
       margin_start = 15
@@ -120,6 +182,7 @@ public class Preferences : Gtk.Dialog {
       int col, row, wspan, hspan;;
       grid.query_child( name, out col, out row, out wspan, out hspan );
       add_feed_row( grid, (row + 1) );
+      _win.reset_timer();
     });
 
     var del = new Button.from_icon_name( "list-remove-symbolic" );
@@ -130,6 +193,7 @@ public class Preferences : Gtk.Dialog {
       if( grid.get_child_at( 0, 0 ) == null ) {
         add_feed_row( grid, 0 );
       }
+      _win.reset_timer();
     });
 
     /* Insert the new row with widgets */
@@ -156,7 +220,8 @@ public class Preferences : Gtk.Dialog {
 
     _feed_grid = new Grid() {
       row_spacing = 5,
-      column_spacing = 5
+      column_spacing = 5,
+      halign = Align.CENTER
     };
 
     var scroll = new ScrolledWindow() {
@@ -165,6 +230,10 @@ public class Preferences : Gtk.Dialog {
       child = _feed_grid
     };
     scroll.set_size_request( 500, 300 );
+    scroll.scroll_child.connect((t,h) => {
+      _win.reset_timer();
+      return( true );
+    });
 
     var vars = _win.templates.template_vars;
     if( vars.num_news_source() == 0 ) {
@@ -222,6 +291,7 @@ public class Preferences : Gtk.Dialog {
       halign = Align.START,
       valign = Align.CENTER
     };
+    w.activate.connect( _win.reset_timer );
     Journaler.settings.bind( setting, w, "active", SettingsBindFlags.DEFAULT );
     return( w );
   }
@@ -229,6 +299,7 @@ public class Preferences : Gtk.Dialog {
   /* Creates spinner */
   private SpinButton make_spinner( string setting, int min_value, int max_value, int step ) {
     var w = new SpinButton.with_range( min_value, max_value, step );
+    w.value_changed.connect( _win.reset_timer );
     Journaler.settings.bind( setting, w, "value", SettingsBindFlags.DEFAULT );
     return( w );
   }
@@ -240,6 +311,7 @@ public class Preferences : Gtk.Dialog {
       max_length              = max_length,
       enable_emoji_completion = false
     };
+    w.changed.connect( _win.reset_timer );
     if( cb != null ) {
       w.insert_text.connect((new_text, new_text_length, ref position) => {
         var cleaned = cb( w, new_text, position );
@@ -259,6 +331,16 @@ public class Preferences : Gtk.Dialog {
     entry.insert_text( cleaned, cleaned.length, ref position );
     SignalHandler.unblock_by_func( void_entry, (void*)handle_text_insertion, this );
     Signal.stop_emission_by_name( entry, "insert_text" );
+  }
+
+  /* Creates a menubutton with the given menu */
+  private MenuButton make_menu( string setting, string label, GLib.Menu menu ) {
+    var w = new MenuButton() {
+      label      = label,
+      menu_model = menu
+    };
+    _menus.set( setting, w );
+    return( w );
   }
 
   /* Creates an information image */
@@ -301,6 +383,7 @@ public class Preferences : Gtk.Dialog {
 
     /* Indicate that the theme changed for the rest of the UI */
     _win.themes.theme = theme;
+    _win.reset_timer();
 
   }
 

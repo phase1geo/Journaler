@@ -22,6 +22,55 @@
 using Gtk;
 using Gdk;
 
+public enum AutoLockOption {
+  NEVER,
+  AFTER_1_MIN,
+  AFTER_2_MIN,
+  AFTER_5_MIN,
+  AFTER_10_MIN,
+  AFTER_15_MIN,
+  AFTER_30_MIN,
+  AFTER_1_HOUR,
+  NUM;
+
+  public string label() {
+    switch( this ) {
+      case NEVER        :  return( _( "Never" ) );
+      case AFTER_1_MIN  :  return( _( "After 1 minute of inactivity" ) );
+      case AFTER_2_MIN  :  return( _( "After %d minutes of inactivity" ).printf( 2 ) );
+      case AFTER_5_MIN  :  return( _( "After %d minutes of inactivity" ).printf( 5 ) );
+      case AFTER_10_MIN :  return( _( "After %d minutes of inactivity" ).printf( 10 ) );
+      case AFTER_15_MIN :  return( _( "After %d minutes of inactivity" ).printf( 15 ) );
+      case AFTER_30_MIN :  return( _( "After %d minutes of inactivity" ).printf( 30 ) );
+      case AFTER_1_HOUR :  return( _( "After 1 hour of inactivity" ) );
+      default           :  assert_not_reached();
+    }
+  }
+
+  public static AutoLockOption parse( uint value ) {
+    if( value >= (uint)NUM ) {
+      return( NEVER );
+    } else {
+      return( (AutoLockOption)value );
+    }
+  }
+
+  public int minutes() {
+    switch( this ) {
+      case NEVER        :  return( 0 );
+      case AFTER_1_MIN  :  return( 1 );
+      case AFTER_2_MIN  :  return( 2 );
+      case AFTER_5_MIN  :  return( 5 );
+      case AFTER_10_MIN :  return( 10 );
+      case AFTER_15_MIN :  return( 15 );
+      case AFTER_30_MIN :  return( 30 );
+      case AFTER_1_HOUR :  return( 60 );
+      default           :  assert_not_reached();
+    }
+  }
+
+}
+
 public class MainWindow : Gtk.ApplicationWindow {
 
   private const int _sidebar_width = 300;
@@ -39,6 +88,8 @@ public class MainWindow : Gtk.ApplicationWindow {
   private GLib.Menu                  _templates_menu;
   private List<Widget>               _header_buttons;
   private Themes                     _themes;
+  private uint                       _auto_lock_id = 0;
+  private int                        _auto_lock_count = 0;
 
   private const GLib.ActionEntry[] action_entries = {
     { "action_today",         action_today },
@@ -66,6 +117,12 @@ public class MainWindow : Gtk.ApplicationWindow {
   public Templates templates {
     get {
       return( _templates );
+    }
+  }
+  public bool locked {
+    get {
+      return( (_lock_stack.visible_child_name == "setlock-view") ||
+              (_lock_stack.visible_child_name == "lock-view") );
     }
   }
 
@@ -233,6 +290,38 @@ public class MainWindow : Gtk.ApplicationWindow {
     /* Make sure that we display today's entry */
     action_today();
 
+    /* Start the auto-lock timer */
+    reset_timer();
+
+  }
+
+  /*
+   This should be called for any user interactions with the UI.  This will cause the auto-lock
+   timer to be reset.
+  */
+  public void reset_timer() {
+
+    stdout.printf( "In reset_timer\n" );
+
+    /* Clear the counter and the timer */
+    _auto_lock_count = 0;
+    if( _auto_lock_id > 0 ) {
+      Source.remove( _auto_lock_id );
+    }
+
+    /* Set the timer */
+    _auto_lock_id = Timeout.add_seconds( 60, () => {
+      var auto_lock = (AutoLockOption)Journaler.settings.get_int( "auto-lock" );
+      _auto_lock_count++;
+      stdout.printf( "Timer minute, count: %d, minutes: %d, id: %u\n", _auto_lock_count, auto_lock.minutes(), _auto_lock_id );
+      if( _auto_lock_count == auto_lock.minutes() ) {
+        _auto_lock_id = 0;
+        show_pane( "lock-view" );
+        return( false );
+      }
+      return( true );
+    });
+
   }
 
   /* Create the miscellaneous menu */
@@ -364,6 +453,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     };
     cancel.clicked.connect(() => {
       show_pane( "entry-view" );
+      reset_timer();
     });
 
     var save = new Button.with_label( _( "Set Password" ) ) {
@@ -374,6 +464,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     save.clicked.connect(() => {
       Security.create_password_file( entry2.text );
       show_pane( "entry-view" );
+      reset_timer();
     });
 
     var bbox = new Box( Orientation.HORIZONTAL, 5 ) {
@@ -446,6 +537,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     entry.activate.connect(() => {
       if( Security.does_password_match( entry.text ) ) {
         show_pane( "entry-view" );
+        reset_timer();
       } else {
         entry.add_css_class( "password-invalid" );
       }
@@ -554,11 +646,15 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   /* Creates a new file */
   public void action_today() {
+    reset_timer();
+    if( locked ) return;
     _entries.show_entry_for_date( DBEntry.todays_date(), true );
   }
 
   /* Save the current entry to the database */
   public void action_save() {
+    reset_timer();
+    if( locked ) return;
     _text_area.save();
   }
 
@@ -578,16 +674,21 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   /* Creates a new template */
   private void action_new_template() {
+    reset_timer();
     edit_template();
   }
 
   /* Edits an existing template by the given name */
   private void action_edit_template( SimpleAction action, Variant? variant ) {
+    reset_timer();
     edit_template( variant.get_string() );
   }
 
   /* Displays the shortcuts cheatsheet */
   private void action_shortcuts() {
+
+    reset_timer();
+    if( locked ) return;
 
     var builder = new Builder.from_resource( "/com/github/phase1geo/journaler/shortcuts.ui" );
     var win     = builder.get_object( "shortcuts" ) as ShortcutsWindow;
@@ -613,6 +714,9 @@ public class MainWindow : Gtk.ApplicationWindow {
   }
 
   private void action_preferences() {
+
+    reset_timer();
+    if( locked ) return;
 
     var prefs = new Preferences( this );
 

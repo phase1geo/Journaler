@@ -100,6 +100,7 @@ public class SidebarEntries : Box {
       tooltip_text = _( "Edit Current Journal" )
     };
     edit.clicked.connect(() => {
+      _win.reset_timer();
       edit_journal( _journals.current );
     });
 
@@ -113,11 +114,13 @@ public class SidebarEntries : Box {
 
   /* Called when a journal is selected in the dropdown menu */
   private void action_select_journal( SimpleAction action, Variant? variant ) {
+    _win.reset_timer();
     _journals.current = _journals.get_journal_by_name( variant.get_string() );
   }
 
   /* Called when a new journal needs to be created on behalf of the user */
   private void action_new_journal() {
+    _win.reset_timer();
     edit_journal( null );
   }
 
@@ -130,6 +133,7 @@ public class SidebarEntries : Box {
     };
 
     _listbox.row_selected.connect((row) => {
+      _win.reset_timer();
       if( _ignore_select || (row == null) ) {
         return;
       }
@@ -147,6 +151,10 @@ public class SidebarEntries : Box {
       vexpand           = true,
       child             = _listbox
     };
+    _lb_scroll.scroll_child.connect((t,h) => {
+      _win.reset_timer();
+      return( true );
+    });
 
     append( _lb_scroll );
 
@@ -167,6 +175,7 @@ public class SidebarEntries : Box {
       if( _ignore_select ) {
         return;
       }
+      _win.reset_timer();
       var dt = _cal.get_date();
       var date = DBEntry.datetime_date( dt );
       var index = get_listbox_index_for_date( date );
@@ -178,10 +187,22 @@ public class SidebarEntries : Box {
       }
     });
 
-    _cal.next_month.connect( populate_calendar );
-    _cal.next_year.connect(  populate_calendar );
-    _cal.prev_month.connect( populate_calendar );
-    _cal.prev_year.connect(  populate_calendar );
+    _cal.next_month.connect(() => {
+      _win.reset_timer();
+      populate_calendar();
+    });
+    _cal.next_year.connect(() => {
+      _win.reset_timer();
+      populate_calendar();
+    });
+    _cal.prev_month.connect(() => {
+      _win.reset_timer();
+      populate_calendar();
+    });
+    _cal.prev_year.connect(() => {
+      _win.reset_timer();
+      populate_calendar();
+    });
 
     append( _cal );
 

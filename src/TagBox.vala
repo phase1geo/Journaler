@@ -5,8 +5,9 @@ public class TagBox : Box {
   private Journal? _journal = null;
   private DBEntry? _entry = null;
 
-  private Box      _box;
-  private TagEntry _new_tag_entry;
+  private MainWindow _win;
+  private Box        _box;
+  private TagEntry   _new_tag_entry;
 
   private List<Widget>  _tag_widgets;
   private Array<string> _all_tags;
@@ -31,17 +32,19 @@ public class TagBox : Box {
   }
 
   /* Default constructor */
-  public TagBox() {
+  public TagBox( MainWindow win ) {
 
     Object( orientation: Orientation.VERTICAL, spacing: 0 );
 
+    _win         = win;
     _tag_widgets = new List<Widget>();
     _all_tags    = new Array<string>();
 
-    _new_tag_entry = new TagEntry( _("Click to add tag…") ) {
+    _new_tag_entry = new TagEntry( _win, _("Click to add tag…") ) {
       add_css = false
     };
     _new_tag_entry.activated.connect((tag) => {
+      _win.reset_timer();
       _entry.add_tag( tag );
       update_tags();
     });
@@ -57,6 +60,10 @@ public class TagBox : Box {
       valign  = Align.CENTER
     };
     scroller.child = _box;
+    scroller.scroll_child.connect((t,h) => {
+      _win.reset_timer();
+      return( false );
+    });
 
     append( scroller );
 
@@ -111,16 +118,18 @@ public class TagBox : Box {
 
     foreach( var tag in _entry.tags ) {
 
-      var tag_button = new TagEntry( tag );
+      var tag_button = new TagEntry( _win, tag );
       tag_button.populate_completion( _all_tags );
 
       tag_button.activated.connect((btag) => {
+        _win.reset_timer();
         _entry.replace_tag( tag, btag );
         _journal.db.save_tags_only( _entry );
         update_tags();
       });
 
       tag_button.removed.connect((btag) => {
+        _win.reset_timer();
         _entry.remove_tag( btag );
         _box.remove( tag_button );
         _tag_widgets.remove( tag_button );

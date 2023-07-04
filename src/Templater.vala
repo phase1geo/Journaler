@@ -79,6 +79,7 @@ public class Templater : Box {
       placeholder_text = _( "Required" )
     };
     _name.changed.connect(() => {
+      _win.reset_timer();
       _save.sensitive = (_name.text != "") && ((_name.text != _current.name) || (_buffer.text != _current.text));
     });
 
@@ -144,6 +145,7 @@ public class Templater : Box {
     set_line_spacing();
     
     _buffer.changed.connect(() => {
+      _win.reset_timer();
       _save.sensitive = (_name.text != "") && ((_name.text != _current.name) || (_buffer.text != _current.text));
     });
 
@@ -151,6 +153,10 @@ public class Templater : Box {
       vscrollbar_policy = PolicyType.AUTOMATIC,
       child = _text
     };
+    scroll.scroll_child.connect((t,h) => {
+      _win.reset_timer();
+      return( true );
+    });
 
     var box = new Box( Orientation.VERTICAL, 5 ) {
       halign  = Align.FILL,
@@ -206,16 +212,19 @@ public class Templater : Box {
 
   /* Inserts a tab position string */
   private void action_insert_next_tab_position() {
+    _win.reset_timer();
     insert_text( "${%d}".printf( _tab_pos++ ) );
   }
 
   /* Inserts the last tab position */
   private void action_insert_last_tab_position() {
+    _win.reset_timer();
     insert_text( "${0}" );
   }
 
   /* Inserts the given variable */
   private void action_insert_variable( SimpleAction action, Variant? variant ) {
+    _win.reset_timer();
     insert_text( "$%s".printf( variant.get_string() ) );
   }
 
@@ -231,6 +240,7 @@ public class Templater : Box {
 
     var del = new Button.with_label( _( "Delete" ) );
     del.clicked.connect(() => {
+      _win.reset_timer();
       _templates.remove_template( _current.name );
       _win.show_pane( _goto_pane );
     });
@@ -243,6 +253,7 @@ public class Templater : Box {
 
     var cancel = new Button.with_label( _( "Cancel" ) );
     cancel.clicked.connect(() => {
+      _win.reset_timer();
       _win.show_pane( _goto_pane );
     });
 
@@ -250,6 +261,7 @@ public class Templater : Box {
       sensitive = false
     };
     _save.clicked.connect(() => {
+      _win.reset_timer();
       _current.name = _name.text;
       _current.text = _buffer.text;
       _templates.add_template( _current );

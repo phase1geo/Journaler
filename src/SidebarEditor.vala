@@ -91,6 +91,7 @@ public class SidebarEditor : Box {
       var name = _name.buffer.text;
       _save_name = (name != _orig_name) && (_journals.get_journal_by_name( name ) == null);
       _save.sensitive = (name != "") && (_save_name || _save_template || _save_description);
+      _win.reset_timer();
     });
 
     var box = new Box( Orientation.HORIZONTAL, 5 );
@@ -150,6 +151,7 @@ public class SidebarEditor : Box {
     _description.buffer.changed.connect(() => {
       _save_description = (_description.buffer.text != _orig_description);
       _save.sensitive   = (_name.buffer.text != "") && (_save_name || _save_template || _save_description);
+      _win.reset_timer();
     });
 
     var box = new Box( Orientation.VERTICAL, 5 );
@@ -167,6 +169,7 @@ public class SidebarEditor : Box {
 
     del.clicked.connect(() => {
       _journals.remove_journal( _journal );
+      _win.reset_timer();
       done();
     });
     del.add_css_class( "destructive-action" );
@@ -179,6 +182,7 @@ public class SidebarEditor : Box {
     var cancel = new Button.with_label( _( "Cancel" ) );
 
     cancel.clicked.connect(() => {
+      _win.reset_timer();
       done();
     });
 
@@ -198,6 +202,7 @@ public class SidebarEditor : Box {
         stdout.printf( "name: %s, template: %s\n", _journal.name, _journal.template );
         _journals.save();
       }
+      _win.reset_timer();
       done();
     });
 
@@ -246,6 +251,7 @@ public class SidebarEditor : Box {
 
   /* Sets the template to the given value and updates the UI */
   private void action_set_template( SimpleAction action, Variant? variant ) {
+    _win.reset_timer();
     _template.label = variant.get_string();
     _save_template  = (get_template_name() != _orig_template);
     _save.sensitive = (_name.buffer.text != "") && (_save_name || _save_template || _save_description);
@@ -253,6 +259,7 @@ public class SidebarEditor : Box {
 
   /* Creates a new template */
   private void action_new_template() {
+    _win.reset_timer();
     _win.edit_template();
   }
 
