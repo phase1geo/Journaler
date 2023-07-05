@@ -2,10 +2,11 @@ using Gtk;
 
 public class TagEntry : Box {
 
-  private Entry    _entry;
-  private Label    _button;
-  private Revealer _entry_revealer;
-  private Revealer _button_revealer;
+  private MainWindow _win;
+  private Entry      _entry;
+  private Label      _button;
+  private Revealer   _entry_revealer;
+  private Revealer   _button_revealer;
 
   private bool _hide_if_contains_text = false;
   private bool _always_shown_when_revealed = false;
@@ -41,10 +42,11 @@ public class TagEntry : Box {
   public signal void button_double_clicked( string tag );
 
   /* Default constructor */
-  public class TagEntry( string tag_text ) {
+  public class TagEntry( MainWindow win, string tag_text ) {
 
     Object( orientation: Orientation.VERTICAL, spacing: 0, halign: Align.START, valign: Align.CENTER, vexpand: false );
 
+    _win                        = win;
     _always_shown_when_revealed = true;
 
     var button_key = new EventControllerKey();
@@ -93,6 +95,7 @@ public class TagEntry : Box {
     });
 
     button_key.key_pressed.connect((keyval, keycode, state) => {
+      _win.reset_timer();
       switch( keyval ) {
         case Gdk.Key.Delete    :
         case Gdk.Key.BackSpace :  removed( _entry.text );  break;
@@ -104,6 +107,7 @@ public class TagEntry : Box {
     });
 
     button_click.pressed.connect((n, x, y) => {
+      _win.reset_timer();
       if( _add_css ) {
         switch( n ) {
           case 1 :  _button.grab_focus();  break;
@@ -115,6 +119,7 @@ public class TagEntry : Box {
     });
 
     entry_key.key_pressed.connect((keyval, keycode, state) => {
+      _win.reset_timer();
       switch( keyval ) {
         case Gdk.Key.Escape :  hide_entry();  break;
         default             :  return( false );

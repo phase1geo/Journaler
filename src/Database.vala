@@ -108,7 +108,10 @@ public class DBEntry {
 
   /* Returns the title of this entry */
   public string gen_title() {
-    return( (this.title == "") ? _( "Entry for %s" ).printf( this.date ) : this.title );
+    return( (this.title == "") ?
+            Utils.build_entry_title( Journaler.settings.get_string( "entry-title-prefix" ),
+                                     Journaler.settings.get_string( "entry-title-suffix" ), this.date ) :
+            this.title );
   }
 
   /* Returns the current year */

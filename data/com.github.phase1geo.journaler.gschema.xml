@@ -21,5 +21,50 @@
       <summary>Most recent height of minder window</summary>
       <description>Most recent height of minder window</description>
     </key>
+    <key name="auto-lock" type="i">
+      <default>0</default>
+      <summary>Specifies the auto-lock setting</summary>
+      <description>Disable using 0.  Otherwise, auto-locks after a period of inactivity: 1=1-min, 2=2-min, 3=5-min, 4=10-min, 5=15-min, 6=30-min, 7-1-hour.</description>
+    </key>
+    <key name="entry-title-prefix" type="s">
+      <default>"Entry for"</default>
+      <summary>Prefix used to display entries when an entry title is not specified.</summary>
+      <description>Prefix used to display entries when an entry title is not specified.</description>
+    </key>
+    <key name="entry-title-suffix" type="s">
+      <default>""</default>
+      <summary>Suffix used to display entries when an entry title is not specified.</summary>
+      <description>Suffix used to display entries when an entry title is not specified.</description>
+    </key>
+    <key name="default-theme" type="s">
+      <default>"Adwaita"</default>
+      <summary>Name of default theme to use in text fields</summary>
+      <description>Name of default theme to use in text fields</description>
+    </key>
+    <key name="editor-font-family" type="s">
+      <default>"Sans"</default>
+      <summary>Font family used in text editor areas</summary>
+      <description>Font family used in text editor areas</description>
+    </key>
+    <key name="editor-font-size" type="i">
+      <default>12</default>
+      <summary>Font size used in text editor areas</summary>
+      <description>Font size used in text editor areas</description>
+    </key>
+    <key name="editor-margin" type="i">
+      <default>20</default>
+      <summary>Margin (in pixels) used in the editor</summary>
+      <description>Margin (in pixels) used in the editor</description>
+    </key>
+    <key name="editor-line-spacing" type="i">
+      <default>5</default>
+      <summary>Amount of space between lines of the editor</summary>
+      <description>Amount of space between lines of the editor</description>
+    </key>
+    <key name="news-feeds" type="a(ssi)">
+      <default>[]</default>
+      <summary>Array of news feeds that can be inserted</summary>
+      <description>Array of news feeds where each element in the array is the name of the feed, the feed URL, and the number of news items to pull from the feed</description>
+    </key>
   </schema>
 </schemalist>

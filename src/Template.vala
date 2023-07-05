@@ -1,6 +1,6 @@
 public class Template {
 
-  public string name { get; set; default = "Template"; }
+  public string name { get; set; default = _( "Template" ); }
   public string text { get; set; default = ""; }
 
   /* Default constructor */

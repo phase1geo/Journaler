@@ -22,6 +22,66 @@
 using Gtk;
 using Gdk;
 
+public enum AutoLockOption {
+  NEVER,
+  AFTER_1_MIN,
+  AFTER_2_MIN,
+  AFTER_5_MIN,
+  AFTER_10_MIN,
+  AFTER_15_MIN,
+  AFTER_30_MIN,
+  AFTER_1_HOUR,
+  ON_SCREENSAVER,
+  ON_APP_BACKGROUND,
+  NUM;
+
+  /* Returns the user-facing string value to display */
+  public string label() {
+    switch( this ) {
+      case NEVER             :  return( _( "Never" ) );
+      case AFTER_1_MIN       :  return( _( "After 1 minute of inactivity" ) );
+      case AFTER_2_MIN       :  return( _( "After %d minutes of inactivity" ).printf( 2 ) );
+      case AFTER_5_MIN       :  return( _( "After %d minutes of inactivity" ).printf( 5 ) );
+      case AFTER_10_MIN      :  return( _( "After %d minutes of inactivity" ).printf( 10 ) );
+      case AFTER_15_MIN      :  return( _( "After %d minutes of inactivity" ).printf( 15 ) );
+      case AFTER_30_MIN      :  return( _( "After %d minutes of inactivity" ).printf( 30 ) );
+      case AFTER_1_HOUR      :  return( _( "After 1 hour of inactivity" ) );
+      case ON_SCREENSAVER    :  return( _( "When screensaver is invoked" ) );
+      case ON_APP_BACKGROUND :  return( _( "When application loses focus" ) );
+      default                :  assert_not_reached();
+    }
+  }
+
+  /* Returns true if we should start adding this option and subsequence to a new menu */
+  public bool new_menu() {
+    return( (this == NEVER) || (this == AFTER_1_MIN) || (this == ON_SCREENSAVER) );
+  }
+
+  /* Parses the integer value and converts it to this type */
+  public static AutoLockOption parse( uint value ) {
+    if( value >= (uint)NUM ) {
+      return( NEVER );
+    } else {
+      return( (AutoLockOption)value );
+    }
+  }
+
+  /* Returns the number of minutes of inactivity before the application is locked */
+  public int minutes() {
+    switch( this ) {
+      case AFTER_1_MIN  :  return( 1 );
+      case AFTER_2_MIN  :  return( 2 );
+      case AFTER_5_MIN  :  return( 5 );
+      case AFTER_10_MIN :  return( 10 );
+      case AFTER_15_MIN :  return( 15 );
+      case AFTER_30_MIN :  return( 30 );
+      case AFTER_1_HOUR :  return( 60 );
+      default           :  return( 0 );
+    }
+  }
+
+}
+
 public class MainWindow : Gtk.ApplicationWindow {
 
   private const int _sidebar_width = 300;
@@ -38,8 +98,11 @@ public class MainWindow : Gtk.ApplicationWindow {
   private Gee.HashMap<string,Widget> _stack_focus_widgets;
   private GLib.Menu                  _templates_menu;
   private List<Widget>               _header_buttons;
-
-  // private UnicodeInsert   _unicoder;
+  private Themes                     _themes;
+  private AutoLockOption             _auto_lock    = AutoLockOption.NEVER;
+  private uint                       _auto_lock_id = 0;
+  private Dialog                     _prefs = null;
+  private ShortcutsWindow            _shortcuts = null;
 
   private const GLib.ActionEntry[] action_entries = {
     { "action_today",         action_today },
@@ -59,15 +122,22 @@ public class MainWindow : Gtk.ApplicationWindow {
       return( _settings );
     }
   }
-  /*
-  public UnicodeInsert unicoder {
+  public Themes themes {
     get {
-      return( _unicoder );
+      return( _themes );
     }
   }
-  */
-
-  public signal void dark_mode_changed( bool mode );
+  public Templates templates {
+    get {
+      return( _templates );
+    }
+  }
+  public bool locked {
+    get {
+      return( (_lock_stack.visible_child_name == "setlock-view") ||
+              (_lock_stack.visible_child_name == "lock-view") );
+    }
+  }
 
   /* Create the main window UI */
   public MainWindow( Gtk.Application app, GLib.Settings settings ) {
@@ -76,6 +146,9 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     _settings = settings;
     _header_buttons = new List<Widget>();
+
+    /* Load the available themes */
+    _themes = new Themes();
 
     /* Create and load the templates */
     _templates = new Templates();
@@ -198,16 +271,18 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     show();
 
-    dark_mode_changed.connect((mode) => {
-      pbox.remove_css_class( mode ? "login-pane-light" : "login-pane-dark" );
-      sbox.remove_css_class( mode ? "login-pane-light" : "login-pane-dark" );
-      pbox.add_css_class( mode ? "login-pane-dark" : "login-pane-light" );
-      sbox.add_css_class( mode ? "login-pane-dark" : "login-pane-light" );
+    _themes.theme_changed.connect((name) => {
+      pbox.remove_css_class( _themes.dark_mode ? "login-pane-light" : "login-pane-dark" );
+      sbox.remove_css_class( _themes.dark_mode ? "login-pane-light" : "login-pane-dark" );
+      pbox.add_css_class( _themes.dark_mode ? "login-pane-dark" : "login-pane-light" );
+      sbox.add_css_class( _themes.dark_mode ? "login-pane-dark" : "login-pane-light" );
     });
 
     /* If the user has set a password, show the journal as locked immediately */
     if( Security.does_password_exist() ) {
       show_pane( "lock-view", true );
+      _auto_lock = (AutoLockOption)settings.get_int( "auto-lock" );
+      reset_timer();
     } else {
       show_pane( "entry-view", true );
     }
@@ -216,6 +291,14 @@ public class MainWindow : Gtk.ApplicationWindow {
     close_request.connect(() => {
       action_save();
       return( false );
+    });
+
+    /* If the auto-lock settings change, grab the value and reset the timer */
+    settings.changed["auto-lock"].connect(() => {
+      if( Security.does_password_exist() ) {
+        _auto_lock = (AutoLockOption)settings.get_int( "auto-lock" );
+      }
+      reset_timer();
     });
 
     /* Loads the application-wide CSS */
@@ -229,6 +312,58 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     /* Make sure that we display today's entry */
     action_today();
+
+  }
+
+  /*
+   This should be called for any user interactions with the UI.  This will cause the auto-lock
+   timer to be reset.
+  */
+  public void reset_timer() {
+
+    stdout.printf( "In reset_timer\n" );
+
+    /* Clear the counter and the timer */
+    if( _auto_lock_id > 0 ) {
+      Source.remove( _auto_lock_id );
+    }
+
+    if( _auto_lock == AutoLockOption.NEVER ) return;
+
+    /* Set the timer */
+    switch( _auto_lock ) {
+      case AutoLockOption.ON_SCREENSAVER :
+        stdout.printf( "ON_SCREENSAVER\n" );
+        _auto_lock_id = Timeout.add_seconds( 1, () => {
+          if( application.screensaver_active ) {
+            _auto_lock_id = 0;
+            show_pane( "lock-view" );
+            return( false );
+          }
+          return( true );
+        });
+        break;
+      case AutoLockOption.ON_APP_BACKGROUND :
+        stdout.printf( "APP_BACKGROUND\n" );
+        _auto_lock_id = Timeout.add_seconds( 1, () => {
+          if( !is_active && ((_prefs == null) || !_prefs.is_active) && ((_shortcuts == null) || !_shortcuts.is_active) ) {
+            _auto_lock_id = 0;
+            show_pane( "lock-view" );
+            return( false );
+          }
+          return( true );
+        });
+        break;
+      default :
+        stdout.printf( "AFTER X MINS\n" );
+        _auto_lock_id = Timeout.add_seconds( (60 * _auto_lock.minutes()), () => {
+          stdout.printf( "Timed out\n" );
+          _auto_lock_id = 0;
+          show_pane( "lock-view" );
+          return( false );
+        });
+        break;
+    }
 
   }
 
@@ -291,6 +426,12 @@ public class MainWindow : Gtk.ApplicationWindow {
         set_header_bar_sensitivity( false );
         break;
       default :
+        if( _prefs != null ) {
+          _prefs.close();
+        }
+        if( _shortcuts != null ) {
+          _shortcuts.close();
+        }
         _lock_stack.transition_type = StackTransitionType.SLIDE_DOWN;
         set_header_bar_sensitivity( false );
         break;
@@ -361,6 +502,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     };
     cancel.clicked.connect(() => {
       show_pane( "entry-view" );
+      reset_timer();
     });
 
     var save = new Button.with_label( _( "Set Password" ) ) {
@@ -371,6 +513,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     save.clicked.connect(() => {
       Security.create_password_file( entry2.text );
       show_pane( "entry-view" );
+      reset_timer();
     });
 
     var bbox = new Box( Orientation.HORIZONTAL, 5 ) {
@@ -422,9 +565,9 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     _stack_focus_widgets.set( "setlock-view", entry1 );
 
-    dark_mode_changed.connect((mode) => {
-      grid.remove_css_class( mode ? "login-frame-light" : "login-frame-dark" );
-      grid.add_css_class( mode ? "login-frame-dark" : "login-frame-light" );
+    _themes.theme_changed.connect((name) => {
+      grid.remove_css_class( _themes.dark_mode ? "login-frame-light" : "login-frame-dark" );
+      grid.add_css_class( _themes.dark_mode ? "login-frame-dark" : "login-frame-light" );
     });
 
   }
@@ -443,6 +586,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     entry.activate.connect(() => {
       if( Security.does_password_match( entry.text ) ) {
         show_pane( "entry-view" );
+        reset_timer();
       } else {
         entry.add_css_class( "password-invalid" );
       }
@@ -466,9 +610,9 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     _stack_focus_widgets.set( "lock-view", entry );
 
-    dark_mode_changed.connect((mode) => {
-      pbox.remove_css_class( mode ? "login-frame-light" : "login-frame-dark" );
-      pbox.add_css_class( mode ? "login-frame-dark" : "login-frame-light" );
+    _themes.theme_changed.connect((name) => {
+      pbox.remove_css_class( _themes.dark_mode ? "login-frame-light" : "login-frame-dark" );
+      pbox.add_css_class( _themes.dark_mode ? "login-frame-dark" : "login-frame-light" );
     });
 
   }
@@ -540,20 +684,26 @@ public class MainWindow : Gtk.ApplicationWindow {
   /* Adds keyboard shortcuts for the menu actions */
   private void add_keyboard_shortcuts( Gtk.Application app ) {
 
-    app.set_accels_for_action( "win.action_today", { "<Control>t" } );
-    app.set_accels_for_action( "win.action_save",  { "<Control>s" } );
-    app.set_accels_for_action( "win.action_lock",  { "<Control>l" } );
-    app.set_accels_for_action( "win.action_quit",  { "<Control>q" } );
+    app.set_accels_for_action( "win.action_today",       { "<Control>t" } );
+    app.set_accels_for_action( "win.action_save",        { "<Control>s" } );
+    app.set_accels_for_action( "win.action_lock",        { "<Control>l" } );
+    app.set_accels_for_action( "win.action_quit",        { "<Control>q" } );
+    app.set_accels_for_action( "win.action_shortcuts",   { "<Control>question" } );
+    app.set_accels_for_action( "win.action_preferences", { "<Control>comma" } );
 
   }
 
   /* Creates a new file */
   public void action_today() {
+    reset_timer();
+    if( locked ) return;
     _entries.show_entry_for_date( DBEntry.todays_date(), true );
   }
 
   /* Save the current entry to the database */
   public void action_save() {
+    reset_timer();
+    if( locked ) return;
     _text_area.save();
   }
 
@@ -573,43 +723,46 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   /* Creates a new template */
   private void action_new_template() {
+    reset_timer();
     edit_template();
   }
 
   /* Edits an existing template by the given name */
   private void action_edit_template( SimpleAction action, Variant? variant ) {
+    reset_timer();
     edit_template( variant.get_string() );
   }
 
   /* Displays the shortcuts cheatsheet */
   private void action_shortcuts() {
 
+    reset_timer();
+    if( locked ) return;
+
     var builder = new Builder.from_resource( "/com/github/phase1geo/journaler/shortcuts.ui" );
-    var win     = builder.get_object( "shortcuts" ) as ShortcutsWindow;
+    _shortcuts = builder.get_object( "shortcuts" ) as ShortcutsWindow;
 
-    win.transient_for = this;
-    win.view_name     = null;
+    _shortcuts.transient_for = this;
+    _shortcuts.view_name     = null;
+    _shortcuts.show();
 
-    /* Display the most relevant information based on the current state */
-    /*
-    if( da.is_node_editable() || da.is_connection_editable() ) {
-      win.section_name = "text-editing";
-    } else if( da.is_node_selected() ) {
-      win.section_name = "node";
-    } else if( da.is_connection_selected() ) {
-      win.section_name = "connection";
-    } else {
-      win.section_name = "general";
-    }
-    */
-
-    win.show();
+    _shortcuts.close.connect(() => {
+      _shortcuts = null;
+    });
 
   }
 
   private void action_preferences() {
 
-    /* TBD */
+    reset_timer();
+    if( locked ) return;
+
+    _prefs = new Preferences( this );
+    _prefs.show();
+
+    _prefs.close.connect(() => {
+      _prefs = null;
+    });
 
   }
 

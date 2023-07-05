@@ -280,4 +280,10 @@ public class Utils {
 
   }
 
+  /* Returns the preview string */
+  public static string build_entry_title( string prefix, string suffix, string? date = null ) {
+    string[] strs = {prefix.strip(), ((date == null) ? DBEntry.todays_date() : date), suffix.strip()};
+    return( string.joinv( " ", strs ).strip() );
+  }
+
 }

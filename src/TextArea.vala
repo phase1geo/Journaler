@@ -35,9 +35,7 @@ public class TextArea : Box {
   private TagBox           _tags;
   private GtkSource.View   _text;
   private GtkSource.Buffer _buffer;
-  private int              _font_size = 12;
-  private int              _text_margin = 20;
-  private string           _theme = "cobalt-light";
+  private string           _theme;
   private Paned            _pane;
   private ScrolledWindow   _iscroll;
   private Pixbuf?          _pixbuf = null;
@@ -50,30 +48,6 @@ public class TextArea : Box {
     { "action_remove_entry_image", action_remove_entry_image },
     { "action_insert_template",    action_insert_template, "s" }
   };
-
-  public int font_size {
-    get {
-      return( _font_size );
-    }
-    set {
-      if( _font_size != value ) {
-        _font_size = value;
-        update_theme();
-      }
-    }
-  }
-
-  public string theme {
-    get {
-      return( _theme );
-    }
-    set {
-      if( _theme != value ) {
-        _theme = value;
-        update_theme();
-      }
-    }
-  }
 
   /* Create the main window UI */
   public TextArea( MainWindow win, Journals journals, Templates templates ) {
@@ -96,15 +70,55 @@ public class TextArea : Box {
     add_text_area();
 
     /* Set the CSS for this widget */
-    win.dark_mode_changed.connect((mode) => {
-      _theme = mode ? "cobalt" : "cobalt-light";
+    win.themes.theme_changed.connect((name) => {
+      _theme = name;
       update_theme();
+    });
+    Journaler.settings.changed.connect((key) => {
+      switch( key ) {
+        case "editor-font-size"    :  set_font_size();      break;
+        case "editor-margin"       :  set_margin( false );  break;
+        case "editor-line-spacing" :  set_line_spacing();   break;
+      }
     });
 
     /* Add the menu actions */
     var actions = new SimpleActionGroup();
     actions.add_action_entries( action_entries, this );
     insert_action_group( "textarea", actions );
+
+  }
+
+  /* Sets the font size of the text widget */
+  private void set_font_size() {
+
+    update_theme();
+    
+  }
+
+  /* Sets the margin around the text widget */
+  private void set_margin( bool init ) {
+
+    var margin = Journaler.settings.get_int( "editor-margin" );
+
+    _text.top_margin    = margin / 2;
+    _text.left_margin   = margin;
+    _text.bottom_margin = margin;
+    _text.right_margin  = margin;
+
+    if( !init ) {
+      update_theme();
+    }
+
+  }
+
+  /* Sets the text line spacing */
+  private void set_line_spacing() {
+
+    var line_spacing = Journaler.settings.get_int( "editor-line-spacing" );
+
+    _text.pixels_below_lines = line_spacing;
+    _text.pixels_inside_wrap = line_spacing;
 
   }
 
@@ -117,8 +131,6 @@ public class TextArea : Box {
 
   /* Creates the textbox with today's entry. */
   private void add_text_area() {
-
-    var line_spacing = 5;
 
     /* Add the title */
     var title_focus = new EventControllerFocus();
@@ -156,7 +168,7 @@ public class TextArea : Box {
     _date.add_css_class( "text-background" );
 
     /* Add the tags */
-    _tags = new TagBox();
+    _tags = new TagBox( _win );
     _tags.add_class( "date" );
     _tags.add_class( "text-background" );
 
@@ -172,23 +184,22 @@ public class TextArea : Box {
     _text = new GtkSource.View.with_buffer( _buffer ) {
       valign             = Align.FILL,
       vexpand            = true,
-      top_margin         = _text_margin / 2,
-      left_margin        = _text_margin,
-      bottom_margin      = _text_margin,
-      right_margin       = _text_margin,
       wrap_mode          = WrapMode.WORD,
-      pixels_below_lines = line_spacing,
-      pixels_inside_wrap = line_spacing,
       cursor_visible     = true,
       enable_snippets    = true
     };
     _text.add_controller( text_focus );
     _text.add_css_class( "journal-text" );
+    _buffer.changed.connect( _win.reset_timer );
+
+    set_line_spacing();
+    set_margin( true );
 
     _title.activate.connect(() => {
       _text.grab_focus();
     });
     _title.changed.connect(() => {
+      _win.reset_timer();
       if( _title.text == "" ) {
         _title.remove_css_class( "title-bold" );
       } else {
@@ -197,19 +208,18 @@ public class TextArea : Box {
     });
 
     title_focus.leave.connect(() => {
+      _title.select_region( 0, 0 );
       save();
     });
-
-    /*
-    text_focus.leave.connect(() => {
-      save();
-    });
-    */
 
     var tscroll = new ScrolledWindow() {
       vscrollbar_policy = PolicyType.AUTOMATIC,
       child = _text
     };
+    tscroll.scroll_child.connect((t,h) => {
+      _win.reset_timer();
+      return( false );
+    });
 
     _pane = new Paned( Orientation.VERTICAL ) {
       end_child = tscroll
@@ -219,6 +229,10 @@ public class TextArea : Box {
       vscrollbar_policy = AUTOMATIC,
       hscrollbar_policy = AUTOMATIC
     };
+    _iscroll.scroll_child.connect((t,h) => {
+      _win.reset_timer();
+      return( false );
+    });
 
     append( tbox );
     append( _date );
@@ -252,6 +266,8 @@ public class TextArea : Box {
   /* Adds or changes the image associated with the current entry */
   private void action_add_entry_image() {
 
+    _win.reset_timer();
+
     var dialog = new FileChooserDialog( _( "Select an image" ), _win, FileChooserAction.OPEN,
                                         _( "Cancel" ), ResponseType.CANCEL,
                                         _( "Open" ), ResponseType.ACCEPT );
@@ -264,6 +280,7 @@ public class TextArea : Box {
     dialog.add_filter( filter );
 
     dialog.response.connect((id) => {
+      _win.reset_timer();
       if( id == ResponseType.ACCEPT ) {
         var file = dialog.get_file();
         if( file != null ) {
@@ -309,6 +326,7 @@ public class TextArea : Box {
 
   /* Removes the image associated with the current entry */
   private void action_remove_entry_image() {
+    _win.reset_timer();
     _pixbuf = null;
     _pixbuf_changed = true;
     display_pixbuf( 200, 0.0, 0.0 );
@@ -317,6 +335,7 @@ public class TextArea : Box {
 
   /* Inserts the given template text at the current insertion cursor location */
   private void action_insert_template( SimpleAction action, Variant? variant ) {
+    _win.reset_timer();
     insert_template( variant.get_string() );
   }
 
@@ -353,6 +372,9 @@ public class TextArea : Box {
     var style_mgr = GtkSource.StyleSchemeManager.get_default();
     var style = style_mgr.get_scheme( _theme );
     _buffer.style_scheme = style;
+
+    var font_size = Journaler.settings.get_int( "editor-font-size" );
+    var margin    = Journaler.settings.get_int( "editor-margin" );
 
     /* Set the CSS */
     var provider = new CssProvider();
@@ -391,7 +413,7 @@ public class TextArea : Box {
       .text-padding {
         padding: 0px %dpx;
       }
-    """.printf( _font_size, _font_size, _text_margin, style.get_style( "background-pattern" ).background, (_text_margin - 4) );
+    """.printf( font_size, font_size, margin, style.get_style( "background-pattern" ).background, (margin - 4) );
     provider.load_from_data( css_data.data );
     StyleContext.add_provider_for_display( get_display(), provider, STYLE_PROVIDER_PRIORITY_APPLICATION );
 
@@ -430,6 +452,7 @@ public class TextArea : Box {
       if( (_journals.current == _journal) && (_title.text != _entry.text) ) {
         _journals.current_changed( true );
       }
+      _entry = entry;
       stdout.printf( "Saved successfully to journal %s\n", _journal.name );
     }
 

@@ -11,8 +11,6 @@ public class Templater : Box {
   private Button           _save;
   private Revealer         _del_revealer;
   private GLib.Menu        _var_menu;
-  private int              _text_margin = 20;
-  private string           _theme = "cobalt-light";
   private string           _goto_pane = "";
   private int              _tab_pos = 1;
 
@@ -31,7 +29,7 @@ public class Templater : Box {
     _templates = templates;
     _current   = null;
 
-    _templates.vars_available.connect(() => {
+    _templates.template_vars.changed.connect(() => {
       update_insert_var_menu();
     });
 
@@ -46,9 +44,14 @@ public class Templater : Box {
     margin_end    = 5;
 
     /* Update the theme used by these components */
-    win.dark_mode_changed.connect((mode) => {
-      _theme = mode ? "cobalt" : "cobalt-light";
-      update_theme();
+    win.themes.theme_changed.connect((name) => {
+      update_theme( name );
+    });
+    Journaler.settings.changed.connect((key) => {
+      switch( key ) {
+        case "editor-margin"       :  set_margin();        break;
+        case "editor-line-spacing" :  set_line_spacing();  break;
+      }
     });
 
     /* Add the menu actions */
@@ -76,6 +79,7 @@ public class Templater : Box {
       placeholder_text = _( "Required" )
     };
     _name.changed.connect(() => {
+      _win.reset_timer();
       _save.sensitive = (_name.text != "") && ((_name.text != _current.name) || (_buffer.text != _current.text));
     });
 
@@ -89,11 +93,31 @@ public class Templater : Box {
     append( sep );
 
   }
+  
+  /* Sets the margin for the text widget */
+  private void set_margin() {
+  
+    var margin = Journaler.settings.get_int( "editor-margin" );
+    
+    _text.top_margin    = margin / 2;
+    _text.left_margin   = margin;
+    _text.bottom_margin = margin;
+    _text.right_margin  = margin;
+  
+  }
+  
+  /* Sets the line spacing for the text widget */
+  private void set_line_spacing() {
+  
+    var line_spacing = Journaler.settings.get_int( "editor-line-spacing" );
+    
+    _text.pixels_below_lines = line_spacing;
+    _text.pixels_inside_wrap = line_spacing;
+    
+  }
 
   /* Adds the text frame */
   private void add_text_frame() {
-
-    var line_spacing = 5;
 
     var lbl = new Label( Utils.make_title( _( "Template Text:" ) ) ) {
       halign     = Align.START,
@@ -109,20 +133,19 @@ public class Templater : Box {
     var text_focus = new EventControllerFocus();
     _buffer = new GtkSource.Buffer.with_language( lang );
     _text = new GtkSource.View.with_buffer( _buffer ) {
-      valign             = Align.FILL,
-      vexpand            = true,
-      top_margin         = _text_margin / 2,
-      left_margin        = _text_margin,
-      bottom_margin      = _text_margin,
-      right_margin       = _text_margin,
-      wrap_mode          = WrapMode.WORD,
-      pixels_below_lines = line_spacing,
-      pixels_inside_wrap = line_spacing,
-      extra_menu         = create_insertion_menu()
+      valign     = Align.FILL,
+      vexpand    = true,
+      wrap_mode  = WrapMode.WORD,
+      extra_menu = create_insertion_menu()
     };
     _text.add_controller( text_focus );
     _text.add_css_class( "journal-text" );
+    
+    set_margin();
+    set_line_spacing();
+    
     _buffer.changed.connect(() => {
+      _win.reset_timer();
       _save.sensitive = (_name.text != "") && ((_name.text != _current.name) || (_buffer.text != _current.text));
     });
 
@@ -130,6 +153,10 @@ public class Templater : Box {
       vscrollbar_policy = PolicyType.AUTOMATIC,
       child = _text
     };
+    scroll.scroll_child.connect((t,h) => {
+      _win.reset_timer();
+      return( true );
+    });
 
     var box = new Box( Orientation.VERTICAL, 5 ) {
       halign  = Align.FILL,
@@ -170,9 +197,9 @@ public class Templater : Box {
   /* Updates the insertion variable menu */
   public void update_insert_var_menu() {
 
-    for( int i=0; i<_templates.num_variables(); i++ ) {
-      var variable = _templates.get_variable( i );
-      _var_menu.append( _( "Insert %s" ).printf( variable.down() ), "templater.action_insert_variable('%s')".printf( variable ) );
+    for( int i=0; i<_templates.template_vars.num_variables(); i++ ) {
+      var variable = _templates.template_vars.get_variable( i );
+      _var_menu.append( _( "Insert %s" ).printf( variable.replace( "_", " " ).down() ), "templater.action_insert_variable('%s')".printf( variable ) );
     }
 
   }
@@ -185,23 +212,26 @@ public class Templater : Box {
 
   /* Inserts a tab position string */
   private void action_insert_next_tab_position() {
+    _win.reset_timer();
     insert_text( "${%d}".printf( _tab_pos++ ) );
   }
 
   /* Inserts the last tab position */
   private void action_insert_last_tab_position() {
+    _win.reset_timer();
     insert_text( "${0}" );
   }
 
   /* Inserts the given variable */
   private void action_insert_variable( SimpleAction action, Variant? variant ) {
+    _win.reset_timer();
     insert_text( "$%s".printf( variant.get_string() ) );
   }
 
   /* Sets the theme and CSS classes */
-  private void update_theme() {
+  private void update_theme( string theme ) {
     var style_mgr = GtkSource.StyleSchemeManager.get_default();
-    var style = style_mgr.get_scheme( _theme );
+    var style = style_mgr.get_scheme( theme );
     _buffer.style_scheme = style;
   }
 
@@ -210,6 +240,7 @@ public class Templater : Box {
 
     var del = new Button.with_label( _( "Delete" ) );
     del.clicked.connect(() => {
+      _win.reset_timer();
       _templates.remove_template( _current.name );
       _win.show_pane( _goto_pane );
     });
@@ -222,6 +253,7 @@ public class Templater : Box {
 
     var cancel = new Button.with_label( _( "Cancel" ) );
     cancel.clicked.connect(() => {
+      _win.reset_timer();
       _win.show_pane( _goto_pane );
     });
 
@@ -229,6 +261,7 @@ public class Templater : Box {
       sensitive = false
     };
     _save.clicked.connect(() => {
+      _win.reset_timer();
       _current.name = _name.text;
       _current.text = _buffer.text;
       _templates.add_template( _current );
