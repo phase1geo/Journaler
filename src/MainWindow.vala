@@ -31,22 +31,33 @@ public enum AutoLockOption {
   AFTER_15_MIN,
   AFTER_30_MIN,
   AFTER_1_HOUR,
+  ON_SCREENSAVER,
+  ON_APP_BACKGROUND,
   NUM;
 
+  /* Returns the user-facing string value to display */
   public string label() {
     switch( this ) {
-      case NEVER        :  return( _( "Never" ) );
-      case AFTER_1_MIN  :  return( _( "After 1 minute of inactivity" ) );
-      case AFTER_2_MIN  :  return( _( "After %d minutes of inactivity" ).printf( 2 ) );
-      case AFTER_5_MIN  :  return( _( "After %d minutes of inactivity" ).printf( 5 ) );
-      case AFTER_10_MIN :  return( _( "After %d minutes of inactivity" ).printf( 10 ) );
-      case AFTER_15_MIN :  return( _( "After %d minutes of inactivity" ).printf( 15 ) );
-      case AFTER_30_MIN :  return( _( "After %d minutes of inactivity" ).printf( 30 ) );
-      case AFTER_1_HOUR :  return( _( "After 1 hour of inactivity" ) );
-      default           :  assert_not_reached();
+      case NEVER             :  return( _( "Never" ) );
+      case AFTER_1_MIN       :  return( _( "After 1 minute of inactivity" ) );
+      case AFTER_2_MIN       :  return( _( "After %d minutes of inactivity" ).printf( 2 ) );
+      case AFTER_5_MIN       :  return( _( "After %d minutes of inactivity" ).printf( 5 ) );
+      case AFTER_10_MIN      :  return( _( "After %d minutes of inactivity" ).printf( 10 ) );
+      case AFTER_15_MIN      :  return( _( "After %d minutes of inactivity" ).printf( 15 ) );
+      case AFTER_30_MIN      :  return( _( "After %d minutes of inactivity" ).printf( 30 ) );
+      case AFTER_1_HOUR      :  return( _( "After 1 hour of inactivity" ) );
+      case ON_SCREENSAVER    :  return( _( "When screensaver is invoked" ) );
+      case ON_APP_BACKGROUND :  return( _( "When application loses focus" ) );
+      default                :  assert_not_reached();
     }
   }
 
+  /* Returns true if we should start adding this option and subsequence to a new menu */
+  public bool new_menu() {
+    return( (this == NEVER) || (this == AFTER_1_MIN) || (this == ON_SCREENSAVER) );
+  }
+
+  /* Parses the integer value and converts it to this type */
   public static AutoLockOption parse( uint value ) {
     if( value >= (uint)NUM ) {
       return( NEVER );
@@ -55,9 +66,9 @@ public enum AutoLockOption {
     }
   }
 
+  /* Returns the number of minutes of inactivity before the application is locked */
   public int minutes() {
     switch( this ) {
-      case NEVER        :  return( 0 );
       case AFTER_1_MIN  :  return( 1 );
       case AFTER_2_MIN  :  return( 2 );
       case AFTER_5_MIN  :  return( 5 );
@@ -65,7 +76,7 @@ public enum AutoLockOption {
       case AFTER_15_MIN :  return( 15 );
       case AFTER_30_MIN :  return( 30 );
       case AFTER_1_HOUR :  return( 60 );
-      default           :  assert_not_reached();
+      default           :  return( 0 );
     }
   }
 
@@ -88,8 +99,10 @@ public class MainWindow : Gtk.ApplicationWindow {
   private GLib.Menu                  _templates_menu;
   private List<Widget>               _header_buttons;
   private Themes                     _themes;
+  private AutoLockOption             _auto_lock    = AutoLockOption.NEVER;
   private uint                       _auto_lock_id = 0;
-  private int                        _auto_lock_count = 0;
+  private Dialog                     _prefs = null;
+  private ShortcutsWindow            _shortcuts = null;
 
   private const GLib.ActionEntry[] action_entries = {
     { "action_today",         action_today },
@@ -268,6 +281,8 @@ public class MainWindow : Gtk.ApplicationWindow {
     /* If the user has set a password, show the journal as locked immediately */
     if( Security.does_password_exist() ) {
       show_pane( "lock-view", true );
+      _auto_lock = (AutoLockOption)settings.get_int( "auto-lock" );
+      reset_timer();
     } else {
       show_pane( "entry-view", true );
     }
@@ -276,6 +291,14 @@ public class MainWindow : Gtk.ApplicationWindow {
     close_request.connect(() => {
       action_save();
       return( false );
+    });
+
+    /* If the auto-lock settings change, grab the value and reset the timer */
+    settings.changed["auto-lock"].connect(() => {
+      if( Security.does_password_exist() ) {
+        _auto_lock = (AutoLockOption)settings.get_int( "auto-lock" );
+      }
+      reset_timer();
     });
 
     /* Loads the application-wide CSS */
@@ -290,9 +313,6 @@ public class MainWindow : Gtk.ApplicationWindow {
     /* Make sure that we display today's entry */
     action_today();
 
-    /* Start the auto-lock timer */
-    reset_timer();
-
   }
 
   /*
@@ -304,23 +324,46 @@ public class MainWindow : Gtk.ApplicationWindow {
     stdout.printf( "In reset_timer\n" );
 
     /* Clear the counter and the timer */
-    _auto_lock_count = 0;
     if( _auto_lock_id > 0 ) {
       Source.remove( _auto_lock_id );
     }
 
+    if( _auto_lock == AutoLockOption.NEVER ) return;
+
     /* Set the timer */
-    _auto_lock_id = Timeout.add_seconds( 60, () => {
-      var auto_lock = (AutoLockOption)Journaler.settings.get_int( "auto-lock" );
-      _auto_lock_count++;
-      stdout.printf( "Timer minute, count: %d, minutes: %d, id: %u\n", _auto_lock_count, auto_lock.minutes(), _auto_lock_id );
-      if( _auto_lock_count == auto_lock.minutes() ) {
-        _auto_lock_id = 0;
-        show_pane( "lock-view" );
-        return( false );
-      }
-      return( true );
-    });
+    switch( _auto_lock ) {
+      case AutoLockOption.ON_SCREENSAVER :
+        stdout.printf( "ON_SCREENSAVER\n" );
+        _auto_lock_id = Timeout.add_seconds( 1, () => {
+          if( application.screensaver_active ) {
+            _auto_lock_id = 0;
+            show_pane( "lock-view" );
+            return( false );
+          }
+          return( true );
+        });
+        break;
+      case AutoLockOption.ON_APP_BACKGROUND :
+        stdout.printf( "APP_BACKGROUND\n" );
+        _auto_lock_id = Timeout.add_seconds( 1, () => {
+          if( !is_active && ((_prefs == null) || !_prefs.is_active) && ((_shortcuts == null) || !_shortcuts.is_active) ) {
+            _auto_lock_id = 0;
+            show_pane( "lock-view" );
+            return( false );
+          }
+          return( true );
+        });
+        break;
+      default :
+        stdout.printf( "AFTER X MINS\n" );
+        _auto_lock_id = Timeout.add_seconds( (60 * _auto_lock.minutes()), () => {
+          stdout.printf( "Timed out\n" );
+          _auto_lock_id = 0;
+          show_pane( "lock-view" );
+          return( false );
+        });
+        break;
+    }
 
   }
 
@@ -383,6 +426,12 @@ public class MainWindow : Gtk.ApplicationWindow {
         set_header_bar_sensitivity( false );
         break;
       default :
+        if( _prefs != null ) {
+          _prefs.close();
+        }
+        if( _shortcuts != null ) {
+          _shortcuts.close();
+        }
         _lock_stack.transition_type = StackTransitionType.SLIDE_DOWN;
         set_header_bar_sensitivity( false );
         break;
@@ -691,25 +740,15 @@ public class MainWindow : Gtk.ApplicationWindow {
     if( locked ) return;
 
     var builder = new Builder.from_resource( "/com/github/phase1geo/journaler/shortcuts.ui" );
-    var win     = builder.get_object( "shortcuts" ) as ShortcutsWindow;
+    _shortcuts = builder.get_object( "shortcuts" ) as ShortcutsWindow;
 
-    win.transient_for = this;
-    win.view_name     = null;
+    _shortcuts.transient_for = this;
+    _shortcuts.view_name     = null;
+    _shortcuts.show();
 
-    /* Display the most relevant information based on the current state */
-    /*
-    if( da.is_node_editable() || da.is_connection_editable() ) {
-      win.section_name = "text-editing";
-    } else if( da.is_node_selected() ) {
-      win.section_name = "node";
-    } else if( da.is_connection_selected() ) {
-      win.section_name = "connection";
-    } else {
-      win.section_name = "general";
-    }
-    */
-
-    win.show();
+    _shortcuts.close.connect(() => {
+      _shortcuts = null;
+    });
 
   }
 
@@ -718,9 +757,12 @@ public class MainWindow : Gtk.ApplicationWindow {
     reset_timer();
     if( locked ) return;
 
-    var prefs = new Preferences( this );
+    _prefs = new Preferences( this );
+    _prefs.show();
 
-    prefs.show();
+    _prefs.close.connect(() => {
+      _prefs = null;
+    });
 
   }
 

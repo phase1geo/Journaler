@@ -208,6 +208,7 @@ public class TextArea : Box {
     });
 
     title_focus.leave.connect(() => {
+      _title.select_region( 0, 0 );
       save();
     });
 

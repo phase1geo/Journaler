@@ -22,7 +22,8 @@ public class Preferences : Gtk.Dialog {
       deletable: false,
       resizable: false,
       title: _("Preferences"),
-      transient_for: win
+      transient_for: win,
+      modal: true
     );
 
     _win = win;
@@ -75,29 +76,33 @@ public class Preferences : Gtk.Dialog {
       halign = Align.CENTER
     };
 
-    var preview_date  = DBEntry.todays_date();
-    var entry_preview = new Label( Journaler.settings.get_string( "entry-title-prefix" ) +
-                                   preview_date +
-                                   Journaler.settings.get_string( "entry-title-suffix" ) ) {
+    var entry_preview = new Label( "" ) {
+      label  = Utils.build_entry_title( Journaler.settings.get_string( "entry-title-prefix" ), Journaler.settings.get_string( "entry-title-suffix" ) ),
       halign = Align.START
     };
 
-    grid.attach( make_label( _( "Default Entry Title" ) ), 0, 0 );
+    grid.attach( make_label( _( "Automatically lock application" ) ), 0, 0 );
+    grid.attach( make_menu( "auto-lock", lock_label(), create_lock_menu() ), 1, 0 );
+
+    grid.attach( make_label( "" ), 0, 1 );
+
+    grid.attach( make_label( _( "Default Entry Title" ) ), 0, 2 );
     grid.attach( make_entry( "entry-title-prefix", _( "Prefix" ), 30, (entry, text, position) => {
-      entry_preview.label = text + preview_date + Journaler.settings.get_string( "entry-title-suffix" );
+      entry_preview.label = Utils.build_entry_title( text, Journaler.settings.get_string( "entry-title-suffix" ) );
       return( text );
-    }), 1, 0 );
+    }), 1, 2 );
     grid.attach( make_entry( "entry-title-suffix", _( "Suffix" ), 30, (entry, text, position) => {
-      entry_preview.label = Journaler.settings.get_string( "entry-title-prefix" ) + preview_date + text;
+      entry_preview.label = Utils.build_entry_title( Journaler.settings.get_string( "entry-title-prefix" ), text );
       return( text );
-    }), 1, 1 );
-    grid.attach( make_label( _( "Preview:" ) ), 0, 2 );
-    grid.attach( entry_preview, 1, 2 );
+    }), 1, 3 );
+    grid.attach( make_label( _( "Preview:" ) ), 0, 4 );
+    grid.attach( entry_preview, 1, 4 );
 
-    grid.attach( make_label( "" ), 0, 3 );
-
-    grid.attach( make_label( _( "Automatically lock application" ) ), 0, 4 );
-    grid.attach( make_menu( "auto-lock", lock_label(), create_lock_menu() ), 1, 4 );
+    /* Disable the menubutton if we haven't setup a password yet */
+    if( !Security.does_password_exist() ) {
+      var mb = (MenuButton)grid.get_child_at( 1, 0 );
+      mb.sensitive = false;
+    }
 
     return( grid );
 
@@ -107,11 +112,19 @@ public class Preferences : Gtk.Dialog {
   private GLib.Menu create_lock_menu() {
 
     var menu = new GLib.Menu();
+    GLib.Menu? submenu = null;
 
     for( int i=0; i<AutoLockOption.NUM; i++ ) {
       var opt = (AutoLockOption)i;
-      menu.append( opt.label(), "prefs.action_lock_menu(%d)".printf( i ) );
+      if( opt.new_menu() ) {
+        if( submenu != null ) {
+          menu.append_section( null, submenu );
+        }
+        submenu = new GLib.Menu();
+      }
+      submenu.append( opt.label(), "prefs.action_lock_menu(%d)".printf( i ) );
     }
+    menu.append_section( null, submenu );
 
     return( menu );
 

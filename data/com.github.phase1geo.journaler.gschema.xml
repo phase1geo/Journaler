@@ -27,7 +27,7 @@
       <description>Disable using 0.  Otherwise, auto-locks after a period of inactivity: 1=1-min, 2=2-min, 3=5-min, 4=10-min, 5=15-min, 6=30-min, 7-1-hour.</description>
     </key>
     <key name="entry-title-prefix" type="s">
-      <default>"Entry for "</default>
+      <default>"Entry for"</default>
       <summary>Prefix used to display entries when an entry title is not specified.</summary>
       <description>Prefix used to display entries when an entry title is not specified.</description>
     </key>

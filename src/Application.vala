@@ -39,6 +39,9 @@ public class Journaler : Gtk.Application {
 
     Object( application_id: "com.github.phase1geo.journaler", flags: ApplicationFlags.HANDLES_OPEN );
 
+    /* Register with the session manager so that we can be alerted to screensaver status */
+    register_session = true;
+
     Intl.setlocale( LocaleCategory.ALL, "" );
     Intl.bindtextdomain( GETTEXT_PACKAGE, LOCALEDIR );
     Intl.bind_textdomain_codeset( GETTEXT_PACKAGE, "UTF-8" );

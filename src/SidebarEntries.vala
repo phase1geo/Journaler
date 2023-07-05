@@ -76,6 +76,14 @@ public class SidebarEntries : Box {
     actions.add_action_entries( action_entries, this );
     insert_action_group( "entries", actions );
 
+    string[] keys = {"entry-title-prefix", "entry-title-suffix"};
+    foreach( var key in keys ) {
+      Journaler.settings.changed[key].connect(() => {
+        var selected = _listbox.get_selected_row();
+        populate_listbox( true, ((selected == null) ? "" : _listbox_entries.index( selected.get_index() ).date) );
+      });
+    }
+
   }
 
   /* Creates the current journal sidebar */
