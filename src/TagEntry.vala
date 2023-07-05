@@ -4,7 +4,7 @@ public class TagEntry : Box {
 
   private MainWindow _win;
   private Entry      _entry;
-  private Label      _button;
+  private Button     _button;
   private Revealer   _entry_revealer;
   private Revealer   _button_revealer;
 
@@ -51,10 +51,10 @@ public class TagEntry : Box {
 
     var button_key = new EventControllerKey();
     var button_click = new GestureClick();
-    _button = new Label( tag_text ) {
+    _button = new Button() {
+      label     = tag_text,
       can_focus = true,
-      sensitive = true,
-      selectable = true
+      sensitive = true
     };
     _button.add_controller( button_key );
     _button.add_controller( button_click );
@@ -106,13 +106,10 @@ public class TagEntry : Box {
       return( true );
     });
 
-    button_click.pressed.connect((n, x, y) => {
+    _button.clicked.connect(() => {
       _win.reset_timer();
       if( _add_css ) {
-        switch( n ) {
-          case 1 :  _button.grab_focus();  break;
-          case 2 :  show_entry();  break;
-        }
+        _button.grab_focus();
       } else {
         show_entry();
       }

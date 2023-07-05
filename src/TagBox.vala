@@ -118,23 +118,49 @@ public class TagBox : Box {
 
     foreach( var tag in _entry.tags ) {
 
-      var tag_button = new TagEntry( _win, tag );
-      tag_button.populate_completion( _all_tags );
+      var tag_motion = new EventControllerMotion();
+      var tag_key    = new EventControllerKey();
+      var tag_button = new Entry() {
+        text            = tag,
+        editable        = false,
+        has_frame       = false,
+        max_width_chars = tag.char_count(),
+        width_chars     = tag.char_count(),
+        secondary_icon_name = ""
+      };
+      tag_button.add_css_class( "tags" );
+      tag_button.add_controller( tag_motion );
+      tag_button.add_controller( tag_key );
 
-      tag_button.activated.connect((btag) => {
+      tag_button.icon_release.connect((pos) => {
         _win.reset_timer();
-        _entry.replace_tag( tag, btag );
-        _journal.db.save_tags_only( _entry );
-        update_tags();
+        remove_tag( tag_button, tag );
       });
 
-      tag_button.removed.connect((btag) => {
+      tag_motion.enter.connect((x,y) => {
         _win.reset_timer();
-        _entry.remove_tag( btag );
-        _box.remove( tag_button );
-        _tag_widgets.remove( tag_button );
-        tag_button.destroy();
+        tag_button.secondary_icon_name = "window-close-symbolic";
       });
+      tag_motion.leave.connect(() => {
+        _win.reset_timer();
+        tag_button.secondary_icon_name = "";
+      });
+
+      tag_key.key_pressed.connect((keyval, keycode, state) => {
+        _win.reset_timer();
+        if( (keyval == Gdk.Key.Delete) || (keyval == Gdk.Key.BackSpace) ) {
+          remove_tag( tag_button, tag );
+          return( false );
+        }
+        return( true );
+      });
+
+      /*
+      tag_button.clicked.connect(() => {
+        _win.reset_timer();
+        remove_tag( tag_button, tag );
+      });
+      */
 
       _box.append( tag_button );
       _tag_widgets.append( tag_button );
@@ -147,6 +173,14 @@ public class TagBox : Box {
 
     _box.append( _new_tag_entry );
 
+  }
+
+  private void remove_tag( Widget btn, string tag ) {
+    _entry.remove_tag( tag );
+    _journal.db.save_tags_only( _entry );
+    _box.remove( btn );
+    _tag_widgets.remove( btn );
+    btn.destroy();
   }
 
   public void add_class( string name ) {
