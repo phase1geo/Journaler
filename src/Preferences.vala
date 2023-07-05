@@ -13,6 +13,8 @@ public class Preferences : Gtk.Dialog {
     { "action_lock_menu",         action_lock_menu,         "i" }
   };
 
+  public signal void closing();
+
   private delegate string ValidateEntryCallback( Entry entry, string text, int position );
 
   /* Default constructor */
