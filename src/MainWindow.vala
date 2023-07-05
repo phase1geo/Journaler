@@ -101,7 +101,7 @@ public class MainWindow : Gtk.ApplicationWindow {
   private Themes                     _themes;
   private AutoLockOption             _auto_lock    = AutoLockOption.NEVER;
   private uint                       _auto_lock_id = 0;
-  private Dialog                     _prefs = null;
+  private Preferences                _prefs = null;
   private ShortcutsWindow            _shortcuts = null;
 
   private const GLib.ActionEntry[] action_entries = {
@@ -357,7 +357,6 @@ public class MainWindow : Gtk.ApplicationWindow {
       default :
         stdout.printf( "AFTER X MINS\n" );
         _auto_lock_id = Timeout.add_seconds( (60 * _auto_lock.minutes()), () => {
-          stdout.printf( "Timed out\n" );
           _auto_lock_id = 0;
           show_pane( "lock-view" );
           return( false );
@@ -746,12 +745,14 @@ public class MainWindow : Gtk.ApplicationWindow {
     _shortcuts.view_name     = null;
     _shortcuts.show();
 
-    _shortcuts.close.connect(() => {
+    _shortcuts.close_request.connect(() => {
       _shortcuts = null;
+      return( false );
     });
 
   }
 
+  /* Displays the preferences window and then handles its closing */
   private void action_preferences() {
 
     reset_timer();
@@ -760,8 +761,15 @@ public class MainWindow : Gtk.ApplicationWindow {
     _prefs = new Preferences( this );
     _prefs.show();
 
-    _prefs.close.connect(() => {
-      _prefs = null;
+    _prefs.close_request.connect(() => {
+      Idle.add(() => {
+        if( is_active ) {
+          _prefs = null;
+          return( false );
+        }
+        return( true );
+      });
+      return( false );
     });
 
   }

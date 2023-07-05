@@ -55,7 +55,7 @@ public class Preferences : Gtk.Dialog {
     close_button.clicked.connect(() => {
       _win.reset_timer();
       save_news_feeds();
-      destroy();
+      close();
     });
 
     add_action_widget( close_button, 0 );
@@ -102,6 +102,7 @@ public class Preferences : Gtk.Dialog {
     if( !Security.does_password_exist() ) {
       var mb = (MenuButton)grid.get_child_at( 1, 0 );
       mb.sensitive = false;
+      grid.attach( make_info( _( "This option is only available once the user has created a password.\n\nTo create a password, close the preferences window, click on the\nLock icon in the headerbar, and create your password." ) ), 2, 0 );
     }
 
     return( grid );
