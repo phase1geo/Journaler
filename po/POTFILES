@@ -1,5 +1,5 @@
 src/Application.vala
-src/Database.vala
+src/exports/ExportXML.vala
 src/Journals.vala
 src/MainWindow.vala
 src/Preferences.vala

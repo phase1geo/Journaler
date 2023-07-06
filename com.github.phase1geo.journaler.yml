@@ -1,5 +1,5 @@
  # This is the same ID that you've used in meson.build and other files
-app-id: com.github.phase1geo.minder
+app-id: com.github.phase1geo.journaler
 
 # Instead of manually specifying a long list of build and runtime dependencies,
 # we can use a convenient pre-made runtime and SDK. For this example, we'll be
@@ -10,7 +10,7 @@ sdk: io.elementary.Sdk
 
 # This should match the exec line in your .desktop file and usually is the same
 # as your app ID
-command: com.github.phase1geo.minder
+command: com.github.phase1geo.journaler
 
 # Here we can specify the kinds of permissions our app needs to run. Since we're
 # not using hardware like webcams, making sound, or reading external files, we
@@ -47,7 +47,7 @@ modules:
       - type: git
         url: https://gitlab.gnome.org/GNOME/gtksourceview.git
         tag: '4.8.0'
-  - name: minder
+  - name: journaler
     buildsystem: meson
     sources:
       - type: dir
