@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: extra\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-07-06 08:17-0500\n"
+"POT-Creation-Date: 2023-07-06 08:30-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -103,4 +103,8 @@ msgstr ""
 
 #: data/com.github.phase1geo.journaler.appdata.xml.in:38
 msgid "Trevor Williams"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.appdata.xml.in:79
+msgid "Initial release"
 msgstr ""
