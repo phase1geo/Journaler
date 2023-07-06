@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: com.github.phase1geo.journaler\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-07-02 08:05-0500\n"
+"POT-Creation-Date: 2023-07-06 08:17-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,96 +17,170 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: src/Application.vala:109
+#: src/Application.vala:112
 msgid "Display version number"
 msgstr ""
 
-#: src/Application.vala:118
+#: src/Application.vala:121
 #, c-format
 msgid "ERROR: %s\n"
 msgstr ""
 
-#: src/Application.vala:119
+#: src/Application.vala:122
 #, c-format
 msgid "Run '%s --help' to see valid options\n"
 msgstr ""
 
-#: src/Database.vala:111
-#, c-format
-msgid "Entry for %s"
+#: src/exports/ExportXML.vala:32
+msgid "XML"
 msgstr ""
 
-#: src/Journals.vala:48 src/Journals.vala:167
+#: src/Journals.vala:50 src/Journals.vala:169
 msgid "Journal"
 msgstr ""
 
-#: src/MainWindow.vala:98
+#: src/MainWindow.vala:41
+msgid "Never"
+msgstr ""
+
+#: src/MainWindow.vala:42
+msgid "After 1 minute of inactivity"
+msgstr ""
+
+#: src/MainWindow.vala:43 src/MainWindow.vala:44 src/MainWindow.vala:45
+#: src/MainWindow.vala:46 src/MainWindow.vala:47
+#, c-format
+msgid "After %d minutes of inactivity"
+msgstr ""
+
+#: src/MainWindow.vala:48
+msgid "After 1 hour of inactivity"
+msgstr ""
+
+#: src/MainWindow.vala:49
+msgid "When screensaver is invoked"
+msgstr ""
+
+#: src/MainWindow.vala:50
+msgid "When application loses focus"
+msgstr ""
+
+#: src/MainWindow.vala:173
 msgid "Journaler"
 msgstr ""
 
-#: src/MainWindow.vala:119
+#: src/MainWindow.vala:194
 msgid "Go To Today"
 msgstr ""
 
-#: src/MainWindow.vala:136
+#: src/MainWindow.vala:211
 msgid "Lock Journaler"
 msgstr ""
 
-#: src/MainWindow.vala:239 src/SidebarEditor.vala:233
+#: src/MainWindow.vala:375 src/SidebarEditor.vala:238
 msgid "Create New Template"
 msgstr ""
 
-#: src/MainWindow.vala:246
+#: src/MainWindow.vala:382
 msgid "Manage Templates"
 msgstr ""
 
-#: src/MainWindow.vala:247
+#: src/MainWindow.vala:383
 msgid "Shortcut Cheatsheet"
 msgstr ""
 
-#: src/MainWindow.vala:248
+#: src/MainWindow.vala:384
 msgid "Preferences…"
 msgstr ""
 
-#: src/MainWindow.vala:357 src/SidebarEditor.vala:179 src/Templater.vala:244
-#: src/TextArea.vala:265
+#: src/MainWindow.vala:499 src/SidebarEditor.vala:182 src/Templater.vala:254
+#: src/TextArea.vala:272
 msgid "Cancel"
 msgstr ""
 
-#: src/MainWindow.vala:364
+#: src/MainWindow.vala:507
 msgid "Set Password"
 msgstr ""
 
-#: src/Preferences.vala:18
+#: src/Preferences.vala:26
 msgid "Preferences"
 msgstr ""
 
-#: src/Preferences.vala:30
-msgid "Behavior"
+#: src/Preferences.vala:40 data/com.github.phase1geo.journaler.shortcuts.ui:11
+#: data/com.github.phase1geo.journaler.shortcuts.ui:15
+msgid "General"
 msgstr ""
 
-#: src/Preferences.vala:31
-msgid "Appearance"
+#: src/Preferences.vala:41
+msgid "Editor"
 msgstr ""
 
-#: src/Preferences.vala:45
+#: src/Preferences.vala:42
+msgid "News Feeds"
+msgstr ""
+
+#: src/Preferences.vala:43
+msgid "Advanced"
+msgstr ""
+
+#: src/Preferences.vala:57
 msgid "Close"
 msgstr ""
 
-#: src/Preferences.vala:81
+#: src/Preferences.vala:87
+msgid "Automatically lock application"
+msgstr ""
+
+#: src/Preferences.vala:92
+msgid "Default Entry Title"
+msgstr ""
+
+#: src/Preferences.vala:93
+msgid "Prefix"
+msgstr ""
+
+#: src/Preferences.vala:97
+msgid "Suffix"
+msgstr ""
+
+#: src/Preferences.vala:101
+msgid "Preview:"
+msgstr ""
+
+#: src/Preferences.vala:108
+msgid ""
+"This option is only available once the user has created a password.\n"
+"\n"
+"To create a password, close the preferences window, click on the\n"
+"Lock icon in the headerbar, and create your password."
+msgstr ""
+
+#: src/Preferences.vala:160
 msgid "Default Theme"
 msgstr ""
 
-#: src/Preferences.vala:84
-msgid "Editor Font Size"
+#: src/Preferences.vala:163
+msgid "Font Size"
 msgstr ""
 
-#: src/Preferences.vala:87
-msgid "Editor Margin"
+#: src/Preferences.vala:166
+msgid "Margin"
 msgstr ""
 
-#: src/Preferences.vala:90
-msgid "Editor Line Spacing"
+#: src/Preferences.vala:169
+msgid "Line Spacing"
+msgstr ""
+
+#: src/Preferences.vala:180
+msgid "Name"
+msgstr ""
+
+#: src/Preferences.vala:186
+msgid "Feed URL"
+msgstr ""
+
+#: src/Preferences.vala:306
+msgid "Export"
 msgstr ""
 
 #: src/SidebarEditor.vala:80
@@ -117,41 +191,41 @@ msgstr ""
 msgid "Required"
 msgstr ""
 
-#: src/SidebarEditor.vala:106 src/SidebarEditor.vala:121
-#: src/SidebarEditor.vala:225 src/SidebarEditor.vala:266
-#: src/SidebarEditor.vala:272
+#: src/SidebarEditor.vala:107 src/SidebarEditor.vala:122
+#: src/SidebarEditor.vala:230 src/SidebarEditor.vala:273
+#: src/SidebarEditor.vala:279
 msgid "None"
 msgstr ""
 
-#: src/SidebarEditor.vala:112
+#: src/SidebarEditor.vala:113
 msgid "Use Template:"
 msgstr ""
 
-#: src/SidebarEditor.vala:137
+#: src/SidebarEditor.vala:138
 msgid "Description:"
 msgstr ""
 
-#: src/SidebarEditor.vala:166 src/Templater.vala:232
+#: src/SidebarEditor.vala:168 src/Templater.vala:241
 msgid "Delete"
 msgstr ""
 
-#: src/SidebarEditor.vala:185
+#: src/SidebarEditor.vala:189
 msgid "Save"
 msgstr ""
 
-#: src/SidebarEntries.vala:87
+#: src/SidebarEntries.vala:95
 msgid "Create New Journal"
 msgstr ""
 
-#: src/SidebarEntries.vala:100
+#: src/SidebarEntries.vala:108
 msgid "Edit Current Journal"
 msgstr ""
 
-#: src/TagBox.vala:41
+#: src/TagBox.vala:43
 msgid "Click to add tag…"
 msgstr ""
 
-#: src/TagEntry.vala:34
+#: src/TagEntry.vala:35
 msgid "Add Tag"
 msgstr ""
 
@@ -159,28 +233,28 @@ msgstr ""
 msgid "Template Name:"
 msgstr ""
 
-#: src/Templater.vala:121
+#: src/Templater.vala:122
 msgid "Template Text:"
 msgstr ""
 
-#: src/Templater.vala:172
+#: src/Templater.vala:178
 msgid "Insert Next Tab Position"
 msgstr ""
 
-#: src/Templater.vala:173
+#: src/Templater.vala:179
 msgid "Insert Last Tab Position"
 msgstr ""
 
-#: src/Templater.vala:182
+#: src/Templater.vala:188
 msgid "Insert Snippet"
 msgstr ""
 
-#: src/Templater.vala:196
+#: src/Templater.vala:202
 #, c-format
 msgid "Insert %s"
 msgstr ""
 
-#: src/Templater.vala:249
+#: src/Templater.vala:260
 msgid "Save Changes"
 msgstr ""
 
@@ -192,31 +266,31 @@ msgstr ""
 msgid "Title (Optional)"
 msgstr ""
 
-#: src/TextArea.vala:245 src/TextArea.vala:355
+#: src/TextArea.vala:250 src/TextArea.vala:365
 msgid "Add Image"
 msgstr ""
 
-#: src/TextArea.vala:251
+#: src/TextArea.vala:256
 msgid "Insert Template"
 msgstr ""
 
-#: src/TextArea.vala:264
+#: src/TextArea.vala:271
 msgid "Select an image"
 msgstr ""
 
-#: src/TextArea.vala:266
+#: src/TextArea.vala:273
 msgid "Open"
 msgstr ""
 
-#: src/TextArea.vala:270
+#: src/TextArea.vala:277
 msgid "PNG Images"
 msgstr ""
 
-#: src/TextArea.vala:348
+#: src/TextArea.vala:358
 msgid "Change Image"
 msgstr ""
 
-#: src/TextArea.vala:349
+#: src/TextArea.vala:359
 msgid "Remove Image"
 msgstr ""
 
@@ -227,11 +301,6 @@ msgstr ""
 
 #: data/com.github.phase1geo.journaler.shortcuts.ui:6
 msgid "Journaler Shortcuts"
-msgstr ""
-
-#: data/com.github.phase1geo.journaler.shortcuts.ui:11
-#: data/com.github.phase1geo.journaler.shortcuts.ui:15
-msgid "General"
 msgstr ""
 
 #: data/com.github.phase1geo.journaler.shortcuts.ui:20

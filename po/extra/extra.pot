@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: extra\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-07-02 08:05-0500\n"
+"POT-Creation-Date: 2023-07-06 08:17-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -42,14 +42,65 @@ msgstr ""
 msgid "Make every day a memory"
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:9
-msgid "TBD"
+#: data/com.github.phase1geo.journaler.appdata.xml.in:10
+msgid ""
+"Make memories in life and never forget them with Journaler, a journaling "
+"application that allows you to easily and expressively capture the details "
+"and thoughts about your life. Review past entries in new and interesting "
+"ways. Stay motivated to keep writing. Easily export your data when needed."
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.appdata.xml.in:15
+msgid "Features:"
 msgstr ""
 
 #: data/com.github.phase1geo.journaler.appdata.xml.in:17
-msgid "Main Window"
+msgid "Support for multiple journals."
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.appdata.xml.in:18
+msgid "Application-wide password protection."
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.appdata.xml.in:19
+msgid "Markdown writing support."
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.appdata.xml.in:20
+msgid "Add an image to each journal entry."
 msgstr ""
 
 #: data/com.github.phase1geo.journaler.appdata.xml.in:21
+msgid "Tagging support."
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.appdata.xml.in:22
+msgid "Expressive review features."
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.appdata.xml.in:23
+msgid "Template support."
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.appdata.xml.in:24
+msgid ""
+"Weather, location, and RSS feed support for extra help in remembering the "
+"day."
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.appdata.xml.in:25
+msgid ""
+"Motivation support with daily reminders, badges, prompts, and customizations."
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.appdata.xml.in:26
+msgid "Export to XML, JSON and HTML."
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.appdata.xml.in:34
+msgid "Main Window"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.appdata.xml.in:38
 msgid "Trevor Williams"
 msgstr ""

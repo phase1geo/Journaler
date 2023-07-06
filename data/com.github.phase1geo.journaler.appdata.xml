@@ -7,7 +7,24 @@
   <name>Journaler</name>
   <summary>Make every day a memory</summary>
   <description>
-    TBD
+    <p>
+      Make memories in life and never forget them with Journaler, a journaling application that allows you to easily and
+      expressively capture the details and thoughts about your life.  Review past entries in new and interesting ways.
+      Stay motivated to keep writing.  Easily export your data when needed.
+    </p>
+    <p>Features:</p>
+    <ul>
+      <li>Support for multiple journals.</li>
+      <li>Application-wide password protection.</li>
+      <li>Markdown writing support.</li>
+      <li>Add an image to each journal entry.</li>
+      <li>Tagging support.</li>
+      <li>Expressive review features.</li>
+      <li>Template support.</li>
+      <li>Weather, location, and RSS feed support for extra help in remembering the day.</li>
+      <li>Motivation support with daily reminders, badges, prompts, and customizations.</li>
+      <li>Export to XML, JSON and HTML.</li>
+    </ul>
   </description>
   <provides>
     <binary>com.github.phase1geo.journaler</binary>
