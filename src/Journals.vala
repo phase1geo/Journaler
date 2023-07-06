@@ -33,10 +33,12 @@ public class Journals {
   }
 
   /* Adds the given journal to the list of journals */
-  public void add_journal( Journal journal ) {
+  public void add_journal( Journal journal, bool fast = false ) {
     _journals.append_val( journal );
-    current = journal;
-    list_changed();
+    if( !fast ) {
+      current = journal;
+      list_changed();
+    }
   }
 
   /* Removes the current journal entry */

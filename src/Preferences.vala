@@ -37,9 +37,10 @@ public class Preferences : Gtk.Dialog {
       margin_top    = 24,
       margin_bottom = 18
     };
-    stack.add_titled( create_general(),    "general", _( "General" ) );
-    stack.add_titled( create_editor(),     "editor",  _( "Editor" ) );
-    stack.add_titled( create_news_feeds(), "feeds",   _( "News Feeds" ) );
+    stack.add_titled( create_general(),    "general",  _( "General" ) );
+    stack.add_titled( create_editor(),     "editor",   _( "Editor" ) );
+    stack.add_titled( create_news_feeds(), "feeds",    _( "News Feeds" ) );
+    stack.add_titled( create_advanced(),   "advanced", _( "Advanced" ) );
 
     var switcher = new StackSwitcher() {
       halign = Align.CENTER
@@ -292,6 +293,24 @@ public class Preferences : Gtk.Dialog {
     });
 
   }
+
+  /* Creates advanced pane */
+  private Grid create_advanced() {
+
+    var grid = new Grid() {
+      row_spacing = 5,
+      column_spacing = 5,
+      halign = Align.CENTER
+    };
+
+    grid.attach( make_label( _( "Export" ) ), 0, 0 );
+    // TBD
+
+    return( grid );
+
+  }
+
+  // -----------------------------------------------------------------
 
   /* Creates label */
   private Label make_label( string label ) {

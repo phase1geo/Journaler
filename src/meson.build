@@ -2,6 +2,8 @@ sources += files(
     'Application.vala',
     'Crypt.vala',
     'Database.vala',
+    'Export.vala',
+    'Exports.vala',
     'Journal.vala',
     'Journals.vala',
     'MainWindow.vala',
@@ -20,3 +22,5 @@ sources += files(
     'TextArea.vala',
     'Utils.vala'
 )
+
+subdir('exports')
