@@ -330,7 +330,7 @@ public class MainWindow : Gtk.ApplicationWindow {
   */
   public void reset_timer() {
 
-    stdout.printf( "In reset_timer\n" );
+    // stdout.printf( "In reset_timer\n" );
 
     /* Clear the counter and the timer */
     if( _auto_lock_id > 0 ) {
@@ -342,7 +342,6 @@ public class MainWindow : Gtk.ApplicationWindow {
     /* Set the timer */
     switch( _auto_lock ) {
       case AutoLockOption.ON_SCREENSAVER :
-        stdout.printf( "ON_SCREENSAVER\n" );
         _auto_lock_id = Timeout.add_seconds( 1, () => {
           if( application.screensaver_active ) {
             _auto_lock_id = 0;
@@ -353,7 +352,6 @@ public class MainWindow : Gtk.ApplicationWindow {
         });
         break;
       case AutoLockOption.ON_APP_BACKGROUND :
-        stdout.printf( "APP_BACKGROUND\n" );
         _auto_lock_id = Timeout.add_seconds( 1, () => {
           if( !is_active && ((_prefs == null) || !_prefs.is_active) && ((_shortcuts == null) || !_shortcuts.is_active) ) {
             _auto_lock_id = 0;
@@ -364,7 +362,6 @@ public class MainWindow : Gtk.ApplicationWindow {
         });
         break;
       default :
-        stdout.printf( "AFTER X MINS\n" );
         _auto_lock_id = Timeout.add_seconds( (60 * _auto_lock.minutes()), () => {
           _auto_lock_id = 0;
           show_pane( "lock-view" );

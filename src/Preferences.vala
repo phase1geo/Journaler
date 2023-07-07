@@ -10,6 +10,7 @@ public class Preferences : Gtk.Dialog {
   private HashMap<string,MenuButton> _menus;
   private MenuButton _journal_mb;
   private MenuButton _format_mb;
+  private MenuButton _import_mb;
   private string     _journal_name = "";
   private string     _format_name  = "xml";
 
@@ -17,7 +18,9 @@ public class Preferences : Gtk.Dialog {
     { "action_set_current_theme",         action_set_current_theme,         "s" },
     { "action_lock_menu",                 action_lock_menu,                 "i" },
     { "action_select_journal_for_export", action_select_journal_for_export, "s" },
-    { "action_select_export_format",      action_select_export_format,      "s" }
+    { "action_select_export_format",      action_select_export_format,      "s" },
+    { "action_select_import_journal",     action_select_import_journal,     "s" },
+    { "action_select_new_import_journal", action_select_new_import_journal }
   };
 
   public signal void closing();
@@ -305,23 +308,34 @@ public class Preferences : Gtk.Dialog {
   /* Creates advanced pane */
   private Box create_advanced() {
 
+    var box = new Box( Orientation.VERTICAL, 5 );
+    box.append( create_advanced_export() );
+    box.append( create_advanced_import() );
+
+    return( box );
+
+  }
+
+  /* Creates the export frame for the Advanced panel */
+  private Frame create_advanced_export() {
+
     /* Export */
     var all = new CheckButton.with_label( _( "Export all journals" ) ) {
       active = true
     };
     var one = new CheckButton.with_label( _( "Export journal" ) ) {
-      sensitive = false,
-      group     = all
+      group = all
     };
 
     var journals_menu = new GLib.Menu();
     for( int i=0; i<_journals.num_journals(); i++ ) {
       var journal = _journals.get_journal( i );
-      journals_menu.append( journal.name, "action_select_journal_for_export('%s')".printf( journal.name ) );
+      journals_menu.append( journal.name, "prefs.action_select_journal_for_export('%s')".printf( journal.name ) );
     }
 
     _journal_mb = new MenuButton() {
       label      = (_journals.num_journals() == 0) ? "" : _journals.get_journal( 0 ).name,
+      sensitive  = false,
       menu_model = journals_menu
     };
 
@@ -344,7 +358,7 @@ public class Preferences : Gtk.Dialog {
 
     var format_menu = new GLib.Menu();
     for( int i=0; i<_win.exports.length(); i++ ) {
-      format_menu.append( _win.exports.index( i ).label, "action_select_export_format('%s')".printf( _win.exports.index( i ).name ) );
+      format_menu.append( _win.exports.index( i ).label, "prefs.action_select_export_format('%s')".printf( _win.exports.index( i ).name ) );
     }
 
     var format = new Label( _( "Export Format:" ) );
@@ -396,7 +410,7 @@ public class Preferences : Gtk.Dialog {
       column_homogeneous = true,
       margin_start       = 5,
       margin_end         = 5,
-      margin_start       = 10,
+      margin_top         = 10,
       margin_bottom      = 5
     };
 
@@ -409,7 +423,7 @@ public class Preferences : Gtk.Dialog {
     var frame_label  = new Label( Utils.make_title( _( "Export Options" ) ) ) {
       use_markup = true
     };
-    var export_frame = new Frame( null ) {
+    var frame = new Frame( null ) {
       halign       = Align.FILL,
       hexpand      = true,
       label_xalign = (float)0.5,
@@ -417,10 +431,90 @@ public class Preferences : Gtk.Dialog {
       child        = egrid
     };
 
-    var box = new Box( Orientation.VERTICAL, 5 );
-    box.append( export_frame );
+    return( frame );
 
-    return( box );
+  }
+
+  /* Generates import UI for the Advanced panel */
+  private Frame create_advanced_import() {
+
+    var import_merge = new CheckButton.with_label( _( "Import entries into original journals, creating non-existing journals" ) ) {
+      active = true
+    };
+
+    var import_journal = new CheckButton.with_label( _( "Import all entries into journal" ) ) {
+      group = import_merge
+    };
+
+    var journals_menu = new GLib.Menu();
+    for( int i=0; i<_journals.num_journals(); i++ ) {
+      var journal = _journals.get_journal( i );
+      journals_menu.append( journal.name, "prefs.action_select_import_journal('%s')".printf( journal.name ) );
+    }
+
+    var new_menu = new GLib.Menu();
+    new_menu.append( _( "Create new journal" ), "prefs.action_select_new_import_journal" );
+
+    var journal_menu = new GLib.Menu();
+    journal_menu.append_section( null, journals_menu );
+    journal_menu.append_section( null, new_menu );
+
+    _import_mb = new MenuButton() {
+      label      = _journals.get_journal( 0 ).name,
+      sensitive  = false,
+      menu_model = journal_menu
+    };
+
+    import_journal.toggled.connect(() => {
+      _import_mb.sensitive = import_journal.active;
+    });
+
+    var jbox = new Box( Orientation.HORIZONTAL, 5 ) {
+      halign  = Align.FILL,
+      hexpand = true
+    };
+    jbox.append( import_journal );
+    jbox.append( _import_mb );
+
+    var import = new Button.with_label( "Import…" ) {
+      halign  = Align.END,
+      hexpand = true
+    };
+    import.clicked.connect(() => {
+      _win.reset_timer();
+      do_import( (import_merge ? "" : _import_mb.label) );
+    });
+
+    var bbox = new Box( Orientation.HORIZONTAL, 5 ) {
+      halign  = Align.FILL,
+      hexpand = true
+    };
+    bbox.append( import );
+
+    var ibox = new Box( Orientation.VERTICAL, 5 ) {
+      halign        = Align.FILL,
+      hexpand       = true,
+      margin_top    = 10,
+      margin_bottom = 5,
+      margin_start  = 5,
+      margin_end    = 5
+    };
+    ibox.append( import_merge );
+    ibox.append( jbox );
+    ibox.append( bbox );
+
+    var frame_label  = new Label( Utils.make_title( _( "Import Options" ) ) ) {
+      use_markup = true
+    };
+    var frame = new Frame( null ) {
+      halign       = Align.FILL,
+      hexpand      = true,
+      label_xalign = (float)0.5,
+      label_widget = frame_label,
+      child        = ibox
+    };
+
+    return( frame );
 
   }
 
@@ -436,7 +530,11 @@ public class Preferences : Gtk.Dialog {
   private void action_select_export_format( SimpleAction action, Variant? variant ) {
 
     _win.reset_timer();
-    _format_mb.label = variant.get_string();
+
+    var export = _win.exports.get_by_name( variant.get_string() );
+
+    _format_mb.label = export.label;
+    _format_name = variant.get_string();
 
   }
 
@@ -493,6 +591,59 @@ public class Preferences : Gtk.Dialog {
     });
 
     dialog.show();
+
+  }
+
+  private void action_select_import_journal( SimpleAction action, Variant? variant ) {
+
+    _win.reset_timer();
+    _import_mb.label = variant.get_string();
+
+  }
+
+  /* Prompts the user to create a new Journal */
+  private void action_select_new_import_journal() {
+
+    _win.reset_timer();
+
+    var dialog = new Dialog() {
+      transient_for = this
+    };
+
+    var label = new Label( _( "New Journal Name:" ) );
+    var entry = new Entry();
+    entry.activate.connect(() => {
+      if( entry.text != "" ) {
+        response( ResponseType.ACCEPT );
+      }
+    });
+
+    var box = dialog.get_content_area();
+    box.append( label );
+    box.append( entry );
+
+    dialog.add_button( _( "Cancel" ), ResponseType.CANCEL );
+    dialog.add_button( _( "Create" ), ResponseType.ACCEPT );
+
+    dialog.response.connect((id) => {
+      if( id == ResponseType.ACCEPT ) {
+        _import_mb.label = entry.text;
+      }
+      dialog.close();
+    });
+
+    dialog.show();
+
+  }
+
+  private void do_import( string journal ) {
+
+    var export = (ExportXML)_win.exports.get_by_name( "xml" );
+
+    if( journal != "" ) {
+    } else {
+      export.import_merge = true;
+    }
 
   }
 
