@@ -11,8 +11,11 @@ public class Preferences : Gtk.Dialog {
   private MenuButton _journal_mb;
   private MenuButton _format_mb;
   private MenuButton _import_mb;
-  private string     _journal_name = "";
-  private string     _format_name  = "xml";
+  private Entry      _new_entry;
+  private Revealer   _new_revealer;
+  private string     _journal_name   = "";
+  private string     _format_name    = "xml";
+  private string     _import_journal = "";
 
   private const GLib.ActionEntry action_entries[] = {
     { "action_set_current_theme",         action_set_current_theme,         "s" },
@@ -465,9 +468,22 @@ public class Preferences : Gtk.Dialog {
       menu_model = journal_menu
     };
 
+    import_merge.toggled.connect(() => {
+      _win.reset_timer();
+    });
+
     import_journal.toggled.connect(() => {
+      _win.reset_timer();
       _import_mb.sensitive = import_journal.active;
     });
+
+    _new_entry = new Entry() {
+      placeholder_text = _( "Enter new journal name" )
+    };
+    _new_revealer = new Revealer() {
+      child        = _new_entry,
+      reveal_child = false
+    };
 
     var jbox = new Box( Orientation.HORIZONTAL, 5 ) {
       halign  = Align.FILL,
@@ -475,6 +491,7 @@ public class Preferences : Gtk.Dialog {
     };
     jbox.append( import_journal );
     jbox.append( _import_mb );
+    jbox.append( _new_revealer );
 
     var import = new Button.with_label( "Import…" ) {
       halign  = Align.END,
@@ -482,7 +499,14 @@ public class Preferences : Gtk.Dialog {
     };
     import.clicked.connect(() => {
       _win.reset_timer();
-      do_import( (import_merge ? "" : _import_mb.label) );
+      do_import( import_merge.active ? "" :
+                 _new_revealer.reveal_child ? _new_entry.text :
+                 _import_mb.label );
+    });
+
+    _new_entry.changed.connect(() => {
+      _win.reset_timer();
+      import.sensitive = (!_new_revealer.reveal_child || (_new_entry.text != ""));
     });
 
     var bbox = new Box( Orientation.HORIZONTAL, 5 ) {
@@ -560,7 +584,7 @@ public class Preferences : Gtk.Dialog {
 
     var dialog = new FileChooserDialog( _( "Export Data As…" ), this, FileChooserAction.SAVE,
                                         _( "Cancel" ), ResponseType.CANCEL,
-                                        _( "Save" ), ResponseType.ACCEPT );
+                                        _( "Export" ), ResponseType.ACCEPT );
 
     /* Add filters */
     var filter = new FileFilter() {
@@ -594,10 +618,12 @@ public class Preferences : Gtk.Dialog {
 
   }
 
+  /* Called when the user selects an existing journal from the menu */
   private void action_select_import_journal( SimpleAction action, Variant? variant ) {
 
     _win.reset_timer();
     _import_mb.label = variant.get_string();
+    _new_revealer.reveal_child = false;
 
   }
 
@@ -605,45 +631,57 @@ public class Preferences : Gtk.Dialog {
   private void action_select_new_import_journal() {
 
     _win.reset_timer();
+    _import_mb.label = _( "New journal called" );
+    _new_entry.text = "";
+    _new_revealer.reveal_child = true;
 
-    var dialog = new Dialog() {
-      transient_for = this
+  }
+
+  /* Handles the import of an XML file into either a new journal or merged into the existing journals */
+  private void do_import( string journal_name ) {
+
+    var export = (ExportXML)_win.exports.get_by_name( "xml" );
+
+    if( journal_name != "" ) {
+      var journal = new Journal( journal_name, "", "" );
+      _journals.add_journal( journal, true );
+      export.import_merge = false;
+    } else {
+      export.import_merge = true;
+    }
+
+    var dialog = new FileChooserDialog( _( "Export Data As…" ), this, FileChooserAction.OPEN,
+                                        _( "Cancel" ), ResponseType.CANCEL,
+                                        _( "Import" ), ResponseType.ACCEPT );
+
+    /* Add filters */
+    var filter = new FileFilter() {
+      name = export.label
     };
-
-    var label = new Label( _( "New Journal Name:" ) );
-    var entry = new Entry();
-    entry.activate.connect(() => {
-      if( entry.text != "" ) {
-        response( ResponseType.ACCEPT );
-      }
-    });
-
-    var box = dialog.get_content_area();
-    box.append( label );
-    box.append( entry );
-
-    dialog.add_button( _( "Cancel" ), ResponseType.CANCEL );
-    dialog.add_button( _( "Create" ), ResponseType.ACCEPT );
+    foreach( var ext in export.extensions ) {
+      filter.add_suffix( ext );
+    }
+    dialog.add_filter( filter );
 
     dialog.response.connect((id) => {
+      _win.reset_timer();
       if( id == ResponseType.ACCEPT ) {
-        _import_mb.label = entry.text;
+        var file = dialog.get_file();
+        if( file != null ) {
+          stdout.printf( "Importing from %s\n", file.get_path() );
+          if( export.import( file.get_path(), _journals ) ) {
+            stdout.printf( "Export successful\n" );
+            // TBD - Send notification?
+          } else {
+            stdout.printf( "Export problematic!\n" );
+            // TBD - Send notification?
+          }
+        }
       }
       dialog.close();
     });
 
     dialog.show();
-
-  }
-
-  private void do_import( string journal ) {
-
-    var export = (ExportXML)_win.exports.get_by_name( "xml" );
-
-    if( journal != "" ) {
-    } else {
-      export.import_merge = true;
-    }
 
   }
 
