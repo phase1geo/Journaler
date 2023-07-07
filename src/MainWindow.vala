@@ -103,6 +103,7 @@ public class MainWindow : Gtk.ApplicationWindow {
   private uint                       _auto_lock_id = 0;
   private Preferences                _prefs = null;
   private ShortcutsWindow            _shortcuts = null;
+  private Exports                    _exports;
 
   private const GLib.ActionEntry[] action_entries = {
     { "action_today",         action_today },
@@ -132,6 +133,11 @@ public class MainWindow : Gtk.ApplicationWindow {
       return( _templates );
     }
   }
+  public Exports exports {
+    get {
+      return( _exports );
+    }
+  }
   public bool locked {
     get {
       return( (_lock_stack.visible_child_name == "setlock-view") ||
@@ -149,6 +155,9 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     /* Load the available themes */
     _themes = new Themes();
+
+    /* Add the exporters */
+    _exports = new Exports();
 
     /* Create and load the templates */
     _templates = new Templates();
@@ -758,7 +767,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     reset_timer();
     if( locked ) return;
 
-    _prefs = new Preferences( this );
+    _prefs = new Preferences( this, _journals );
     _prefs.show();
 
     _prefs.close_request.connect(() => {

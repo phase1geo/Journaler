@@ -87,6 +87,8 @@ public class ExportXML : Export {
     Xml.Node* node = new Xml.Node( null, "entry" );
 
     var load_entry = new DBEntry();
+    load_entry.date = entry.date;
+
     var result = journal.db.load_entry( load_entry, false );
     if( result == DBLoadResult.LOADED ) {
 
