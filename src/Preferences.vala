@@ -503,7 +503,7 @@ public class Preferences : Gtk.Dialog {
 
     _new_entry.changed.connect(() => {
       _win.reset_timer();
-      _import.sensitive = (!_new_entry_shown || (_new_entry.text != ""));
+      _import.sensitive = (!_new_entry_shown || ((_new_entry.text != "") && (_journals.get_journal_by_name( _new_entry.text ) == null)));
     });
 
     var bbox = new Box( Orientation.HORIZONTAL, 5 ) {
@@ -643,8 +643,11 @@ public class Preferences : Gtk.Dialog {
     var export = (ExportXML)_win.exports.get_by_name( "xml" );
 
     if( journal_name != "" ) {
-      journal = new Journal( journal_name, "", "" );
-      _journals.add_journal( journal, true );
+      journal = _journals.get_journal_by_name( journal_name );
+      if( journal == null ) {
+        journal = new Journal( journal_name, "", "" );
+        _journals.add_journal( journal, true );
+      }
     }
 
     var dialog = new FileChooserDialog( _( "Export Data As…" ), this, FileChooserAction.OPEN,
@@ -666,6 +669,7 @@ public class Preferences : Gtk.Dialog {
         var file = dialog.get_file();
         if( file != null ) {
           if( export.import( file.get_path(), _journals, journal ) ) {
+            _journals.current_changed( true );
             _win.notification( _( "Import successful" ), "" );
           } else {
             _win.notification( _( "Import failed" ), "" );
