@@ -38,6 +38,9 @@ public class Journals {
     if( !fast ) {
       current = journal;
       list_changed();
+    } else {
+      list_changed();
+      save();
     }
   }
 
@@ -45,6 +48,7 @@ public class Journals {
   public void remove_journal( Journal journal ) {
     for( int i=0; i<_journals.length; i++ ) {
       if( _journals.index( i ) == journal ) {
+        _journals.index( i ).remove_db();
         _journals.remove_index( i );
         if( _journals.length == 0 ) {
           var new_journal = new Journal( _( "Journal" ), "", "" );

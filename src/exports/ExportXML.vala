@@ -25,11 +25,10 @@ public class ExportXML : Export {
 
   public bool include_images { get; set; default = false; }
   public bool for_import     { get; set; default = false; }
-  public bool import_merge   { get; set; default = false; }
 
   /* Constructor */
   public ExportXML() {
-    base( "xml", _( "XML" ), {".xml"}, true, true );
+    base( "xml", _( "XML" ), {"xml"}, true, true );
   }
 
   /* Performs export to the given filename */
@@ -154,7 +153,7 @@ public class ExportXML : Export {
   // ----------------------------------------------------
 
   /* Imports given filename into drawing area */
-  public override bool import( string fname, Journals journals ) {
+  public override bool import( string fname, Journals journals, Journal? journal ) {
 
     Xml.Doc* doc = Xml.Parser.read_file( fname, null, (Xml.ParserOption.HUGE | Xml.ParserOption.NOWARNING) );
     if( doc == null ) {
@@ -165,7 +164,7 @@ public class ExportXML : Export {
 
     for( Xml.Node* it = root->children; it != null; it = it->next ) {
       if( (it->type == Xml.ElementType.ELEMENT_NODE) && (it->name == "journal") ) {
-        import_journal( it, journals );
+        import_journal( it, journals, journal );
       }
     }
 
@@ -176,18 +175,17 @@ public class ExportXML : Export {
   }
 
   /* Imports a journal node */
-  private void import_journal( Xml.Node* node, Journals journals ) {
-
-    Journal journal = null;
+  private void import_journal( Xml.Node* node, Journals journals, Journal? target ) {
 
     var name        = "";
     var template    = "";
     var description = "";
+    var journal     = target;
 
     var n = node->get_prop( "name" );
     if( n != null ) {
       name = n;
-      if( import_merge ) {
+      if( journal == null ) {
         journal = journals.get_journal_by_name( name );
       }
     } else {
@@ -255,6 +253,17 @@ public class ExportXML : Export {
           case "tags"  :  import_tags( it, entry );   break;
         }
       }
+    }
+
+    var load_entry  = new DBEntry();
+    load_entry.date = entry.date;
+
+    var load_result = journal.db.load_entry( load_entry, true );
+    if( load_result == DBLoadResult.LOADED ) {
+      load_entry.merge_with_entry( entry );
+      journal.db.save_entry( load_entry );
+    } else if( load_result == DBLoadResult.CREATED ) {
+      journal.db.save_entry( entry );
     }
 
   }

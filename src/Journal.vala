@@ -66,6 +66,11 @@ public class Journal {
     return( FileUtils.rename( old_db, new_db ) == 0 );
   }
 
+  /* This should be called when we are deleting this journal entry */
+  public bool remove_db() {
+    return( FileUtils.unlink( db_path() ) == 0 );
+  }
+
   /* Saves this journal in XML format */
   public Xml.Node* save() {
 

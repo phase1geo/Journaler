@@ -50,7 +50,7 @@ public class Export {
   }
 
   /* Imports given filename into drawing area */
-  public virtual bool import( string fname, Journals journals ) {
+  public virtual bool import( string fname, Journals journals, Journal? journal = null ) {
     return( false );
   }
 
