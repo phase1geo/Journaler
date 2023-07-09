@@ -23,8 +23,7 @@ using Gdk;
 
 public class ExportXML : Export {
 
-  public bool include_images { get; set; default = false; }
-  public bool for_import     { get; set; default = false; }
+  public bool for_import { get; set; default = false; }
 
   /* Constructor */
   public ExportXML() {
@@ -32,7 +31,7 @@ public class ExportXML : Export {
   }
 
   /* Performs export to the given filename */
-  public override bool export( string fname, Array<Journal> journals ) {
+  public override bool do_export( string fname, Array<Journal> journals ) {
 
     Xml.Doc*  doc  = new Xml.Doc( "1.0" );
     Xml.Node* root = new Xml.Node( null, "journals" );
@@ -99,7 +98,7 @@ public class ExportXML : Export {
       text->add_child( doc->new_cdata_block( load_entry.text, load_entry.text.length ) );
       node->add_child( text );
 
-      if( (entry.image != null) && false ) {
+      if( (entry.image != null) && include_images ) {
 
         var path = create_image( entry.image );
 
@@ -136,24 +135,10 @@ public class ExportXML : Export {
 
   }
 
-  /* Creates an image file from the given pixbuf and returns the pathname */
-  private string? create_image( Pixbuf pixbuf ) {
-
-    try {
-      string fname = "";  // TBD
-      if( pixbuf.save( fname, "png", "compression", "7" ) ) {
-        return( fname );
-      }
-    } catch( Error e ) {}
-
-    return( null );
-
-  }
-
   // ----------------------------------------------------
 
   /* Imports given filename into drawing area */
-  public override bool import( string fname, Journals journals, Journal? journal ) {
+  public override bool do_import( string fname, Journals journals, Journal? journal ) {
 
     Xml.Doc* doc = Xml.Parser.read_file( fname, null, (Xml.ParserOption.HUGE | Xml.ParserOption.NOWARNING) );
     if( doc == null ) {

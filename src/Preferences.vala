@@ -552,10 +552,12 @@ public class Preferences : Gtk.Dialog {
 
     _win.reset_timer();
 
-    var export = _win.exports.get_by_name( variant.get_string() );
-
-    _format_mb.label = export.label;
     _format_name = variant.get_string();
+
+    stdout.printf( "In action_select_export_format, format: %s\n", _format_name );
+
+    var export = _win.exports.get_by_name( _format_name );
+    _format_mb.label = export.label;
 
   }
 
@@ -572,11 +574,11 @@ public class Preferences : Gtk.Dialog {
     }
 
     var export = _win.exports.get_by_name( format );
+    export.include_images = include_images;
 
     if( format == "xml" ) {
       var xml_export = (ExportXML)export;
-      xml_export.for_import     = for_import;
-      xml_export.include_images = include_images;
+      xml_export.for_import = for_import;
     }
 
     var dialog = new FileChooserDialog( _( "Export Data As…" ), this, FileChooserAction.SAVE,
@@ -597,7 +599,7 @@ public class Preferences : Gtk.Dialog {
       if( id == ResponseType.ACCEPT ) {
         var file = dialog.get_file();
         if( file != null ) {
-          if( export.export( file.get_path(), journals ) ) {
+          if( export.export( file.get_path() + (include_images ? ".bundle" : ""), journals ) ) {
             _win.notification( _( "Export successful" ), "" );
           } else {
             _win.notification( _( "Export failed" ), "" );
@@ -660,6 +662,7 @@ public class Preferences : Gtk.Dialog {
     };
     foreach( var ext in export.extensions ) {
       filter.add_suffix( ext );
+      filter.add_suffix( ext + ".bundle" );
     }
     dialog.add_filter( filter );
 
