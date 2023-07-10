@@ -42,6 +42,7 @@ public class TextArea : Box {
   private bool             _pixbuf_changed = false;
   private GLib.Menu        _image_menu;
   private GLib.Menu        _templates_menu;
+  private Statistics       _stats;
 
   private const GLib.ActionEntry action_entries[] = {
     { "action_add_entry_image",    action_add_entry_image },
@@ -172,7 +173,8 @@ public class TextArea : Box {
     _tags.add_class( "date" );
     _tags.add_class( "text-background" );
 
-    var sep = new Separator( Orientation.HORIZONTAL );
+    var sep1 = new Separator( Orientation.HORIZONTAL );
+    var sep2 = new Separator( Orientation.HORIZONTAL );
 
     /* Now let's setup some stuff related to the text field */
     var lang_mgr = GtkSource.LanguageManager.get_default();
@@ -234,11 +236,15 @@ public class TextArea : Box {
       return( false );
     });
 
+    _stats = new Statistics( _text.buffer );
+
     append( tbox );
     append( _date );
     append( _tags );
-    append( sep );
+    append( sep1 );
     append( _pane );
+    append( sep2 );
+    append( _stats );
 
   }
 

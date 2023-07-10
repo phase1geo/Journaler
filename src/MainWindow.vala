@@ -104,6 +104,7 @@ public class MainWindow : Gtk.ApplicationWindow {
   private Preferences                _prefs = null;
   private ShortcutsWindow            _shortcuts = null;
   private Exports                    _exports;
+  private Goals                      _goals;
 
   private const GLib.ActionEntry[] action_entries = {
     { "action_today",         action_today },
@@ -144,6 +145,11 @@ public class MainWindow : Gtk.ApplicationWindow {
               (_lock_stack.visible_child_name == "lock-view") );
     }
   }
+  public Goals goals {
+    get {
+      return( _goals );
+    }
+  }
 
   /* Create the main window UI */
   public MainWindow( Gtk.Application app, GLib.Settings settings ) {
@@ -167,6 +173,9 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     /* Create and load the journals */
     _journals = new Journals( _templates );
+
+    /* Creates the goals */
+    _goals = new Goals();
 
     /* Create the hash map for the focus widgets */
     _stack_focus_widgets = new Gee.HashMap<string,Widget>();
@@ -318,6 +327,9 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     /* Load the available journals */
     _journals.load();
+
+    /* Load the goals */
+    _goals.load();
 
     /* Make sure that we display today's entry */
     action_today();
