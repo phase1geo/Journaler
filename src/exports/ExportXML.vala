@@ -23,17 +23,17 @@ using Gdk;
 
 public class ExportXML : Export {
 
-  public bool include_images { get; set; default = false; }
-  public bool for_import     { get; set; default = false; }
-  public bool import_merge   { get; set; default = false; }
+  public bool for_import { get; set; default = false; }
 
   /* Constructor */
   public ExportXML() {
-    base( "xml", _( "XML" ), {".xml"}, true, true );
+    base( "xml", _( "XML" ), {"xml"}, true, true );
   }
 
   /* Performs export to the given filename */
-  public override bool export( string fname, Array<Journal> journals ) {
+  public override bool do_export( string fname, Array<Journal> journals ) {
+
+    stdout.printf( "Exporting XML fname: %s\n", fname );
 
     Xml.Doc*  doc  = new Xml.Doc( "1.0" );
     Xml.Node* root = new Xml.Node( null, "journals" );
@@ -87,6 +87,8 @@ public class ExportXML : Export {
     Xml.Node* node = new Xml.Node( null, "entry" );
 
     var load_entry = new DBEntry();
+    load_entry.date = entry.date;
+
     var result = journal.db.load_entry( load_entry, false );
     if( result == DBLoadResult.LOADED ) {
 
@@ -98,9 +100,10 @@ public class ExportXML : Export {
       text->add_child( doc->new_cdata_block( load_entry.text, load_entry.text.length ) );
       node->add_child( text );
 
-      if( (entry.image != null) && false ) {
+      if( (load_entry.image != null) && include_images ) {
 
-        var path = create_image( entry.image );
+        var path = create_image( load_entry.image );
+        stdout.printf( "Attempted to create image with path: %s\n", path );
 
         if( path != null ) {
 
@@ -108,9 +111,9 @@ public class ExportXML : Export {
           image->set_prop( "path", path );
 
           if( for_import ) {
-            image->set_prop( "pos",  entry.image_pos.to_string() );
-            image->set_prop( "vadj", entry.image_vadj.to_string() );
-            image->set_prop( "hadj", entry.image_hadj.to_string() );
+            image->set_prop( "pos",  load_entry.image_pos.to_string() );
+            image->set_prop( "vadj", load_entry.image_vadj.to_string() );
+            image->set_prop( "hadj", load_entry.image_hadj.to_string() );
           }
 
           node->add_child( image );
@@ -121,7 +124,7 @@ public class ExportXML : Export {
 
       Xml.Node* tags = new Xml.Node( null, "tags" );
 
-      foreach( var tag in entry.tags ) {
+      foreach( var tag in load_entry.tags ) {
         Xml.Node* t = new Xml.Node( null, "tag" );
         t->set_prop( "name", tag );
         tags->add_child( t );
@@ -135,24 +138,10 @@ public class ExportXML : Export {
 
   }
 
-  /* Creates an image file from the given pixbuf and returns the pathname */
-  private string? create_image( Pixbuf pixbuf ) {
-
-    try {
-      string fname = "";  // TBD
-      if( pixbuf.save( fname, "png", "compression", "7" ) ) {
-        return( fname );
-      }
-    } catch( Error e ) {}
-
-    return( null );
-
-  }
-
   // ----------------------------------------------------
 
   /* Imports given filename into drawing area */
-  public override bool import( string fname, Journals journals ) {
+  public override bool do_import( string fname, Journals journals, Journal? journal ) {
 
     Xml.Doc* doc = Xml.Parser.read_file( fname, null, (Xml.ParserOption.HUGE | Xml.ParserOption.NOWARNING) );
     if( doc == null ) {
@@ -163,7 +152,7 @@ public class ExportXML : Export {
 
     for( Xml.Node* it = root->children; it != null; it = it->next ) {
       if( (it->type == Xml.ElementType.ELEMENT_NODE) && (it->name == "journal") ) {
-        import_journal( it, journals );
+        import_journal( it, journals, journal );
       }
     }
 
@@ -174,18 +163,17 @@ public class ExportXML : Export {
   }
 
   /* Imports a journal node */
-  private void import_journal( Xml.Node* node, Journals journals ) {
-
-    Journal journal = null;
+  private void import_journal( Xml.Node* node, Journals journals, Journal? target ) {
 
     var name        = "";
     var template    = "";
     var description = "";
+    var journal     = target;
 
     var n = node->get_prop( "name" );
     if( n != null ) {
       name = n;
-      if( import_merge ) {
+      if( journal == null ) {
         journal = journals.get_journal_by_name( name );
       }
     } else {
@@ -255,6 +243,17 @@ public class ExportXML : Export {
       }
     }
 
+    var load_entry  = new DBEntry();
+    load_entry.date = entry.date;
+
+    var load_result = journal.db.load_entry( load_entry, true );
+    if( load_result == DBLoadResult.LOADED ) {
+      load_entry.merge_with_entry( entry );
+      journal.db.save_entry( load_entry );
+    } else if( load_result == DBLoadResult.CREATED ) {
+      journal.db.save_entry( entry );
+    }
+
   }
 
   /* Imports the specified text XML node */
@@ -274,8 +273,14 @@ public class ExportXML : Export {
     var path = node->get_prop( "path" );
     if( path != null ) {
       try {
+        if( !Path.is_absolute( path ) ) {
+          path = Path.build_filename( _directory, path );
+        }
         entry.image = new Pixbuf.from_file( path );
-      } catch( Error e ) {}
+        entry.image_changed = true;
+      } catch( Error e ) {
+        stderr.printf( "ERROR: %s\n", e.message );
+      }
     }
 
     var pos = node->get_prop( "pos" );

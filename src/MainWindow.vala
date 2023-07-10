@@ -103,6 +103,7 @@ public class MainWindow : Gtk.ApplicationWindow {
   private uint                       _auto_lock_id = 0;
   private Preferences                _prefs = null;
   private ShortcutsWindow            _shortcuts = null;
+  private Exports                    _exports;
 
   private const GLib.ActionEntry[] action_entries = {
     { "action_today",         action_today },
@@ -132,6 +133,11 @@ public class MainWindow : Gtk.ApplicationWindow {
       return( _templates );
     }
   }
+  public Exports exports {
+    get {
+      return( _exports );
+    }
+  }
   public bool locked {
     get {
       return( (_lock_stack.visible_child_name == "setlock-view") ||
@@ -149,6 +155,9 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     /* Load the available themes */
     _themes = new Themes();
+
+    /* Add the exporters */
+    _exports = new Exports();
 
     /* Create and load the templates */
     _templates = new Templates();
@@ -321,7 +330,7 @@ public class MainWindow : Gtk.ApplicationWindow {
   */
   public void reset_timer() {
 
-    stdout.printf( "In reset_timer\n" );
+    // stdout.printf( "In reset_timer\n" );
 
     /* Clear the counter and the timer */
     if( _auto_lock_id > 0 ) {
@@ -333,7 +342,6 @@ public class MainWindow : Gtk.ApplicationWindow {
     /* Set the timer */
     switch( _auto_lock ) {
       case AutoLockOption.ON_SCREENSAVER :
-        stdout.printf( "ON_SCREENSAVER\n" );
         _auto_lock_id = Timeout.add_seconds( 1, () => {
           if( application.screensaver_active ) {
             _auto_lock_id = 0;
@@ -344,7 +352,6 @@ public class MainWindow : Gtk.ApplicationWindow {
         });
         break;
       case AutoLockOption.ON_APP_BACKGROUND :
-        stdout.printf( "APP_BACKGROUND\n" );
         _auto_lock_id = Timeout.add_seconds( 1, () => {
           if( !is_active && ((_prefs == null) || !_prefs.is_active) && ((_shortcuts == null) || !_shortcuts.is_active) ) {
             _auto_lock_id = 0;
@@ -355,7 +362,6 @@ public class MainWindow : Gtk.ApplicationWindow {
         });
         break;
       default :
-        stdout.printf( "AFTER X MINS\n" );
         _auto_lock_id = Timeout.add_seconds( (60 * _auto_lock.minutes()), () => {
           _auto_lock_id = 0;
           show_pane( "lock-view" );
@@ -758,7 +764,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     reset_timer();
     if( locked ) return;
 
-    _prefs = new Preferences( this );
+    _prefs = new Preferences( this, _journals );
     _prefs.show();
 
     _prefs.close_request.connect(() => {

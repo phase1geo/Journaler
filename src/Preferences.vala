@@ -4,13 +4,26 @@ using Gee;
 public class Preferences : Gtk.Dialog {
 
   private MainWindow _win;
+  private Journals   _journals;
   private MenuButton _theme_mb;
   private Grid       _feed_grid;
   private HashMap<string,MenuButton> _menus;
+  private MenuButton _journal_mb;
+  private MenuButton _format_mb;
+  private MenuButton _import_mb;
+  private Button     _import;
+  private Entry      _new_entry;
+  private bool       _new_entry_shown = false;
+  private string     _journal_name = "";
+  private string     _format_name  = "xml";
 
   private const GLib.ActionEntry action_entries[] = {
-    { "action_set_current_theme", action_set_current_theme, "s" },
-    { "action_lock_menu",         action_lock_menu,         "i" }
+    { "action_set_current_theme",         action_set_current_theme,         "s" },
+    { "action_lock_menu",                 action_lock_menu,                 "i" },
+    { "action_select_journal_for_export", action_select_journal_for_export, "s" },
+    { "action_select_export_format",      action_select_export_format,      "s" },
+    { "action_select_import_journal",     action_select_import_journal,     "s" },
+    { "action_select_new_import_journal", action_select_new_import_journal }
   };
 
   public signal void closing();
@@ -18,7 +31,7 @@ public class Preferences : Gtk.Dialog {
   private delegate string ValidateEntryCallback( Entry entry, string text, int position );
 
   /* Default constructor */
-  public Preferences( MainWindow win ) {
+  public Preferences( MainWindow win, Journals journals ) {
 
     Object(
       deletable: false,
@@ -28,8 +41,9 @@ public class Preferences : Gtk.Dialog {
       modal: true
     );
 
-    _win = win;
-    _menus = new HashMap<string,MenuButton>();
+    _win      = win;
+    _journals = journals;
+    _menus    = new HashMap<string,MenuButton>();
 
     var stack = new Stack() {
       margin_start  = 5,
@@ -295,18 +309,376 @@ public class Preferences : Gtk.Dialog {
   }
 
   /* Creates advanced pane */
-  private Grid create_advanced() {
+  private Box create_advanced() {
 
-    var grid = new Grid() {
-      row_spacing = 5,
-      column_spacing = 5,
-      halign = Align.CENTER
+    var box = new Box( Orientation.VERTICAL, 5 );
+    box.append( create_advanced_export() );
+    box.append( create_advanced_import() );
+
+    return( box );
+
+  }
+
+  /* Creates the export frame for the Advanced panel */
+  private Frame create_advanced_export() {
+
+    /* Export */
+    var all = new CheckButton.with_label( _( "Export all journals" ) ) {
+      active = true
+    };
+    var one = new CheckButton.with_label( _( "Export journal" ) ) {
+      group = all
     };
 
-    grid.attach( make_label( _( "Export" ) ), 0, 0 );
-    // TBD
+    var journals_menu = new GLib.Menu();
+    for( int i=0; i<_journals.num_journals(); i++ ) {
+      var journal = _journals.get_journal( i );
+      journals_menu.append( journal.name, "prefs.action_select_journal_for_export('%s')".printf( journal.name ) );
+    }
 
-    return( grid );
+    _journal_mb = new MenuButton() {
+      label      = (_journals.num_journals() == 0) ? "" : _journals.get_journal( 0 ).name,
+      sensitive  = false,
+      menu_model = journals_menu
+    };
+
+    var obox = new Box( Orientation.HORIZONTAL, 5 );
+    obox.append( one );
+    obox.append( _journal_mb );
+
+    all.toggled.connect(() => {
+      _win.reset_timer();
+    });
+    one.toggled.connect(() => {
+      _win.reset_timer();
+      _journal_mb.sensitive = one.active;
+    });
+
+    var for_import = new CheckButton.with_label( _( "Export for the purpose of importing back into Journaler" ) ) {
+      margin_top = 10
+    };
+    var include_images = new CheckButton.with_label( _( "Include entry images" ) );
+
+    var format_menu = new GLib.Menu();
+    for( int i=0; i<_win.exports.length(); i++ ) {
+      format_menu.append( _win.exports.index( i ).label, "prefs.action_select_export_format('%s')".printf( _win.exports.index( i ).name ) );
+    }
+
+    var format = new Label( _( "Export Format:" ) );
+    _format_mb = new MenuButton() {
+      label      = _( "XML" ),
+      menu_model = format_menu
+    };
+
+    for_import.toggled.connect(() => {
+      _win.reset_timer();
+      if( for_import.active ) {
+        include_images.active    = true;
+        include_images.sensitive = false;
+        _format_mb.sensitive     = false;
+      } else {
+        include_images.active    = false;
+        include_images.sensitive = true;
+        _format_mb.sensitive     = true;
+      }
+    });
+
+    include_images.toggled.connect(() => {
+      _win.reset_timer();
+    });
+
+    var export = new Button.with_label( _( "Export…" ) ) {
+      halign  = Align.END,
+      hexpand = true
+    };
+    export.clicked.connect(() => {
+      _win.reset_timer();
+      var journal = all.active ? "" : _journal_name;
+      do_export( journal, for_import.active, include_images.active, _format_name );
+    });
+
+    var bbox = new Box( Orientation.HORIZONTAL, 5 ) {
+      halign  = Align.FILL,
+      hexpand = true
+    };
+    bbox.append( format );
+    bbox.append( _format_mb );
+    bbox.append( export );
+
+    var egrid = new Grid() {
+      row_spacing        = 5,
+      column_spacing     = 5,
+      halign             = Align.FILL,
+      hexpand            = true,
+      column_homogeneous = true,
+      margin_start       = 5,
+      margin_end         = 5,
+      margin_top         = 10,
+      margin_bottom      = 5
+    };
+
+    egrid.attach( all,            0, 0 );
+    egrid.attach( obox,           1, 0 );
+    egrid.attach( for_import,     0, 1, 2 );
+    egrid.attach( include_images, 0, 2, 2 );
+    egrid.attach( bbox,           1, 3 );
+
+    var frame_label  = new Label( Utils.make_title( _( "Export Options" ) ) ) {
+      use_markup = true
+    };
+    var frame = new Frame( null ) {
+      halign       = Align.FILL,
+      hexpand      = true,
+      label_xalign = (float)0.5,
+      label_widget = frame_label,
+      child        = egrid
+    };
+
+    return( frame );
+
+  }
+
+  /* Generates import UI for the Advanced panel */
+  private Frame create_advanced_import() {
+
+    var import_merge = new CheckButton.with_label( _( "Import entries into original journals, automatically creating non-existing journals" ) ) {
+      active = true
+    };
+
+    var import_journal = new CheckButton.with_label( _( "Import all entries into journal" ) ) {
+      group = import_merge
+    };
+
+    var journals_menu = new GLib.Menu();
+    for( int i=0; i<_journals.num_journals(); i++ ) {
+      var journal = _journals.get_journal( i );
+      journals_menu.append( journal.name, "prefs.action_select_import_journal('%s')".printf( journal.name ) );
+    }
+
+    var new_menu = new GLib.Menu();
+    new_menu.append( _( "Create new journal" ), "prefs.action_select_new_import_journal" );
+
+    var journal_menu = new GLib.Menu();
+    journal_menu.append_section( null, journals_menu );
+    journal_menu.append_section( null, new_menu );
+
+    _import_mb = new MenuButton() {
+      label      = _journals.get_journal( 0 ).name,
+      sensitive  = false,
+      menu_model = journal_menu
+    };
+
+    import_merge.toggled.connect(() => {
+      _win.reset_timer();
+    });
+
+    import_journal.toggled.connect(() => {
+      _win.reset_timer();
+      _import_mb.sensitive = import_journal.active;
+    });
+
+    _new_entry = new Entry() {
+      placeholder_text = _( "Enter new journal name" )
+    };
+    _new_entry.hide();
+
+    var jbox = new Box( Orientation.HORIZONTAL, 5 ) {
+      halign  = Align.FILL,
+      hexpand = true
+    };
+    jbox.append( import_journal );
+    jbox.append( _import_mb );
+    jbox.append( _new_entry );
+
+    _import = new Button.with_label( "Import…" ) {
+      halign  = Align.END,
+      hexpand = true
+    };
+    _import.clicked.connect(() => {
+      _win.reset_timer();
+      do_import( import_merge.active ? "" :
+                 _new_entry_shown ? _new_entry.text :
+                 _import_mb.label );
+    });
+
+    _new_entry.changed.connect(() => {
+      _win.reset_timer();
+      _import.sensitive = (!_new_entry_shown || ((_new_entry.text != "") && (_journals.get_journal_by_name( _new_entry.text ) == null)));
+    });
+
+    var bbox = new Box( Orientation.HORIZONTAL, 5 ) {
+      halign  = Align.FILL,
+      hexpand = true
+    };
+    bbox.append( _import );
+
+    var ibox = new Box( Orientation.VERTICAL, 5 ) {
+      halign        = Align.FILL,
+      hexpand       = true,
+      margin_top    = 10,
+      margin_bottom = 5,
+      margin_start  = 5,
+      margin_end    = 5
+    };
+    ibox.append( import_merge );
+    ibox.append( jbox );
+    ibox.append( bbox );
+
+    var frame_label  = new Label( Utils.make_title( _( "Import Options" ) ) ) {
+      use_markup = true
+    };
+    var frame = new Frame( null ) {
+      halign       = Align.FILL,
+      hexpand      = true,
+      label_xalign = (float)0.5,
+      label_widget = frame_label,
+      child        = ibox
+    };
+
+    return( frame );
+
+  }
+
+  /* Selects the journal to export */
+  private void action_select_journal_for_export( SimpleAction action, Variant? variant ) {
+
+    _win.reset_timer();
+    _journal_mb.label = variant.get_string();
+
+  }
+
+  /* Selects the export format */
+  private void action_select_export_format( SimpleAction action, Variant? variant ) {
+
+    _win.reset_timer();
+
+    _format_name = variant.get_string();
+
+    stdout.printf( "In action_select_export_format, format: %s\n", _format_name );
+
+    var export = _win.exports.get_by_name( _format_name );
+    _format_mb.label = export.label;
+
+  }
+
+  /* Performs the export based on the settings */
+  private void do_export( string journal, bool for_import, bool include_images, string format ) {
+
+    var journals = new Array<Journal>();
+    if( journal == "" ) {
+      for( int i=0; i<_journals.num_journals(); i++ ) {
+        journals.append_val( _journals.get_journal( i ) );
+      }
+    } else {
+      journals.append_val( _journals.get_journal_by_name( journal ) );
+    }
+
+    var export = _win.exports.get_by_name( format );
+    export.include_images = include_images;
+
+    if( format == "xml" ) {
+      var xml_export = (ExportXML)export;
+      xml_export.for_import = for_import;
+    }
+
+    var dialog = Utils.make_file_chooser( _( "Export Data As…" ), this, FileChooserAction.SAVE, _( "Export" ) );
+
+    /* Add filters */
+    var filter = new FileFilter() {
+      name = export.label
+    };
+    foreach( var ext in export.extensions ) {
+      filter.add_suffix( ext );
+    }
+    dialog.add_filter( filter );
+
+    dialog.response.connect((id) => {
+      _win.reset_timer();
+      if( id == ResponseType.ACCEPT ) {
+        var file = dialog.get_file();
+        if( file != null ) {
+          if( export.export( file.get_path() + (include_images ? ".bundle" : ""), journals ) ) {
+            _win.notification( _( "Export successful" ), "" );
+          } else {
+            _win.notification( _( "Export failed" ), "" );
+          }
+        }
+      }
+      dialog.close();
+    });
+
+    dialog.show();
+
+  }
+
+  /* Called when the user selects an existing journal from the menu */
+  private void action_select_import_journal( SimpleAction action, Variant? variant ) {
+
+    _win.reset_timer();
+    _import_mb.label = variant.get_string();
+    _import.sensitive = true;
+    _new_entry.hide();
+    _new_entry_shown = false;
+
+  }
+
+  /* Prompts the user to create a new Journal */
+  private void action_select_new_import_journal() {
+
+    _win.reset_timer();
+    _import_mb.label = _( "new called" );
+    _import.sensitive = false;
+    _new_entry.text = "";
+    _new_entry.show();
+    _new_entry.grab_focus();
+    _new_entry_shown = true;
+
+  }
+
+  /* Handles the import of an XML file into either a new journal or merged into the existing journals */
+  private void do_import( string journal_name ) {
+
+    Journal journal = null;
+
+    var export = (ExportXML)_win.exports.get_by_name( "xml" );
+
+    if( journal_name != "" ) {
+      journal = _journals.get_journal_by_name( journal_name );
+      if( journal == null ) {
+        journal = new Journal( journal_name, "", "" );
+        _journals.add_journal( journal, true );
+      }
+    }
+
+    var dialog = Utils.make_file_chooser( _( "Import Data From…" ), this, FileChooserAction.OPEN, _( "Import" ) );
+
+    /* Add filters */
+    var filter = new FileFilter() {
+      name = export.label
+    };
+    foreach( var ext in export.extensions ) {
+      filter.add_suffix( ext );
+      filter.add_suffix( ext + ".bundle" );
+    }
+    dialog.add_filter( filter );
+
+    dialog.response.connect((id) => {
+      _win.reset_timer();
+      if( id == ResponseType.ACCEPT ) {
+        var file = dialog.get_file();
+        if( file != null ) {
+          if( export.import( file.get_path(), _journals, journal ) ) {
+            _journals.current_changed( true );
+            _win.notification( _( "Import successful" ), "" );
+          } else {
+            _win.notification( _( "Import failed" ), "" );
+          }
+        }
+      }
+      dialog.close();
+    });
+
+    dialog.show();
 
   }
 

@@ -20,17 +20,22 @@
 */
 
 using Gtk;
+using Gdk;
 using Gee;
 
 public class Export {
 
   private HashMap<string,Widget> _settings;
+  protected string               _directory;
+  private static int             _image_id = 1;
 
   public string   name       { get; private set; }
   public string   label      { get; private set; }
   public string[] extensions { get; private set; }
   public bool     importable { get; private set; }
   public bool     exportable { get; private set; }
+
+  public bool include_images { get; set; default = false; }
 
   /* Constructor */
   public Export( string name, string label, string[] extensions, bool exportable, bool importable ) {
@@ -44,14 +49,98 @@ public class Export {
 
   public signal void settings_changed();
 
+  /* Exports the specified journals to a file or archive */
+  public bool export( string fname, Array<Journal> journals ) {
+    var format_name = "";
+    return(
+      initialize_export( fname, out format_name ) &&
+      do_export( format_name, journals ) &&
+      finalize_export( fname )
+    );
+  }
+
+  public bool import( string fname, Journals journals, Journal? journal = null ) {
+    var format_name = "";
+    return(
+      initialize_import( fname, out format_name ) &&
+      do_import( format_name, journals, journal ) &&
+      finalize_import( fname )
+    );
+  }
+
   /* Performs export to the given filename */
-  public virtual bool export( string fname, Array<Journal> journals ) {
+  protected virtual bool do_export( string fname, Array<Journal> journals ) {
     return( false );
   }
 
   /* Imports given filename into drawing area */
-  public virtual bool import( string fname, Journals journals ) {
+  protected virtual bool do_import( string fname, Journals journals, Journal? journal = null ) {
     return( false );
+  }
+
+  private bool initialize_export( string fname, out string format_name ) {
+
+    var basename = Path.get_basename( fname );
+
+    format_name = include_images ? Path.build_filename( fname, basename.slice( 0, (basename.length - ".bundle".length) ) ) : fname;
+    _directory  = include_images ? fname : Path.get_dirname( fname );
+    _image_id   = 1;
+
+    if( include_images ) {
+
+      // If the directory already exists, remove it
+      if( FileUtils.test( fname, FileTest.EXISTS ) && (DirUtils.remove( fname ) != 0) ) {
+        return( false );
+      }
+
+      // Create the directories
+      DirUtils.create_with_parents( Path.build_filename( fname, "images" ), 0700 );
+
+    }
+
+    return( true );
+
+  }
+
+  private bool finalize_export( string fname ) {
+
+    return( true );
+
+  }
+
+  private bool initialize_import( string fname, out string format_name ) {
+
+    var bundle  = ".bundle";
+    format_name = fname.has_suffix( bundle ) ? Path.build_filename( fname, fname.slice( 0, (fname.length - bundle.length) ) ) : fname;
+    _directory  = fname.has_suffix( bundle ) ? fname : Path.get_dirname( fname );
+
+    return( true );
+
+  }
+
+  private bool finalize_import( string fname ) {
+
+    return( true );
+
+  }
+
+  /* Creates an image file from the given pixbuf and returns the pathname */
+  protected string? create_image( Pixbuf pixbuf ) {
+
+    try {
+      string fname = Path.build_filename( "images", "image-%06d.png".printf( _image_id++ ) );
+      stdout.printf( "image fname: %s\n", fname );
+      if( pixbuf.save( Path.build_filename( _directory, fname ), "png", "compression", "7" ) ) {
+        return( fname );
+      } else {
+        stdout.printf( "Unable to save pixbuf to %s\n", Path.build_filename( _directory, fname ) );
+      }
+    } catch( Error e ) {
+      stderr.printf( "ERROR: %s\n", e.message );
+    }
+
+    return( null );
+
   }
 
   public bool settings_available() {

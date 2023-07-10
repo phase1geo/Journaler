@@ -30,7 +30,7 @@ public class Exports {
 
     /* Add the exports */
     add( new ExportXML(), save_settings );
-    //add( new ExportJSON(), save_settings );
+    add( new ExportJSON(), save_settings );
     //add( new ExportHTML(), save_settings );
 
   }

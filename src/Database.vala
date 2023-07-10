@@ -61,6 +61,32 @@ public class DBEntry {
     store_tag_list( tag_list );
   }
 
+  /* Merges an entry into this one */
+  public void merge_with_entry( DBEntry entry ) {
+
+    /* If the text does not match, append the text of the entry to the end of our text, placing a horizontal separator line */
+    if( text != entry.text ) {
+      text += "\n\n---\n\n%s".printf( entry.text );
+    }
+
+    /* If this entry doesn't contain an image but the other one does, use the other entry's image data */
+    if( (image == null) && (entry.image != null) ) {
+      image         = entry.image;
+      image_pos     = entry.image_pos;
+      image_vadj    = entry.image_vadj;
+      image_hadj    = entry.image_hadj;
+      image_changed = true;
+    }
+
+    /* Let's merge the tags */
+    foreach( var tag in entry._tags ) {
+      if( !contains_tag( tag ) ) {
+        add_tag( tag );
+      }
+    }
+
+  }
+
   /* Returns true if the given tag currently exists */
   public bool contains_tag( string tag ) {
     return( !_tags.find( tag ).is_empty() );
@@ -292,13 +318,13 @@ public class Database {
   }
 
   /* Creates a new entry with the given date if one could not be found */
-  private bool create_entry( DBEntry entry ) {
+  public bool create_entry( DBEntry entry ) {
 
     /* Insert the entry */
     var entry_query = """
       INSERT INTO Entry (title, txt, date, time, image, image_pos, image_vadj, image_hadj)
       VALUES ('', '%s', '%s', '%s', NULL, NULL, NULL, NULL);
-      """.printf( entry.text, entry.date, entry.time );
+      """.printf( entry.text.replace("'", "''"), entry.date, entry.time );
 
     if( !exec_query( entry_query ) ) {
       return( false );
@@ -455,7 +481,7 @@ public class Database {
     var err = _db.exec( query, callback, out errmsg );
     if( err != Sqlite.OK ) {
       if( err != ERRCODE_NOT_UNIQUE ) {
-        stdout.printf( "err: %d, errmsg: %s\n", err, errmsg );
+        stdout.printf( "query: %s, err: %d, errmsg: %s\n", query, err, errmsg );
       }
       return( false );
     }
