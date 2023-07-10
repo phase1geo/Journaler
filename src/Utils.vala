@@ -286,4 +286,19 @@ public class Utils {
     return( string.joinv( " ", strs ).strip() );
   }
 
+  /* Creates a file chooser dialog and returns it to the code */
+  public static Gtk.FileChooserDialog make_file_chooser( string title, Gtk.Window win, Gtk.FileChooserAction action, string accept_label ) {
+
+    var gtk_settings = Gtk.Settings.get_default();
+
+    var use_header = gtk_settings.gtk_dialogs_use_header;
+    gtk_settings.gtk_dialogs_use_header = true;
+
+    var dialog = new FileChooserDialog( title, win, action, _( "Cancel" ), ResponseType.CANCEL, accept_label, ResponseType.ACCEPT );
+    gtk_settings.gtk_dialogs_use_header = use_header;
+
+    return( dialog );
+
+  }
+
 }

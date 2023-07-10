@@ -581,9 +581,7 @@ public class Preferences : Gtk.Dialog {
       xml_export.for_import = for_import;
     }
 
-    var dialog = new FileChooserDialog( _( "Export Data As…" ), this, FileChooserAction.SAVE,
-                                        _( "Cancel" ), ResponseType.CANCEL,
-                                        _( "Export" ), ResponseType.ACCEPT );
+    var dialog = Utils.make_file_chooser( _( "Export Data As…" ), this, FileChooserAction.SAVE, _( "Export" ) );
 
     /* Add filters */
     var filter = new FileFilter() {
@@ -652,9 +650,7 @@ public class Preferences : Gtk.Dialog {
       }
     }
 
-    var dialog = new FileChooserDialog( _( "Export Data As…" ), this, FileChooserAction.OPEN,
-                                        _( "Cancel" ), ResponseType.CANCEL,
-                                        _( "Import" ), ResponseType.ACCEPT );
+    var dialog = Utils.make_file_chooser( _( "Import Data From…" ), this, FileChooserAction.OPEN, _( "Import" ) );
 
     /* Add filters */
     var filter = new FileFilter() {

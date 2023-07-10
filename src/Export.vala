@@ -26,7 +26,7 @@ using Gee;
 public class Export {
 
   private HashMap<string,Widget> _settings;
-  private string                 _directory;
+  protected string               _directory;
   private static int             _image_id = 1;
 
   public string   name       { get; private set; }
@@ -80,7 +80,9 @@ public class Export {
 
   private bool initialize_export( string fname, out string format_name ) {
 
-    format_name = include_images ? Path.build_filename( fname, fname.slice( 0, (fname.length - ".bundle".length) ) ) : fname;
+    var basename = Path.get_basename( fname );
+
+    format_name = include_images ? Path.build_filename( fname, basename.slice( 0, (basename.length - ".bundle".length) ) ) : fname;
     _directory  = include_images ? fname : Path.get_dirname( fname );
     _image_id   = 1;
 
@@ -127,8 +129,11 @@ public class Export {
 
     try {
       string fname = Path.build_filename( "images", "image-%06d.png".printf( _image_id++ ) );
+      stdout.printf( "image fname: %s\n", fname );
       if( pixbuf.save( Path.build_filename( _directory, fname ), "png", "compression", "7" ) ) {
         return( fname );
+      } else {
+        stdout.printf( "Unable to save pixbuf to %s\n", Path.build_filename( _directory, fname ) );
       }
     } catch( Error e ) {
       stderr.printf( "ERROR: %s\n", e.message );

@@ -268,9 +268,7 @@ public class TextArea : Box {
 
     _win.reset_timer();
 
-    var dialog = new FileChooserDialog( _( "Select an image" ), _win, FileChooserAction.OPEN,
-                                        _( "Cancel" ), ResponseType.CANCEL,
-                                        _( "Open" ), ResponseType.ACCEPT );
+    var dialog = Utils.make_file_chooser( _( "Select an image" ), _win, FileChooserAction.OPEN, _( "Add Image" ) );
 
     /* Add filters */
     var filter = new FileFilter() {

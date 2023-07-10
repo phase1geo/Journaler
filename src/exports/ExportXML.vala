@@ -33,6 +33,8 @@ public class ExportXML : Export {
   /* Performs export to the given filename */
   public override bool do_export( string fname, Array<Journal> journals ) {
 
+    stdout.printf( "Exporting XML fname: %s\n", fname );
+
     Xml.Doc*  doc  = new Xml.Doc( "1.0" );
     Xml.Node* root = new Xml.Node( null, "journals" );
 
@@ -98,9 +100,10 @@ public class ExportXML : Export {
       text->add_child( doc->new_cdata_block( load_entry.text, load_entry.text.length ) );
       node->add_child( text );
 
-      if( (entry.image != null) && include_images ) {
+      if( (load_entry.image != null) && include_images ) {
 
-        var path = create_image( entry.image );
+        var path = create_image( load_entry.image );
+        stdout.printf( "Attempted to create image with path: %s\n", path );
 
         if( path != null ) {
 
@@ -108,9 +111,9 @@ public class ExportXML : Export {
           image->set_prop( "path", path );
 
           if( for_import ) {
-            image->set_prop( "pos",  entry.image_pos.to_string() );
-            image->set_prop( "vadj", entry.image_vadj.to_string() );
-            image->set_prop( "hadj", entry.image_hadj.to_string() );
+            image->set_prop( "pos",  load_entry.image_pos.to_string() );
+            image->set_prop( "vadj", load_entry.image_vadj.to_string() );
+            image->set_prop( "hadj", load_entry.image_hadj.to_string() );
           }
 
           node->add_child( image );
@@ -121,7 +124,7 @@ public class ExportXML : Export {
 
       Xml.Node* tags = new Xml.Node( null, "tags" );
 
-      foreach( var tag in entry.tags ) {
+      foreach( var tag in load_entry.tags ) {
         Xml.Node* t = new Xml.Node( null, "tag" );
         t->set_prop( "name", tag );
         tags->add_child( t );
@@ -270,8 +273,14 @@ public class ExportXML : Export {
     var path = node->get_prop( "path" );
     if( path != null ) {
       try {
+        if( !Path.is_absolute( path ) ) {
+          path = Path.build_filename( _directory, path );
+        }
         entry.image = new Pixbuf.from_file( path );
-      } catch( Error e ) {}
+        entry.image_changed = true;
+      } catch( Error e ) {
+        stderr.printf( "ERROR: %s\n", e.message );
+      }
     }
 
     var pos = node->get_prop( "pos" );
