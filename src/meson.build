@@ -4,6 +4,7 @@ sources += files(
     'Database.vala',
     'Export.vala',
     'Exports.vala',
+    'Goal.vala',
     'Goals.vala',
     'Journal.vala',
     'Journals.vala',
@@ -26,3 +27,4 @@ sources += files(
 )
 
 subdir('exports')
+subdir('goals')

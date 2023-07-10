@@ -457,6 +457,13 @@ public class TextArea : Box {
         _journals.current_changed( true );
       }
       _entry = entry;
+
+      /* Update the goals */
+      _win.goals.mark_achievement( entry.date, false );
+      if( _stats.word_goal_reached() ) {
+        _win.goals.mark_achievement( entry.date, true );
+      }
+
       stdout.printf( "Saved successfully to journal %s\n", _journal.name );
     }
 

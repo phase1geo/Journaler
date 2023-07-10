@@ -175,7 +175,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     _journals = new Journals( _templates );
 
     /* Creates the goals */
-    _goals = new Goals();
+    _goals = new Goals( this );
 
     /* Create the hash map for the focus widgets */
     _stack_focus_widgets = new Gee.HashMap<string,Widget>();
