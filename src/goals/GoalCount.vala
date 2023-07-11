@@ -16,7 +16,7 @@ public class GoalCount : Goal {
   }
 
   /* Returns true if the count should be incremented */
-  protected override CountAction get_count_action( Date start_date, Date todays_date, Date last_achieved ) {
+  protected override CountAction get_count_action( Date todays_date, Date last_achieved ) {
     return( (last_achieved.days_between( todays_date ) == 0) ? CountAction.NONE : CountAction.INCREMENT );
   }
 

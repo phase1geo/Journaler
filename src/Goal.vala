@@ -1,7 +1,8 @@
 public enum CountAction {
   NONE,
   INCREMENT,
-  RESET
+  RESET,
+  CLEAR
 }
 
 public class Goal {
@@ -45,7 +46,7 @@ public class Goal {
   }
 
   /* Returns true if the count should be incremented */
-  protected virtual CountAction get_count_action( Date start_date, Date todays_date, Date last_achieved ) {
+  protected virtual CountAction get_count_action( Date todays_date, Date last_achieved ) {
     return( CountAction.NONE );
   }
 
@@ -53,18 +54,18 @@ public class Goal {
    This should be called whenver an entry goal has been met.  It will return true if the goal requires
    saving.
   */
-  public bool mark_achievement( string start_date, string todays_date, bool word_count_met, out bool achievement ) {
+  public bool mark_achievement( string todays_date, bool word_count_met, out bool achievement ) {
     achievement = false;
     stdout.printf( "In mark_achievement, name: %s, word_count_met: %s, word_count: %s, count: %d, achieved: %s\n",
                    _name, word_count_met.to_string(), _word_count.to_string(), count, _achieved.to_string() );
     if( (word_count_met == _word_count) && !_achieved ) {
       var save = true;
-      switch( get_count_action( get_date( start_date ), get_date( todays_date ), get_date( last_achieved ) ) ) {
+      switch( get_count_action( get_date( todays_date ), get_date( last_achieved ) ) ) {
         case CountAction.INCREMENT :  count++;        break;
+        case CountAction.CLEAR     :  count = 0;      break;
         case CountAction.RESET     :  count = 1;      break;
         default                    :  save  = false;  break;
       }
-      stdout.printf( "  count: %d, goal: %d, save: %s\n", count, goal, save.to_string() );
       last_achieved = todays_date;
       if( count >= goal ) {
         _achieved = true;
@@ -87,6 +88,11 @@ public class Goal {
     date.clear();
     date.set_dmy( (DateDay)int.parse( parts[2] ), int.parse( parts[1] ), (DateYear)int.parse( parts[0] ) );
     return( date.copy() );
+  }
+
+  /* Returns the date in a string format that is compatible with an entry date */
+  protected string get_date_str( Date date ) {
+    return( "%04u-%02d-%02u".printf( date.get_year(), date.get_month(), date.get_day() ) );
   }
 
   /* Returns the XML node name used to store results */
