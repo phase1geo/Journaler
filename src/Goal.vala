@@ -56,8 +56,10 @@ public class Goal {
   */
   public bool mark_achievement( string todays_date, bool word_count_met, out bool achievement ) {
     achievement = false;
+    /*
     stdout.printf( "In mark_achievement, name: %s, word_count_met: %s, word_count: %s, count: %d, achieved: %s\n",
                    _name, word_count_met.to_string(), _word_count.to_string(), count, _achieved.to_string() );
+                   */
     if( (word_count_met == _word_count) && !_achieved ) {
       var save = true;
       switch( get_count_action( get_date( todays_date ), get_date( last_achieved ) ) ) {
@@ -87,7 +89,7 @@ public class Goal {
     var  parts = date_str.split( "-" );
     date.clear();
     date.set_dmy( (DateDay)int.parse( parts[2] ), int.parse( parts[1] ), (DateYear)int.parse( parts[0] ) );
-    return( date.copy() );
+    return( date );
   }
 
   /* Returns the date in a string format that is compatible with an entry date */
