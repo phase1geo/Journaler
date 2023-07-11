@@ -106,6 +106,7 @@ public class MainWindow : Gtk.ApplicationWindow {
   private Exports                    _exports;
   private Goals                      _goals;
   private FlowBox                    _awards_box;
+  private Label                      _awards_status;
 
   private const GLib.ActionEntry[] action_entries = {
     { "action_today",         action_today },
@@ -701,6 +702,11 @@ public class MainWindow : Gtk.ApplicationWindow {
       hexpand = true
     };
 
+    _awards_status = new Label( "" ) {
+      halign  = Align.START,
+      hexpand = true
+    };
+
     var close = new Button.with_label( _( "Close" ) ) {
       halign  = Align.END,
       hexpand = true
@@ -710,6 +716,7 @@ public class MainWindow : Gtk.ApplicationWindow {
       show_pane( "entry-view" );
     });
 
+    bbox.append( _awards_status );
     bbox.append( close );
 
     box.append( scroll );
@@ -821,6 +828,8 @@ public class MainWindow : Gtk.ApplicationWindow {
   private void refresh_awards() {
 
     FlowBoxChild? w = null;
+
+    _awards_status.label = _goals.get_achievement_status();
 
     do {
       w = _awards_box.get_child_at_index( 0 );

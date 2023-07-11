@@ -25,12 +25,12 @@ public class Statistics : Box {
     _words_goal = Journaler.settings.get_int( "word-goal" );
 
     /* Handle any changes to the goals */
-    Journaler.settings.notify["character-goal"].connect(() => {
+    Journaler.settings.changed["character-goal"].connect(() => {
       _chars_goal = Journaler.settings.get_int( "character-goal" );
       update_stats_string();
     });
-    Journaler.settings.notify["word-goal"].connect(() => {
-      _words_goal = Journaler.settings.get_int( "character-goal" );
+    Journaler.settings.changed["word-goal"].connect(() => {
+      _words_goal = Journaler.settings.get_int( "word-goal" );
       update_stats_string();
     });
 

@@ -112,6 +112,17 @@ public class Goals {
     return( _goals.index( i ) );
   }
 
+  /* Returns the achievement status label */
+  public string get_achievement_status() {
+    var achieved = 0;
+    for( int i=0; i<_goals.length; i++ ) {
+      if( _goals.index( i ).achieved ) {
+        achieved++;
+      }
+    }
+    return( _( "Achieved %d out of %d awards" ).printf( achieved, size() ) );
+  }
+
   /* Checks for any achievements when an entry meets an entry goal (on save only) */
   public void mark_achievement( string entry_date, bool word_count_met ) {
     var todays_date = DBEntry.todays_date();

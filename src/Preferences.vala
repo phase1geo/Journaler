@@ -183,6 +183,14 @@ public class Preferences : Gtk.Dialog {
     grid.attach( make_label( _( "Line Spacing" ) ), 0, 3 );
     grid.attach( make_spinner( "editor-line-spacing", 2, 20, 1 ), 1, 3 );
 
+    grid.attach( make_spacer(), 0, 4 );
+
+    grid.attach( make_label( _( "Character Count Goal" ) ), 0, 5 );
+    grid.attach( make_spinner( "character-goal", 100, 100000, 100 ), 1, 5 );
+
+    grid.attach( make_label( _( "Word Count Goal" ) ), 0, 6 );
+    grid.attach( make_spinner( "word-goal", 50, 5000, 50 ), 1, 6 );
+
     return( grid );
 
   }
@@ -683,6 +691,12 @@ public class Preferences : Gtk.Dialog {
   }
 
   // -----------------------------------------------------------------
+
+  /* Creates visual spacer */
+  private Label make_spacer() {
+    var w = new Label( "" );
+    return( w );
+  }
 
   /* Creates label */
   private Label make_label( string label ) {
