@@ -7,16 +7,20 @@ public enum CountAction {
 public class Goal {
 
   private string _name       = "";
+  private string _label      = "";
   private bool   _achieved   = false;
   private bool   _word_count = false;
 
-  protected int    count         { set; get; default = 0; }
-  protected int    goal          { set; get; default = 0; }
-  protected string last_achieved { set; get; default = DBEntry.todays_date(); }
+  protected string last_achieved { set; get; default = DBEntry.yesterdays_date(); }
 
   public string name {
     get {
       return( _name );
+    }
+  }
+  public string label {
+    get {
+      return( _label );
     }
   }
   public bool achieved {
@@ -24,12 +28,20 @@ public class Goal {
       return( _achieved );
     }
   }
+  public int count { set; get; default = 0; }
+  public int goal  { set; get; default = 0; }
 
   /* Default constructor */
-  public Goal( string name, int goal, bool word_count ) {
+  public Goal( string name, string label, int goal, bool word_count ) {
     _name       = name;
+    _label      = label;
     _goal       = goal;
     _word_count = word_count;
+  }
+
+  /* Constructor */
+  public Goal.from_xml( Xml.Node* node ) {
+    load( node );
   }
 
   /* Returns true if the count should be incremented */
@@ -43,6 +55,8 @@ public class Goal {
   */
   public bool mark_achievement( string start_date, string todays_date, bool word_count_met, out bool achievement ) {
     achievement = false;
+    stdout.printf( "In mark_achievement, name: %s, word_count_met: %s, word_count: %s, count: %d, achieved: %s\n",
+                   _name, word_count_met.to_string(), _word_count.to_string(), count, _achieved.to_string() );
     if( (word_count_met == _word_count) && !_achieved ) {
       var save = true;
       switch( get_count_action( get_date( start_date ), get_date( todays_date ), get_date( last_achieved ) ) ) {
@@ -50,6 +64,7 @@ public class Goal {
         case CountAction.RESET     :  count = 1;      break;
         default                    :  save  = false;  break;
       }
+      stdout.printf( "  count: %d, goal: %d, save: %s\n", count, goal, save.to_string() );
       last_achieved = todays_date;
       if( count >= goal ) {
         _achieved = true;
@@ -58,6 +73,11 @@ public class Goal {
       return( save );
     }
     return( false );
+  }
+
+  /* Returns the completion percentage of this goal */
+  public int completion_percentage() {
+    return( (int)((count / (float)goal) * 100) );
   }
 
   /* Gets the date from the given date string */
@@ -74,6 +94,20 @@ public class Goal {
     return( "goal-generic" );
   }
 
+  /* Callback method used for merging local data */
+  protected virtual void do_merge( Goal goal ) {}
+
+  /* Used to merge the loaded XML data into this goal */
+  public void merge( Goal goal ) {
+
+    _achieved     = goal._achieved;
+    count         = goal.count;
+    last_achieved = goal.last_achieved;
+
+    do_merge( goal );
+
+  }
+
   /* Callback method used for saving local data */
   protected virtual void save_node( Xml.Node* node ) {}
 
@@ -87,9 +121,7 @@ public class Goal {
 
     node->set_prop( "name",          _name );
     node->set_prop( "achieved",      _achieved.to_string() );
-    node->set_prop( "word_count",    _word_count.to_string() );
     node->set_prop( "count",         count.to_string() );
-    node->set_prop( "goal",          goal.to_string() );
     node->set_prop( "last_achieved", last_achieved );
 
     save_node( node );
@@ -111,19 +143,9 @@ public class Goal {
       _achieved = bool.parse( a );
     }
 
-    var wc = node->get_prop( "word_count" );
-    if( wc != null ) {
-      _word_count = bool.parse( wc );
-    }
-
     var c = node->get_prop( "count" );
     if( c != null ) {
       count = int.parse( c );
-    }
-
-    var g = node->get_prop( "goal" );
-    if( g != null ) {
-      goal = int.parse( g );
     }
 
     var la = node->get_prop( "last_achieved" );

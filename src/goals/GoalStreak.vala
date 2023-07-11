@@ -1,8 +1,18 @@
 public class GoalStreak : Goal {
 
   /* Default constructor */
-  public GoalStreak( string name, int goal, bool word_count ) {
-    base( name, goal, word_count );
+  public GoalStreak( string label, int goal, bool word_count ) {
+    base( "streak-%d-%d".printf( goal, (word_count ? 1 : 0) ), label, goal, word_count );
+  }
+
+  /* Constructor */
+  public GoalStreak.from_xml( Xml.Node* node ) {
+    base.from_xml( node );
+  }
+
+  /* Returns the name of the XML node */
+  public override string xml_node_name() {
+    return( "goal-streak" );
   }
 
   /* Returns true if the count should be incremented */

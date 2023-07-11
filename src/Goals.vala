@@ -1,21 +1,25 @@
 public class Goals {
 
-  private MainWindow  _win;
-  private Array<Goal> _goals;
-  private string      _start_date = DBEntry.todays_date();
+  private MainWindow               _win;
+  private Array<Goal>              _goals;
+  private Gee.HashMap<string,Goal> _hash;
+  private string                   _start_date = DBEntry.todays_date();
 
   /* Default constructor */
   public Goals( MainWindow win ) {
 
     _win   = win;
     _goals = new Array<Goal>();
+    _hash  = new Gee.HashMap<string,Goal>();
 
     for( int i=0; i<2; i++ ) {
+
       bool word_count = (i == 1);
-      add_goal( new GoalStreak( _( "First Entry" ),         1, word_count ) );
-      add_goal( new GoalStreak( _( "Two Days in a Row" ),   2, word_count ) );
-      add_goal( new GoalStreak( _( "Three Days in a Row" ), 3, word_count ) );
-      add_goal( new GoalStreak( _( "Five Days in a Row" ),  5, word_count ) );
+
+      add_goal( new GoalStreak( _( "First entry" ),         1, word_count ) );
+      add_goal( new GoalStreak( _( "Two days in a Row" ),   2, word_count ) );
+      add_goal( new GoalStreak( _( "Three days in a Row" ), 3, word_count ) );
+      add_goal( new GoalStreak( _( "Five days in a Row" ),  5, word_count ) );
       add_goal( new GoalStreak( _( "One Week in a Row" ),   days_in_week( 1 ),  word_count ) );
       add_goal( new GoalStreak( _( "Two Weeks in a Row" ),  days_in_week( 2 ),  word_count ) );
       add_goal( new GoalStreak( _( "One month in a Row" ),  days_in_month( 1 ), word_count ) );
@@ -24,6 +28,15 @@ public class Goals {
       add_goal( new GoalStreak( _( "One year in a Row" ),   days_in_year( 1 ),  word_count ) );
       add_goal( new GoalStreak( _( "Two years in a Row" ),  days_in_year( 2 ),  word_count ) );
       add_goal( new GoalStreak( _( "Five years in a Row" ), days_in_year( 5 ),  word_count ) );
+
+      add_goal( new GoalCount( _( "10 entries" ), 10, word_count ) );
+      add_goal( new GoalCount( _( "20 entries" ), 20, word_count ) );
+      add_goal( new GoalCount( _( "50 entries" ), 50, word_count ) );
+      add_goal( new GoalCount( _( "100 entries" ), 100, word_count ) );
+      add_goal( new GoalCount( _( "200 entries" ), 200, word_count ) );
+      add_goal( new GoalCount( _( "500 entries" ), 500, word_count ) );
+      add_goal( new GoalCount( _( "1000 entries" ), 1000, word_count ) );
+
     }
 
   }
@@ -31,6 +44,24 @@ public class Goals {
   /* Adds a new goal to the list */
   private void add_goal( Goal goal ) {
     _goals.append_val( goal );
+    _hash.set( goal.name, goal );
+  }
+
+  /* Merges the given goal with an existing goal */
+  private void merge_goal( Goal goal ) {
+    if( _hash.has_key( goal.name ) ) {
+      _hash.get( goal.name ).merge( goal );
+    }
+  }
+
+  /* Returns the number of goals stored */
+  public int size() {
+    return( (int)_goals.length );
+  }
+
+  /* Returns the goal stored at the given index */
+  public Goal index( int i ) {
+    return( _goals.index( i ) );
   }
 
   /* Checks for any achievements when an entry meets an entry goal (on save only) */
@@ -43,7 +74,7 @@ public class Goals {
         bool achieved;
         save_needed |= _goals.index( i ).mark_achievement( _start_date, todays_date, word_count_met, out achieved );
         if( achieved ) {
-          notify_msgs += _goals.index( i ).name;
+          notify_msgs += _goals.index( i ).label;
         }
       }
       if( save_needed ) {
@@ -113,7 +144,14 @@ public class Goals {
 
     for( Xml.Node* it = doc->get_root_element()->children; it != null; it = it->next ) {
       if( it->type == Xml.ElementType.ELEMENT_NODE ) {
-        // TBD
+        Goal? goal = null;
+        switch( it->name ) {
+          case "goal-streak" :  goal = new GoalStreak.from_xml( it );  break;
+          case "goal-count"  :  goal = new GoalCount.from_xml( it );   break;
+        }
+        if( goal != null ) {
+          merge_goal( goal );
+        }
       }
     }
 
