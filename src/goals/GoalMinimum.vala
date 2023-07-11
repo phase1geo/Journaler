@@ -41,7 +41,7 @@ public class GoalMinimum : Goal {
 
   /* Calculates the beginning of the week */
   private Date get_beginning_of_this_week( Date begin_date ) {
-    var begin_week = begin_date.copy();
+    var begin_week = begin_date;
     switch( begin_date.get_weekday() ) {
       case DateWeekday.SUNDAY    :  begin_week.subtract_days( 0 );  break;
       case DateWeekday.MONDAY    :  begin_week.subtract_days( 1 );  break;
@@ -57,21 +57,21 @@ public class GoalMinimum : Goal {
 
   /* Calculates the beginning of the previous week */
   private Date get_beginning_of_previous_week( Date begin_date ) {
-    var begin_week = begin_date.copy();
+    var begin_week = begin_date;
     begin_week.subtract_days( 7 );
     return( begin_week );
   }
 
   /* Calculates the beginning of the month */
   private Date get_beginning_of_this_month( Date begin_date ) {
-    var begin_mon = begin_date.copy();
+    var begin_mon = begin_date;
     begin_mon.subtract_days( begin_date.get_day() - 1 );
     return( begin_mon );
   }
 
   /* Calculates the beginning of the previous month */
   private Date get_beginning_of_previous_month( Date begin_date ) {
-    var begin_mon = begin_date.copy();
+    var begin_mon = begin_date;
     begin_mon.subtract_months( 1 );
     return( begin_mon );
   }
