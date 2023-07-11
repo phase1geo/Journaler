@@ -647,17 +647,13 @@ public class MainWindow : Gtk.ApplicationWindow {
       vexpand = true
     };
     pbox.add_css_class( "login-frame" );
+    pbox.add_css_class( Granite.STYLE_CLASS_BACKGROUND );
     pbox.append( lbl );
     pbox.append( entry );
 
     box.append( pbox );
 
     _stack_focus_widgets.set( "lock-view", entry );
-
-    _themes.theme_changed.connect((name) => {
-      pbox.remove_css_class( _themes.dark_mode ? "login-frame-light" : "login-frame-dark" );
-      pbox.add_css_class( _themes.dark_mode ? "login-frame-dark" : "login-frame-light" );
-    });
 
   }
 

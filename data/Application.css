@@ -24,14 +24,6 @@
   box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.3);
 }
 
-.login-frame-dark {
-  background-color: #000;
-}
-
-.login-frame-light {
-  background-color: #fff;
-}
-
 @keyframes shake {
   0% {
     margin-left: 0rem;
