@@ -104,6 +104,9 @@ public class MainWindow : Gtk.ApplicationWindow {
   private Preferences                _prefs = null;
   private ShortcutsWindow            _shortcuts = null;
   private Exports                    _exports;
+  private Goals                      _goals;
+  private FlowBox                    _awards_box;
+  private Label                      _awards_status;
 
   private const GLib.ActionEntry[] action_entries = {
     { "action_today",         action_today },
@@ -112,6 +115,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     { "action_quit",          action_quit },
     { "action_new_template",  action_new_template },
     { "action_edit_template", action_edit_template, "s" },
+    { "action_awards",        action_awards },
     { "action_shortcuts",     action_shortcuts },
     { "action_preferences",   action_preferences },
   };
@@ -144,6 +148,11 @@ public class MainWindow : Gtk.ApplicationWindow {
               (_lock_stack.visible_child_name == "lock-view") );
     }
   }
+  public Goals goals {
+    get {
+      return( _goals );
+    }
+  }
 
   /* Create the main window UI */
   public MainWindow( Gtk.Application app, GLib.Settings settings ) {
@@ -167,6 +176,9 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     /* Create and load the journals */
     _journals = new Journals( _templates );
+
+    /* Creates the goals */
+    _goals = new Goals( this );
 
     /* Create the hash map for the focus widgets */
     _stack_focus_widgets = new Gee.HashMap<string,Widget>();
@@ -264,6 +276,19 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     add_template_view( tbox );
 
+    var abox = new Box( Orientation.VERTICAL, 0 ) {
+      halign        = Align.FILL,
+      valign        = Align.FILL,
+      hexpand       = true,
+      vexpand       = true,
+      margin_start  = 5,
+      margin_end    = 5,
+      margin_top    = 5,
+      margin_bottom = 5
+    };
+
+    add_awards_view( abox );
+
     /* Create primary stack */
     _lock_stack = new Stack() {
       halign = Align.FILL,
@@ -275,6 +300,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     _lock_stack.add_named( pw,   "entry-view" );
     _lock_stack.add_named( sbox, "setlock-view" );
     _lock_stack.add_named( tbox, "template-view" );
+    _lock_stack.add_named( abox, "awards-view" );
 
     child = _lock_stack;
 
@@ -318,6 +344,9 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     /* Load the available journals */
     _journals.load();
+
+    /* Load the goals */
+    _goals.load();
 
     /* Make sure that we display today's entry */
     action_today();
@@ -384,8 +413,12 @@ public class MainWindow : Gtk.ApplicationWindow {
     template_menu.append_section( null, _templates_menu );
     template_menu.append_section( null, new_template );
 
+    var award_menu = new GLib.Menu();
+    award_menu.append( _( "View Awards" ), "win.action_awards" );
+
     var misc_menu = new GLib.Menu();
     misc_menu.append_submenu( _( "Manage Templates" ), template_menu );
+    misc_menu.append_section( null, award_menu );
     misc_menu.append( _( "Shortcut Cheatsheet" ), "win.action_shortcuts" );
     misc_menu.append( _( "Preferences…" ), "win.action_preferences" );
 
@@ -421,6 +454,8 @@ public class MainWindow : Gtk.ApplicationWindow {
       case "entry-view" :
         if( _lock_stack.visible_child_name == "template-view" ) {
           _lock_stack.transition_type = StackTransitionType.SLIDE_LEFT;
+        } else if( _lock_stack.visible_child_name == "awards-view" ) {
+          _lock_stack.transition_type = StackTransitionType.CROSSFADE;
         } else {
           _lock_stack.transition_type = StackTransitionType.SLIDE_UP;
         }
@@ -428,6 +463,10 @@ public class MainWindow : Gtk.ApplicationWindow {
         break;
       case "template-view" :
         _lock_stack.transition_type = StackTransitionType.SLIDE_RIGHT;
+        set_header_bar_sensitivity( false );
+        break;
+      case "awards-view" :
+        _lock_stack.transition_type = StackTransitionType.CROSSFADE;
         set_header_bar_sensitivity( false );
         break;
       default :
@@ -641,6 +680,52 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   }
 
+  /* Create the rewards view */
+  private void add_awards_view( Box box ) {
+
+    _awards_box = new FlowBox() {
+      row_spacing    = 5,
+      column_spacing = 5,
+      halign         = Align.FILL,
+      valign         = Align.FILL,
+      hexpand        = true,
+      vexpand        = true,
+      homogeneous    = true,
+    };
+
+    var scroll = new ScrolledWindow() {
+      child = _awards_box
+    };
+
+    var bbox = new Box( Orientation.HORIZONTAL, 0 ) {
+      halign  = Align.FILL,
+      hexpand = true
+    };
+
+    _awards_status = new Label( "" ) {
+      halign  = Align.START,
+      hexpand = true
+    };
+
+    var close = new Button.with_label( _( "Close" ) ) {
+      halign  = Align.END,
+      hexpand = true
+    };
+    close.clicked.connect(() => {
+      reset_timer();
+      show_pane( "entry-view" );
+    });
+
+    bbox.append( _awards_status );
+    bbox.append( close );
+
+    box.append( scroll );
+    box.append( bbox );
+
+    _stack_focus_widgets.set( "awards-view", close );
+
+  }
+
   /* Creates the current journal sidebar */
   private Box add_current_sidebar() {
 
@@ -693,6 +778,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     app.set_accels_for_action( "win.action_save",        { "<Control>s" } );
     app.set_accels_for_action( "win.action_lock",        { "<Control>l" } );
     app.set_accels_for_action( "win.action_quit",        { "<Control>q" } );
+    app.set_accels_for_action( "win.action_awards",      { "<Control>1" } );
     app.set_accels_for_action( "win.action_shortcuts",   { "<Control>question" } );
     app.set_accels_for_action( "win.action_preferences", { "<Control>comma" } );
 
@@ -736,6 +822,80 @@ public class MainWindow : Gtk.ApplicationWindow {
   private void action_edit_template( SimpleAction action, Variant? variant ) {
     reset_timer();
     edit_template( variant.get_string() );
+  }
+
+  /* Refreshes the awards view */
+  private void refresh_awards() {
+
+    FlowBoxChild? w = null;
+
+    _awards_status.label = _goals.get_achievement_status();
+
+    do {
+      w = _awards_box.get_child_at_index( 0 );
+      if( w != null ) {
+        _awards_box.remove( w.child );
+      }
+    } while( w != null );
+
+    for( int i=0; i<_goals.size(); i++ ) {
+
+      Picture img;
+      var goal = _goals.index( i );
+
+      /* Create image icon */
+      if( goal.achieved ) {
+        img = new Picture.for_resource( "/com/github/phase1geo/journaler/award-achieved.png" );
+      } else {
+        img = new Picture.for_resource( "/com/github/phase1geo/journaler/award-unachieved.png" );
+      }
+
+      var lbl1 = new Label( Utils.make_title( goal.label ) ) {
+        use_markup = true,
+        halign     = Align.START
+      };
+
+      var status = goal.achieved ?
+                   _( "Complete!" ) :
+                   _( "%d out of %d (%d%%)" ).printf( goal.count, goal.goal, goal.completion_percentage() );
+
+      var lbl2 = new Label( _( "Status: %s" ).printf( status ) ) {
+        halign = Align.START
+      };
+
+      var vbox = new Box( Orientation.VERTICAL, 5 ) {
+        valign  = Align.CENTER,
+        vexpand = true,
+      };
+      vbox.append( lbl1 );
+      vbox.append( lbl2 );
+
+      var hbox = new Box( Orientation.HORIZONTAL, 5 ) {
+        valign        = Align.FILL,
+        vexpand       = true,
+        margin_start  = 5,
+        margin_end    = 5,
+        margin_top    = 5,
+        margin_bottom = 5
+      };
+      hbox.append( img );
+      hbox.append( vbox );
+
+      _awards_box.append( hbox );
+
+    }
+
+  }
+
+  /* Shows the awards view */
+  private void action_awards() {
+
+    reset_timer();
+    if( locked ) return;
+
+    refresh_awards();
+    show_pane( "awards-view" );
+
   }
 
   /* Displays the shortcuts cheatsheet */

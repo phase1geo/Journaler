@@ -42,6 +42,7 @@ public class TextArea : Box {
   private bool             _pixbuf_changed = false;
   private GLib.Menu        _image_menu;
   private GLib.Menu        _templates_menu;
+  private Statistics       _stats;
 
   private const GLib.ActionEntry action_entries[] = {
     { "action_add_entry_image",    action_add_entry_image },
@@ -172,7 +173,8 @@ public class TextArea : Box {
     _tags.add_class( "date" );
     _tags.add_class( "text-background" );
 
-    var sep = new Separator( Orientation.HORIZONTAL );
+    var sep1 = new Separator( Orientation.HORIZONTAL );
+    var sep2 = new Separator( Orientation.HORIZONTAL );
 
     /* Now let's setup some stuff related to the text field */
     var lang_mgr = GtkSource.LanguageManager.get_default();
@@ -234,11 +236,15 @@ public class TextArea : Box {
       return( false );
     });
 
+    _stats = new Statistics( _text.buffer );
+
     append( tbox );
     append( _date );
     append( _tags );
-    append( sep );
+    append( sep1 );
     append( _pane );
+    append( sep2 );
+    append( _stats );
 
   }
 
@@ -423,9 +429,10 @@ public class TextArea : Box {
 
   private bool image_changed() {
     return( _pixbuf_changed ||
-            (_pane.position != _entry.image_pos) ||
-            (_iscroll.vadjustment.value != _entry.image_vadj) ||
-            (_iscroll.hadjustment.value != _entry.image_hadj) );
+            ((_pixbuf != null) &&
+             ((_pane.position != _entry.image_pos) ||
+              (_iscroll.vadjustment.value != _entry.image_vadj) ||
+              (_iscroll.hadjustment.value != _entry.image_hadj))) );
   }
 
   private bool text_changed() {
@@ -434,6 +441,15 @@ public class TextArea : Box {
 
   /* Saves the contents of the text area as an entry in the current database */
   public void save() {
+
+    /*
+    stdout.printf( "journal null: %s, entry null: %s, title_changed: %s, image_changed: %s, text_changed: %s\n",
+                   (_journal == null).to_string(),
+                   (_entry == null).to_string(),
+                   title_changed().to_string(),
+                   image_changed().to_string(),
+                   text_changed().to_string() );
+                   */
 
     /* If the text area is not editable or has not changed, there's no need to save */
     if( (_journal == null) || (_entry == null) || (!title_changed() && !image_changed() && !text_changed()) ) {
@@ -450,7 +466,16 @@ public class TextArea : Box {
       if( (_journals.current == _journal) && (_title.text != _entry.text) ) {
         _journals.current_changed( true );
       }
+
       _entry = entry;
+      _pixbuf_changed = false;
+
+      /* Update the goals */
+      _win.goals.mark_achievement( entry.date, false );
+      if( _stats.word_goal_reached() ) {
+        _win.goals.mark_achievement( entry.date, true );
+      }
+
       stdout.printf( "Saved successfully to journal %s\n", _journal.name );
     }
 

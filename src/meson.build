@@ -4,6 +4,8 @@ sources += files(
     'Database.vala',
     'Export.vala',
     'Exports.vala',
+    'Goal.vala',
+    'Goals.vala',
     'Journal.vala',
     'Journals.vala',
     'MainWindow.vala',
@@ -12,6 +14,7 @@ sources += files(
     'Security.vala',
     'SidebarEditor.vala',
     'SidebarEntries.vala',
+    'Statistics.vala',
     'TagBox.vala',
     'TagEntry.vala',
     'Template.vala',
@@ -24,3 +27,4 @@ sources += files(
 )
 
 subdir('exports')
+subdir('goals')

@@ -4,6 +4,11 @@
 
 .login-pane-light {
   background-image: linear-gradient(lightblue, pink);
+  /*
+   background-image: url("file:///home/trevorw/Downloads/background.jpg");
+   background-image: url("https://res.cloudinary.com/dhqvlsb3l/image/upload/f_auto,q_auto:best/v1/assets/na/teasers/founders-double-desk.jpg");
+   background-size: 100% 100%;
+  */
 }
 
 .login-pane-dark {
@@ -53,4 +58,8 @@
 
 .calendar-dark > grid > label.day-number:not(.other-month):checked {
    background-color: rgba(173, 216, 230, 0.2);
+}
+
+.statistics-padding {
+  padding: 5px;
 }

@@ -171,6 +171,13 @@ public class DBEntry {
   }
 
   /* Returns the string version of today's date */
+  public static string yesterdays_date() {
+    var today = new DateTime.now_local();
+    var yesterday = today.add_days( -1 );
+    return( datetime_date( yesterday ) );
+  }
+
+  /* Returns the string version of today's date */
   public static string todays_date() {
     var today = new DateTime.now_local();
     return( datetime_date( today ) );

@@ -66,5 +66,15 @@
       <summary>Array of news feeds that can be inserted</summary>
       <description>Array of news feeds where each element in the array is the name of the feed, the feed URL, and the number of news items to pull from the feed</description>
     </key>
+    <key name="character-goal" type="i">
+      <default>1000</default>
+      <summary>Specifies the entry character count to reach the daily goal</summary>
+      <description>Specifies the entry character count to reach the daily goal</description>
+    </key>
+    <key name="word-goal" type="i">
+      <default>500</default>
+      <summary>Specifies the entry word count to reach the daily goal</summary>
+      <description>Specifies the entry word count to reach the daily goal</description>
+    </key>
   </schema>
 </schemalist>
