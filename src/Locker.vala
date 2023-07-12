@@ -2,9 +2,9 @@ using Gtk;
 
 public class LockerImage {
 
-  private static int _id = 1;
+  private static int _next_id = 1;
 
-  private string _name;
+  private int    _id;
   private string _css_syntax;
   private bool   _built_in = false;
 
@@ -16,21 +16,21 @@ public class LockerImage {
 
   /* Default constructor */
   public LockerImage( bool built_in, string css_syntax ) {
-    _name       = "custom-%04d".printf( _id++ );
+    _id         = _next_id++;
     _css_syntax = css_syntax;
     _built_in   = built_in;
   }
 
   /* Constructor */
   public LockerImage.linear_gradient( bool built_in, string[] colors ) {
-    _name       = "line-grad-%04d".printf( _id++ );
+    _id         = _next_id++;
     _css_syntax = "linear-gradient(%s)".printf( string.joinv( ",", colors ) );
     _built_in   = built_in;
   }
 
   /* Constructor */
   public LockerImage.url( bool built_in, string url ) {
-    _name       = "url-%04d".printf( _id++ );
+    _id         = _next_id++;
     _css_syntax = "url(\"%s\")".printf( url );
     _built_in   = built_in;
   }
@@ -42,7 +42,7 @@ public class LockerImage {
 
   /* Returns the CSS class for this image */
   public string css_class() {
-    return( "login-pane-%s".printf( _name ) );
+    return( "login-pane-%04d".printf( _id ) );
   }
 
   /* Returns the CSS required to generate login pane background image */
@@ -55,7 +55,6 @@ public class LockerImage {
 
     Xml.Node* node = new Xml.Node( null, "image" );
 
-    node->set_prop( "name", _name );
     node->set_prop( "css", _css_syntax );
     
     return( node );
@@ -65,15 +64,13 @@ public class LockerImage {
   /* Loads the contents of this image from XML */
   public void load( Xml.Node* node ) {
 
-    var n = node->get_prop( "name" );
-    if( n != null ) {
-      _name = n;
-    }
-
     var c = node->get_prop( "css" );
     if( c != null ) {
       _css_syntax = c;
     }
+
+    _id       = _next_id++;
+    _built_in = false;
 
   }
 
@@ -112,11 +109,6 @@ public class Locker {
     add_image( new LockerImage.linear_gradient( true, {"#E95420", "#000"} ) );
     add_image( new LockerImage.linear_gradient( true, {"#92B662", "#000"} ) );
     add_image( new LockerImage.linear_gradient( true, {"#666666", "#000"} ) );
-
-    add_image( new LockerImage.url( true, "https://raw.githubusercontent.com/elementary/brand/master/logomark.svg" ) );
-    add_image( new LockerImage( true, "url(\"https://raw.githubusercontent.com/elementary/brand/master/logomark.svg\"), linear-gradient(#666, #000)" ) );
-    add_image( new LockerImage.url( false, "https://raw.githubusercontent.com/elementary/brand/master/logomark.svg" ) );
-    add_image( new LockerImage( false, "url(\"https://raw.githubusercontent.com/elementary/brand/master/logomark.svg\"), linear-gradient(#666, #000)" ) );
 
     /* Load the XML data */
     load();
