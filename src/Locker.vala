@@ -115,6 +115,8 @@ public class Locker {
 
     add_image( new LockerImage.url( true, "https://raw.githubusercontent.com/elementary/brand/master/logomark.svg" ) );
     add_image( new LockerImage( true, "url(\"https://raw.githubusercontent.com/elementary/brand/master/logomark.svg\"), linear-gradient(#666, #000)" ) );
+    add_image( new LockerImage.url( false, "https://raw.githubusercontent.com/elementary/brand/master/logomark.svg" ) );
+    add_image( new LockerImage( false, "url(\"https://raw.githubusercontent.com/elementary/brand/master/logomark.svg\"), linear-gradient(#666, #000)" ) );
 
     /* Load the XML data */
     load();
@@ -127,11 +129,15 @@ public class Locker {
   /* Adds an image for a given set of colors */
   public void add_linear_gradient_image( string[] colors ) {
     add_image( new LockerImage.linear_gradient( false, colors ) );
+    update_css();
+    save();
   }
 
   /* Adds an image for a given URI */
   public void add_uri_image( string uri ) {
     add_image( new LockerImage.url( false, uri ) );
+    update_css();
+    save();
   }
 
   /* Adds the specified image to the stored list */
@@ -142,6 +148,7 @@ public class Locker {
   /* Removes the given image from the list */
   public void remove_image( int idx ) {
     _images.remove_index( idx );
+    update_css();
     save();
   }
 

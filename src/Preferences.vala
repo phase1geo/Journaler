@@ -270,71 +270,72 @@ public class Preferences : Gtk.Dialog {
       hexpand        = true,
       vexpand        = true,
       homogeneous    = true,
+      margin_end     = 10
     };
 
     login_box.child_activated.connect((child) => {
-      if( (child.child as Box) != null ) { 
+      if( (child.child as Button) == null ) { 
         _win.locker.current = child.get_index();
       }
     });
 
     for( int i=0; i<_win.locker.size(); i++ ) {
-      var box = new Box( Orientation.VERTICAL, 5 ) {
-        halign        = Align.FILL,
-        valign        = Align.FILL,
-        hexpand       = true,
-        vexpand       = true,
-        margin_start  = 5,
-        margin_end    = 5,
-        margin_top    = 5,
-        margin_bottom = 5
-      };
-      box.set_size_request( 100, 100 );
-      box.add_css_class( _win.locker.css_class( i ) );
-      box.add_css_class( "login-thumbnail" );
-      
-      if( !_win.locker.is_built_in( i ) ) {
-        var motion  = new EventControllerMotion();
-        var overlay = new Overlay() {
-          child = box
-        };
-        overlay.add_controller( motion );
-        var remove = new Button.from_icon_name( "window-close-symbolic" ) {
-          halign = Align.END,
-          valign = Align.START
-        };
-        remove.hide();
-        remove.clicked.connect(() => {
-          var child = (FlowBoxChild)overlay.get_parent();
-          var idx   = child.get_index();
-          if( _win.locker.current == idx ) {
-            _win.locker.current = ((idx + 1) == _win.locker.size()) ? (idx - 1) : idx;
-            login_box.select_child( login_box.get_child_at_index( _win.locker.current ) );
-          }
-          _win.locker.remove_image( idx );
-          login_box.remove( overlay );
-        });
-        motion.enter.connect((x, y) => {
-          remove.show();
-        });
-        motion.leave.connect(() => {
-          remove.hide();
-        });
-        overlay.add_overlay( remove );
-        login_box.append( overlay );
-      } else {
-        login_box.append( box );
-      }
+      add_login_image( login_box, i );
     }
 
-    var add_menu = new GLib.Menu();
-    add_menu.append( _( "Add File…" ), "prefs.action_add_login_image_from_file" );
-    add_menu.append( _( "Add URL…" ),  "prefs.action_add_login_image_from_url" );
+    var pentry = new Entry() {
+      placeholder_text = _( "Enter image filename or URL" )
+    };
+
+    var pbrowse = new Button.with_label( _( "Browse…" ) );
+    var pbox = new Box( Orientation.HORIZONTAL, 5 ) {
+      margin_start  = 5,
+      margin_end    = 5,
+      margin_top    = 5,
+      margin_bottom = 5
+    };
+    pbox.append( pentry );
+    pbox.append( pbrowse );
+
+    var popover = new Popover() {
+      child = pbox
+    };
+
+    pentry.activate.connect(() => {
+      var uri = pentry.text;
+      if( uri != "" ) {
+        if( FileUtils.test( uri, FileTest.EXISTS ) && !uri.has_prefix( "file://" ) ) {
+          uri = "file://%s".printf( uri );
+        }
+        _win.locker.add_uri_image( uri );
+        add_login_image( login_box, (_win.locker.size() - 1) );
+        pentry.text = "";
+      }
+      popover.popdown();
+    });
+
+    pbrowse.clicked.connect(() => {
+      _win.reset_timer();
+      popover.popdown();
+      var dialog = Utils.make_file_chooser( _( "Select an image" ), this, FileChooserAction.OPEN, _( "Choose Image" ) );
+      dialog.response.connect((id) => {
+        _win.reset_timer();
+        if( id == ResponseType.ACCEPT ) {
+          var file = dialog.get_file();
+          if( file != null ) {
+            pentry.text = file.get_path();
+            pentry.activate();
+          }
+        }
+        dialog.close();
+      });
+      dialog.show();
+    });
 
     var add_button = new MenuButton() {
-      icon_name  = "list-add-symbolic",
-      has_frame  = true,
-      menu_model = add_menu
+      icon_name = "list-add-symbolic",
+      has_frame = true,
+      popover   = popover
     };
     add_button.add_css_class( "login-thumbnail" );
     login_box.append( add_button );
@@ -352,6 +353,58 @@ public class Preferences : Gtk.Dialog {
     box.append( scroll );
 
     return( box );
+
+  }
+
+  /* Adds a login image to the given flowbox using the locker index */
+  private void add_login_image( FlowBox flowbox, int index ) {
+
+    var box = new Box( Orientation.VERTICAL, 5 ) {
+      halign        = Align.FILL,
+      valign        = Align.FILL,
+      hexpand       = true,
+      vexpand       = true,
+      margin_start  = 5,
+      margin_end    = 5,
+      margin_top    = 5,
+      margin_bottom = 5
+    };
+    box.set_size_request( 100, 100 );
+    box.add_css_class( _win.locker.css_class( index ) );
+    box.add_css_class( "login-thumbnail" );
+     
+    if( !_win.locker.is_built_in( index ) ) {
+      var motion  = new EventControllerMotion();
+      var overlay = new Overlay() {
+        child = box
+      };
+      overlay.add_controller( motion );
+      var remove = new Button.from_icon_name( "window-close-symbolic" ) {
+        halign = Align.END,
+        valign = Align.START
+      };
+      remove.hide();
+      remove.clicked.connect(() => {
+        var child = (FlowBoxChild)overlay.get_parent();
+        var idx   = child.get_index();
+        if( _win.locker.current == idx ) {
+          _win.locker.current = ((idx + 1) == _win.locker.size()) ? (idx - 1) : idx;
+          flowbox.select_child( flowbox.get_child_at_index( _win.locker.current ) );
+        }
+        _win.locker.remove_image( idx );
+        flowbox.remove( overlay );
+      });
+      motion.enter.connect((x, y) => {
+        remove.show();
+      });
+      motion.leave.connect(() => {
+        remove.hide();
+      });
+      overlay.add_overlay( remove );
+      flowbox.insert( overlay, index );
+    } else {
+      flowbox.insert( box, index );
+    }
 
   }
 
@@ -662,8 +715,6 @@ public class Preferences : Gtk.Dialog {
     _win.reset_timer();
 
     _format_name = variant.get_string();
-
-    stdout.printf( "In action_select_export_format, format: %s\n", _format_name );
 
     var export = _win.exports.get_by_name( _format_name );
     _format_mb.label = export.label;
