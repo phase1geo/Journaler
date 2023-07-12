@@ -14,6 +14,13 @@ public class LockerImage {
     }
   }
 
+  /* Default constructor */
+  public LockerImage( bool built_in, string css_syntax ) {
+    _name       = "custom-%04d".printf( _id++ );
+    _css_syntax = css_syntax;
+    _built_in   = built_in;
+  }
+
   /* Constructor */
   public LockerImage.linear_gradient( bool built_in, string[] colors ) {
     _name       = "line-grad-%04d".printf( _id++ );
@@ -40,7 +47,7 @@ public class LockerImage {
 
   /* Returns the CSS required to generate login pane background image */
   public string get_css() {
-    return( ".%s { background-image: %s; background-position: center; background-size: 100%; }\n".printf( css_class(), _css_syntax ) );
+    return( ".%s { background-image: %s; background-position: center; background-size: 100%; background-repeat: no-repeat; }\n".printf( css_class(), _css_syntax ) );
   }
 
   /* Saves the contents of this image as XML */
@@ -107,6 +114,7 @@ public class Locker {
     add_image( new LockerImage.linear_gradient( true, {"#666666", "#000"} ) );
 
     add_image( new LockerImage.url( true, "https://raw.githubusercontent.com/elementary/brand/master/logomark.svg" ) );
+    add_image( new LockerImage( true, "url(\"https://raw.githubusercontent.com/elementary/brand/master/logomark.svg\"), linear-gradient(#666, #000)" ) );
 
     /* Load the XML data */
     load();
@@ -116,9 +124,25 @@ public class Locker {
 
   }
 
+  /* Adds an image for a given set of colors */
+  public void add_linear_gradient_image( string[] colors ) {
+    add_image( new LockerImage.linear_gradient( false, colors ) );
+  }
+
+  /* Adds an image for a given URI */
+  public void add_uri_image( string uri ) {
+    add_image( new LockerImage.url( false, uri ) );
+  }
+
   /* Adds the specified image to the stored list */
   private void add_image( LockerImage image ) {
     _images.append_val( image );
+  }
+
+  /* Removes the given image from the list */
+  public void remove_image( int idx ) {
+    _images.remove_index( idx );
+    save();
   }
 
   /* Adds the widget that displays the lock screen image */
@@ -135,6 +159,11 @@ public class Locker {
   /* Returns the locker image at the specified index in the array */
   public string css_class( int idx ) {
     return( _images.index( idx ).css_class() );
+  }
+
+  /* Returns true if this image is a built-in image */
+  public bool is_built_in( int idx ) {
+    return( _images.index( idx ).built_in );
   }
 
   /* Updates the CSS */

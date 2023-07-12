@@ -256,7 +256,11 @@ public class Preferences : Gtk.Dialog {
   }
 
   /* Creates the preference panel for the login screens */
-  private ScrolledWindow create_login() {
+  private Box create_login() {
+
+    var lbl = new Label( Utils.make_title( _( "Select a Login Screen Background" ) ) ) {
+      use_markup = true
+    };
 
     var login_box = new FlowBox() {
       row_spacing    = 5,
@@ -269,11 +273,12 @@ public class Preferences : Gtk.Dialog {
     };
 
     login_box.child_activated.connect((child) => {
-      _win.locker.current = child.get_index();
+      if( (child.child as Box) != null ) { 
+        _win.locker.current = child.get_index();
+      }
     });
 
     for( int i=0; i<_win.locker.size(); i++ ) {
-      stdout.printf( "Adding box with css class: %s\n", _win.locker.css_class( i ) );
       var box = new Box( Orientation.VERTICAL, 5 ) {
         halign        = Align.FILL,
         valign        = Align.FILL,
@@ -287,8 +292,52 @@ public class Preferences : Gtk.Dialog {
       box.set_size_request( 100, 100 );
       box.add_css_class( _win.locker.css_class( i ) );
       box.add_css_class( "login-thumbnail" );
-      login_box.append( box );
+      
+      if( !_win.locker.is_built_in( i ) ) {
+        var motion  = new EventControllerMotion();
+        var overlay = new Overlay() {
+          child = box
+        };
+        overlay.add_controller( motion );
+        var remove = new Button.from_icon_name( "window-close-symbolic" ) {
+          halign = Align.END,
+          valign = Align.START
+        };
+        remove.hide();
+        remove.clicked.connect(() => {
+          var child = (FlowBoxChild)overlay.get_parent();
+          var idx   = child.get_index();
+          if( _win.locker.current == idx ) {
+            _win.locker.current = ((idx + 1) == _win.locker.size()) ? (idx - 1) : idx;
+            login_box.select_child( login_box.get_child_at_index( _win.locker.current ) );
+          }
+          _win.locker.remove_image( idx );
+          login_box.remove( overlay );
+        });
+        motion.enter.connect((x, y) => {
+          remove.show();
+        });
+        motion.leave.connect(() => {
+          remove.hide();
+        });
+        overlay.add_overlay( remove );
+        login_box.append( overlay );
+      } else {
+        login_box.append( box );
+      }
     }
+
+    var add_menu = new GLib.Menu();
+    add_menu.append( _( "Add File…" ), "prefs.action_add_login_image_from_file" );
+    add_menu.append( _( "Add URL…" ),  "prefs.action_add_login_image_from_url" );
+
+    var add_button = new MenuButton() {
+      icon_name  = "list-add-symbolic",
+      has_frame  = true,
+      menu_model = add_menu
+    };
+    add_button.add_css_class( "login-thumbnail" );
+    login_box.append( add_button );
 
     /* Select the current theme */
     var flow_child = login_box.get_child_at_index( _win.locker.current );
@@ -298,7 +347,11 @@ public class Preferences : Gtk.Dialog {
       child = login_box
     };
 
-    return( scroll );
+    var box = new Box( Orientation.VERTICAL, 5 );
+    box.append( lbl );
+    box.append( scroll );
+
+    return( box );
 
   }
 
