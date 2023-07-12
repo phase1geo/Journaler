@@ -53,6 +53,7 @@ public class Preferences : Gtk.Dialog {
     };
     stack.add_titled( create_general(),    "general",  _( "General" ) );
     stack.add_titled( create_editor(),     "editor",   _( "Editor" ) );
+    stack.add_titled( create_login(),      "login",    _( "Login Screen" ) );
     stack.add_titled( create_news_feeds(), "feeds",    _( "News Feeds" ) );
     stack.add_titled( create_advanced(),   "advanced", _( "Advanced" ) );
 
@@ -251,6 +252,53 @@ public class Preferences : Gtk.Dialog {
     }
 
     name.grab_focus();
+
+  }
+
+  /* Creates the preference panel for the login screens */
+  private ScrolledWindow create_login() {
+
+    var login_box = new FlowBox() {
+      row_spacing    = 5,
+      column_spacing = 5,
+      halign         = Align.FILL,
+      valign         = Align.FILL,
+      hexpand        = true,
+      vexpand        = true,
+      homogeneous    = true,
+    };
+
+    login_box.child_activated.connect((child) => {
+      _win.locker.current = child.get_index();
+    });
+
+    for( int i=0; i<_win.locker.size(); i++ ) {
+      stdout.printf( "Adding box with css class: %s\n", _win.locker.css_class( i ) );
+      var box = new Box( Orientation.VERTICAL, 5 ) {
+        halign        = Align.FILL,
+        valign        = Align.FILL,
+        hexpand       = true,
+        vexpand       = true,
+        margin_start  = 5,
+        margin_end    = 5,
+        margin_top    = 5,
+        margin_bottom = 5
+      };
+      box.set_size_request( 100, 100 );
+      box.add_css_class( _win.locker.css_class( i ) );
+      box.add_css_class( "login-thumbnail" );
+      login_box.append( box );
+    }
+
+    /* Select the current theme */
+    var flow_child = login_box.get_child_at_index( _win.locker.current );
+    login_box.select_child( flow_child );
+
+    var scroll = new ScrolledWindow() {
+      child = login_box
+    };
+
+    return( scroll );
 
   }
 
