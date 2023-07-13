@@ -18,11 +18,16 @@ public class Reviewer : Box {
 
   private MenuButton _journal_mb;
   private ListBox    _journal_lb;
+  private Button     _journal_set_all;
+  private Button     _journal_clear_all;
   private int        _num_journals = 0;
 
   private MenuButton _tag_mb;
   private ListBox    _tag_lb;
+  private Button     _tag_set_all;
+  private Button     _tag_clear_all;
   private int        _num_tags = 0;
+  private bool       _ignore_toggled = false;
 
   private ListBox        _match_lb;
   private Array<DBEntry> _match_entries;
@@ -61,20 +66,20 @@ public class Reviewer : Box {
       child             = _journal_lb
     };
 
-    var set_all = new Button.with_label( _( "Select All" ) ) {
+    _journal_set_all = new Button.with_label( _( "Select All" ) ) {
       halign  = Align.START,
       hexpand = true
     };
-    set_all.clicked.connect(() => {
+    _journal_set_all.clicked.connect(() => {
       _win.reset_timer();
       change_select_of_all_items( _journal_lb, true );
     });
 
-    var clear_all = new Button.with_label( _( "Clear All" ) ) {
+    _journal_clear_all = new Button.with_label( _( "Clear All" ) ) {
       halign  = Align.END,
       hexpand = true
     };
-    clear_all.clicked.connect(() => {
+    _journal_clear_all.clicked.connect(() => {
       _win.reset_timer();
       change_select_of_all_items( _journal_lb, false );
     });
@@ -83,8 +88,8 @@ public class Reviewer : Box {
       halign  = Align.FILL,
       hexpand = true
     };
-    bbox.append( set_all );
-    bbox.append( clear_all );
+    bbox.append( _journal_set_all );
+    bbox.append( _journal_clear_all );
 
     var box = new Box( Orientation.VERTICAL, 5 ) {
       margin_start  = 5,
@@ -101,7 +106,6 @@ public class Reviewer : Box {
     };
 
     _journal_mb = new MenuButton() {
-      label   = _( "All Journals" ),
       popover = popover
     };
 
@@ -121,20 +125,20 @@ public class Reviewer : Box {
       child             = _tag_lb
     };
 
-    var set_all = new Button.with_label( _( "Select All" ) ) {
+    _tag_set_all = new Button.with_label( _( "Select All" ) ) {
       halign  = Align.START,
       hexpand = true
     };
-    set_all.clicked.connect(() => {
+    _tag_set_all.clicked.connect(() => {
       _win.reset_timer();
       change_select_of_all_items( _tag_lb, true );
     });
 
-    var clear_all = new Button.with_label( _( "Clear All" ) ) {
+    _tag_clear_all = new Button.with_label( _( "Clear All" ) ) {
       halign  = Align.END,
       hexpand = true
     };
-    clear_all.clicked.connect(() => {
+    _tag_clear_all.clicked.connect(() => {
       _win.reset_timer();
       change_select_of_all_items( _tag_lb, false );
     });
@@ -143,8 +147,8 @@ public class Reviewer : Box {
       halign  = Align.FILL,
       hexpand = true
     };
-    bbox.append( set_all );
-    bbox.append( clear_all );
+    bbox.append( _tag_set_all );
+    bbox.append( _tag_clear_all );
 
     var box = new Box( Orientation.VERTICAL, 5 ) {
       margin_start  = 5,
@@ -161,7 +165,6 @@ public class Reviewer : Box {
     };
 
     _tag_mb = new MenuButton() {
-      label   = _( "All Tags" ),
       popover = popover
     };
 
@@ -193,13 +196,11 @@ public class Reviewer : Box {
       margin_top    = 5,
       margin_bottom = 5
     };
-    btn.activate.connect(() => {
-      _win.reset_timer();
-      do_search();
-    });
     btn.toggled.connect(() => {
-      _win.reset_timer();
-      do_search();
+      if( !_ignore_toggled ) {
+        _win.reset_timer();
+        do_search();
+      }
     });
 
     lb.append( btn );
@@ -229,6 +230,8 @@ public class Reviewer : Box {
     var row        = lb.get_row_at_index( i++ );
     var run_search = false;
 
+    _ignore_toggled = true;
+
     while( row != null ) {
       var cb = (CheckButton)row.child;
       if( cb.active != select ) {
@@ -237,6 +240,8 @@ public class Reviewer : Box {
       }
       row = lb.get_row_at_index( i++ );
     }
+
+    _ignore_toggled = false;
 
     if( run_search ) {
       do_search();
@@ -250,13 +255,6 @@ public class Reviewer : Box {
     while( row != null ) {
       lb.remove( row );
       row = lb.get_row_at_index( 0 );
-    }
-  }
-
-  private void display_string_array( string msg, List<string> arr ) {
-    stdout.printf( "%s\n", msg );
-    foreach( var item in arr ) {
-      stdout.printf( "  %s\n", item );
     }
   }
 
@@ -276,7 +274,7 @@ public class Reviewer : Box {
       add_item_to_list( _journal_lb, journal_name );
     }
 
-    _num_journals = (int)journals.length;
+    _num_journals = (int)journals.length();
 
   }
 
@@ -334,6 +332,36 @@ public class Reviewer : Box {
 
   // --------------------------------------------------------------
 
+  /* Creates the label that will be displayed on the journals or tags menubutton based on what is currently selected */
+  private string make_menubutton_label( Array<string> list, int max_length, string all_str, string none_str ) {
+    if( list.length == 0 ) {
+      return( none_str );
+    } else if( list.length == max_length ) {
+      return( all_str );
+    } else {
+      switch( list.length ) {
+        case 1  :  return( list.index( 0 ) );
+        case 2  :
+        case 3  :  return( string.joinv( ", ", list.data[0:list.length] ) );
+        default :  return( "%s + %d more".printf( string.joinv( ", ", list.data[0:3] ), ((int)list.length - 3) ) );
+      }
+    }
+  }
+
+  /* Updates the state of the UI */
+  private void update_ui_state( Array<string> journals, Array<string> tags ) {
+
+    /* Update journal and tag listboxes */
+    _journal_set_all.sensitive   = (journals.length < _num_journals);
+    _journal_clear_all.sensitive = (journals.length > 0);
+    _journal_mb.label = make_menubutton_label( journals, _num_journals, _( "All Journals" ), _( "No Journals" ) );
+
+    _tag_set_all.sensitive   = (tags.length < (_num_tags + 1));
+    _tag_clear_all.sensitive = (tags.length > 0);
+    _tag_mb.label = make_menubutton_label( tags, _num_tags, _( "All Tags" ), _( "No Tags" ) );
+
+  }
+
   /* Performs search of selected items, date ranges, and search terms */
   private void do_search() {
 
@@ -343,6 +371,9 @@ public class Reviewer : Box {
     /* Get the selected journals and tags */
     get_activated_items_from_list( _journal_lb, journals );
     get_activated_items_from_list( _tag_lb,     tags );
+
+    /* Update the state of the UI */
+    update_ui_state( journals, tags );
 
     /* Clear the list of match entries */
     clear_listbox( _match_lb );
