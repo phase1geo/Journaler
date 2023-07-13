@@ -377,10 +377,6 @@ public class Preferences : Gtk.Dialog {
   private void add_login_image( FlowBox flowbox, int index ) {
 
     var box = new Box( Orientation.VERTICAL, 5 ) {
-      halign        = Align.FILL,
-      valign        = Align.FILL,
-      hexpand       = true,
-      vexpand       = true,
       margin_start  = 5,
       margin_end    = 5,
       margin_top    = 5,

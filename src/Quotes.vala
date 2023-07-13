@@ -67,7 +67,7 @@ public class Quotes {
   /* Returns a randomly selected quote */
   public string get_quote() {
     var index = Random.int_range( 0, (int)_quotes.length );
-    return( _quotes.index( 0 ).make_quote() );
+    return( _quotes.index( index ).make_quote() );
   }
 
 }
