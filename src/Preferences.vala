@@ -254,6 +254,174 @@ public class Preferences : Gtk.Dialog {
 
   }
 
+  /* Creates the preference panel for the login screens */
+  private Box create_login() {
+
+    var lbl = new Label( Utils.make_title( _( "Select a Login Screen Background" ) ) ) {
+      use_markup = true
+    };
+
+    var login_box = new FlowBox() {
+      row_spacing    = 5,
+      column_spacing = 5,
+      halign         = Align.FILL,
+      valign         = Align.FILL,
+      hexpand        = true,
+      vexpand        = true,
+      homogeneous    = true,
+      margin_end     = 10
+    };
+
+    login_box.child_activated.connect((child) => {
+      _win.reset_timer();
+      if( (child.child as Button) == null ) { 
+        _win.locker.current = child.get_index();
+      }
+    });
+
+    for( int i=0; i<_win.locker.size(); i++ ) {
+      add_login_image( login_box, i );
+    }
+
+    var pentry = new Entry() {
+      placeholder_text = _( "Enter image filename or URL" )
+    };
+
+    var pbrowse = new Button.with_label( _( "Browse…" ) );
+    var pbox = new Box( Orientation.HORIZONTAL, 5 ) {
+      margin_start  = 5,
+      margin_end    = 5,
+      margin_top    = 5,
+      margin_bottom = 5
+    };
+    pbox.append( pentry );
+    pbox.append( pbrowse );
+
+    var popover = new Popover() {
+      child = pbox
+    };
+
+    pentry.changed.connect(() => {
+      _win.reset_timer();
+    });
+
+    pentry.activate.connect(() => {
+      _win.reset_timer();
+      var uri = pentry.text;
+      if( uri != "" ) {
+        if( FileUtils.test( uri, FileTest.EXISTS ) && !uri.has_prefix( "file://" ) ) {
+          uri = "file://%s".printf( uri );
+        }
+        _win.locker.add_uri_image( uri );
+        add_login_image( login_box, (_win.locker.size() - 1) );
+        pentry.text = "";
+      }
+      popover.popdown();
+    });
+
+    pbrowse.clicked.connect(() => {
+      _win.reset_timer();
+      popover.popdown();
+      var dialog = Utils.make_file_chooser( _( "Select an image" ), this, FileChooserAction.OPEN, _( "Choose Image" ) );
+      dialog.response.connect((id) => {
+        _win.reset_timer();
+        if( id == ResponseType.ACCEPT ) {
+          var file = dialog.get_file();
+          if( file != null ) {
+            pentry.text = file.get_path();
+            pentry.activate();
+          }
+        }
+        dialog.close();
+      });
+      dialog.show();
+    });
+
+    var add_button = new MenuButton() {
+      icon_name = "list-add-symbolic",
+      has_frame = true,
+      popover   = popover
+    };
+    add_button.activate.connect(() => {
+      _win.reset_timer();
+    });
+    add_button.add_css_class( "login-thumbnail" );
+    login_box.append( add_button );
+
+    /* Select the current theme */
+    var flow_child = login_box.get_child_at_index( _win.locker.current );
+    login_box.select_child( flow_child );
+
+    var scroll = new ScrolledWindow() {
+      child = login_box
+    };
+
+    var box = new Box( Orientation.VERTICAL, 5 );
+    box.append( lbl );
+    box.append( scroll );
+
+    return( box );
+
+  }
+
+  /* Adds a login image to the given flowbox using the locker index */
+  private void add_login_image( FlowBox flowbox, int index ) {
+
+    var box = new Box( Orientation.VERTICAL, 5 ) {
+      halign        = Align.FILL,
+      valign        = Align.FILL,
+      hexpand       = true,
+      vexpand       = true,
+      margin_start  = 5,
+      margin_end    = 5,
+      margin_top    = 5,
+      margin_bottom = 5
+    };
+    box.set_size_request( 75, 50 );
+    box.add_css_class( _win.locker.css_class( index ) );
+    box.add_css_class( "login-thumbnail" );
+     
+    if( !_win.locker.is_built_in( index ) ) {
+      var motion  = new EventControllerMotion();
+      var overlay = new Overlay() {
+        child = box
+      };
+      overlay.add_controller( motion );
+      var remove = new Button.from_icon_name( "window-close-symbolic" ) {
+        halign    = Align.END,
+        valign    = Align.START,
+        has_frame = true
+      };
+      remove.add_css_class( "login-thumbnail" );
+      remove.add_css_class( Granite.STYLE_CLASS_BACKGROUND );
+      remove.hide();
+      remove.clicked.connect(() => {
+        _win.reset_timer();
+        var child = (FlowBoxChild)overlay.get_parent();
+        var idx   = child.get_index();
+        if( _win.locker.current == idx ) {
+          _win.locker.current = ((idx + 1) == _win.locker.size()) ? (idx - 1) : idx;
+          flowbox.select_child( flowbox.get_child_at_index( _win.locker.current ) );
+        }
+        _win.locker.remove_image( idx );
+        flowbox.remove( overlay );
+      });
+      motion.enter.connect((x, y) => {
+        _win.reset_timer();
+        remove.show();
+      });
+      motion.leave.connect(() => {
+        _win.reset_timer();
+        remove.hide();
+      });
+      overlay.add_overlay( remove );
+      flowbox.insert( overlay, index );
+    } else {
+      flowbox.insert( box, index );
+    }
+
+  }
+
   /* Creates the news feed panel */
   private ScrolledWindow create_news_feeds() {
 

@@ -416,11 +416,14 @@ public class MainWindow : Gtk.ApplicationWindow {
     var award_menu = new GLib.Menu();
     award_menu.append( _( "View Awards" ), "win.action_awards" );
 
+    var pref_menu = new GLib.Menu();
+    pref_menu.append( _( "Shortcut Cheatsheet" ), "win.action_shortcuts" );
+    pref_menu.append( _( "Preferences…" ), "win.action_preferences" );
+
     var misc_menu = new GLib.Menu();
     misc_menu.append_submenu( _( "Manage Templates" ), template_menu );
     misc_menu.append_section( null, award_menu );
-    misc_menu.append( _( "Shortcut Cheatsheet" ), "win.action_shortcuts" );
-    misc_menu.append( _( "Preferences…" ), "win.action_preferences" );
+    misc_menu.append_section( null, pref_menu );
 
     return( misc_menu );
 

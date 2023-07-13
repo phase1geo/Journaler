@@ -312,13 +312,14 @@ public class SidebarEntries : Box {
   /* Populates the calendar with marks that match the current month/year */
   private void populate_calendar() {
 
+    /* Clear all of the marked days */
+    _cal.clear_marks();
+
     for( int i=0; i<_listbox_entries.length; i++ ) {
       var entry = _listbox_entries.index( i );
       var day   = entry.get_day();
       if( (entry.get_year() == _cal.year) && (entry.get_month() == (_cal.month + 1)) ) {
         _cal.mark_day( day );
-      } else if( _cal.get_day_is_marked( day ) ) {
-        _cal.unmark_day( day );
       }
     }
 

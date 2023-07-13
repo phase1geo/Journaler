@@ -68,16 +68,16 @@ public class Statistics : Box {
 
   /* Updates the statistics label based on the current buffer */
   private void update_stats_string() {
-    
+
     var char_str = _( "Characters" );
     var word_str = _( "Words" );
     var goal_str = _( "Goal" );
     var met_str  = _( "Achieved" );
 
-    _label.label = _( "<b>%s:</b>  %d  <b>( %s:  %s )   %s:</b>  %d  <b>( %s:  %s )</b>" ).printf(
-      char_str, _chars, goal_str, ((_chars >= _chars_goal) ? met_str : _chars_goal.to_string()),
-      word_str, _words, goal_str, ((_words >= _words_goal) ? met_str : _words_goal.to_string())
-    );
+    var char_goal_str = (_chars_goal == 0) ? "" : "  <b>( %s:  %s )</b>".printf( goal_str, ((_chars >= _chars_goal) ? met_str : _chars_goal.to_string()) );
+    var word_goal_str = (_words_goal == 0) ? "" : "  <b>( %s:  %s )</b>".printf( goal_str, ((_words >= _words_goal) ? met_str : _words_goal.to_string()) );
+
+    _label.label = "<b>%s:</b>  %d%s   <b>%s:</b>  %d%s".printf( char_str, _chars, char_goal_str, word_str, _words, word_goal_str );
 
   }
 
