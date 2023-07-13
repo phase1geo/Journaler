@@ -43,6 +43,9 @@ public class TextArea : Box {
   private GLib.Menu        _image_menu;
   private GLib.Menu        _templates_menu;
   private Statistics       _stats;
+  private Label            _quote;
+  private Revealer         _quote_revealer;
+  private Quotes           _quotes;
 
   private const GLib.ActionEntry action_entries[] = {
     { "action_add_entry_image",    action_add_entry_image },
@@ -58,6 +61,9 @@ public class TextArea : Box {
     _win       = win;
     _journals  = journals;
     _templates = templates;
+
+    /* Create the list of quotes to use */
+    _quotes = new Quotes();
 
     /* Update the templates menu */
     _templates.changed.connect((name, added) => {
@@ -80,6 +86,11 @@ public class TextArea : Box {
         case "editor-font-size"    :  set_font_size();      break;
         case "editor-margin"       :  set_margin( false );  break;
         case "editor-line-spacing" :  set_line_spacing();   break;
+        case "enable-quotations"   :  
+          if( _buffer.text == "" ) {
+            _quote_revealer.reveal_child = Journaler.settings.get_boolean( "enable-quotations" );
+          }
+          break;
       }
     });
 
@@ -176,12 +187,25 @@ public class TextArea : Box {
     var sep1 = new Separator( Orientation.HORIZONTAL );
     var sep2 = new Separator( Orientation.HORIZONTAL );
 
+    /* Add the quote region */
+    _quote = new Label( "" ) {
+      halign    = Align.FILL,
+      hexpand   = true,
+      xalign    = (float)0,
+      wrap      = true
+    };
+    _quote.add_css_class( "text-background" );
+    _quote.add_css_class( "quote" );
+    _quote_revealer = new Revealer() {
+      reveal_child = false,
+      child        = _quote
+    };
+
     /* Now let's setup some stuff related to the text field */
     var lang_mgr = GtkSource.LanguageManager.get_default();
     var lang     = lang_mgr.get_language( "markdown" );
 
     /* Create the text entry view */
-    var text_focus = new EventControllerFocus();
     _buffer = new GtkSource.Buffer.with_language( lang );
     _text = new GtkSource.View.with_buffer( _buffer ) {
       valign             = Align.FILL,
@@ -190,9 +214,14 @@ public class TextArea : Box {
       cursor_visible     = true,
       enable_snippets    = true
     };
-    _text.add_controller( text_focus );
     _text.add_css_class( "journal-text" );
-    _buffer.changed.connect( _win.reset_timer );
+    _buffer.changed.connect(() => {
+      _win.reset_timer();
+      if( _quote_revealer.reveal_child && Journaler.settings.get_boolean( "dismiss-quotation-on-write" ) ) {
+        _quote_revealer.transition_duration = 2000;
+        _quote_revealer.reveal_child        = false;
+      }
+    });
 
     set_line_spacing();
     set_margin( true );
@@ -242,6 +271,7 @@ public class TextArea : Box {
     append( _date );
     append( _tags );
     append( sep1 );
+    append( _quote_revealer );
     append( _pane );
     append( sep2 );
     append( _stats );
@@ -411,13 +441,19 @@ public class TextArea : Box {
         padding-left: %dpx;
         padding-bottom: 5px;
       }
+      .quote {
+        padding-left: %dpx;
+        padding-right: 5px;
+        padding-top: 5px;
+        padding-bottom: 5px;
+      }
       .text-background {
         background-color: %s;
       }
       .text-padding {
         padding: 0px %dpx;
       }
-    """.printf( font_size, font_size, margin, style.get_style( "background-pattern" ).background, (margin - 4) );
+    """.printf( font_size, font_size, margin, margin, style.get_style( "background-pattern" ).background, (margin - 4) );
     provider.load_from_data( css_data.data );
     StyleContext.add_provider_for_display( get_display(), provider, STYLE_PROVIDER_PRIORITY_APPLICATION );
 
@@ -499,6 +535,13 @@ public class TextArea : Box {
     _tags.journal = _journal;
     _tags.entry   = entry;
     _tags.update_tags();
+
+    /* Show the quote of the day if the text field is empty */
+    if( (entry.text == "") && Journaler.settings.get_boolean( "enable-quotations" ) ) {
+      _quote.label                        = _quotes.get_quote();
+      _quote_revealer.transition_duration = 0;
+      _quote_revealer.reveal_child        = true;
+    }
 
     /* Set the buffer text to the entry text or insert the snippet */
     _text.buffer.begin_irreversible_action();

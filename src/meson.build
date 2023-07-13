@@ -11,6 +11,7 @@ sources += files(
     'Locker.vala',
     'MainWindow.vala',
     'Preferences.vala',
+    'Quotes.vala',
     'RSS.vala',
     'Security.vala',
     'SidebarEditor.vala',
