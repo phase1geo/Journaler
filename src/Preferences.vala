@@ -53,6 +53,7 @@ public class Preferences : Gtk.Dialog {
     };
     stack.add_titled( create_general(),    "general",  _( "General" ) );
     stack.add_titled( create_editor(),     "editor",   _( "Editor" ) );
+    stack.add_titled( create_login(),      "login",    _( "Login Screen" ) );
     stack.add_titled( create_news_feeds(), "feeds",    _( "News Feeds" ) );
     stack.add_titled( create_advanced(),   "advanced", _( "Advanced" ) );
 
@@ -729,8 +730,6 @@ public class Preferences : Gtk.Dialog {
     _win.reset_timer();
 
     _format_name = variant.get_string();
-
-    stdout.printf( "In action_select_export_format, format: %s\n", _format_name );
 
     var export = _win.exports.get_by_name( _format_name );
     _format_mb.label = export.label;

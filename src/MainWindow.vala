@@ -107,6 +107,7 @@ public class MainWindow : Gtk.ApplicationWindow {
   private Goals                      _goals;
   private FlowBox                    _awards_box;
   private Label                      _awards_status;
+  private Locker                     _locker;
 
   private const GLib.ActionEntry[] action_entries = {
     { "action_today",         action_today },
@@ -148,6 +149,11 @@ public class MainWindow : Gtk.ApplicationWindow {
               (_lock_stack.visible_child_name == "lock-view") );
     }
   }
+  public Locker locker {
+    get {
+      return( _locker );
+    }
+  }
   public Goals goals {
     get {
       return( _goals );
@@ -179,6 +185,9 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     /* Creates the goals */
     _goals = new Goals( this );
+
+    /* Creates the locker */
+    _locker = new Locker( this );
 
     /* Create the hash map for the focus widgets */
     _stack_focus_widgets = new Gee.HashMap<string,Widget>();
@@ -257,6 +266,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     };
 
     add_setlock_view( sbox );
+    locker.add_widget( sbox );
 
     var pbox = new Box( Orientation.VERTICAL, 0 ) {
       halign  = Align.FILL,
@@ -266,6 +276,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     };
 
     add_locked_view( pbox );
+    locker.add_widget( pbox );
 
     var tbox = new Box( Orientation.VERTICAL, 0 ) {
       halign  = Align.FILL,
@@ -306,12 +317,14 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     show();
 
+    /*
     _themes.theme_changed.connect((name) => {
       pbox.remove_css_class( _themes.dark_mode ? "login-pane-light" : "login-pane-dark" );
       sbox.remove_css_class( _themes.dark_mode ? "login-pane-light" : "login-pane-dark" );
       pbox.add_css_class( _themes.dark_mode ? "login-pane-dark" : "login-pane-light" );
       sbox.add_css_class( _themes.dark_mode ? "login-pane-dark" : "login-pane-light" );
     });
+    */
 
     /* If the user has set a password, show the journal as locked immediately */
     if( Security.does_password_exist() ) {
@@ -602,6 +615,7 @@ public class MainWindow : Gtk.ApplicationWindow {
       vexpand        = true
     };
     grid.add_css_class( "login-frame" );
+    grid.add_css_class( Granite.STYLE_CLASS_BACKGROUND );
     grid.attach( lbl1,   0, 0 );
     grid.attach( entry1, 1, 0 );
     grid.attach( lbl2,   0, 1 );
@@ -612,10 +626,12 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     _stack_focus_widgets.set( "setlock-view", entry1 );
 
+    /*
     _themes.theme_changed.connect((name) => {
       grid.remove_css_class( _themes.dark_mode ? "login-frame-light" : "login-frame-dark" );
       grid.add_css_class( _themes.dark_mode ? "login-frame-dark" : "login-frame-light" );
     });
+    */
 
   }
 
@@ -650,17 +666,13 @@ public class MainWindow : Gtk.ApplicationWindow {
       vexpand = true
     };
     pbox.add_css_class( "login-frame" );
+    pbox.add_css_class( Granite.STYLE_CLASS_BACKGROUND );
     pbox.append( lbl );
     pbox.append( entry );
 
     box.append( pbox );
 
     _stack_focus_widgets.set( "lock-view", entry );
-
-    _themes.theme_changed.connect((name) => {
-      pbox.remove_css_class( _themes.dark_mode ? "login-frame-light" : "login-frame-dark" );
-      pbox.add_css_class( _themes.dark_mode ? "login-frame-dark" : "login-frame-light" );
-    });
 
   }
 

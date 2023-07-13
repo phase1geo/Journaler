@@ -8,6 +8,7 @@ sources += files(
     'Goals.vala',
     'Journal.vala',
     'Journals.vala',
+    'Locker.vala',
     'MainWindow.vala',
     'Preferences.vala',
     'RSS.vala',

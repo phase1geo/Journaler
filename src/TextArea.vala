@@ -442,15 +442,6 @@ public class TextArea : Box {
   /* Saves the contents of the text area as an entry in the current database */
   public void save() {
 
-    /*
-    stdout.printf( "journal null: %s, entry null: %s, title_changed: %s, image_changed: %s, text_changed: %s\n",
-                   (_journal == null).to_string(),
-                   (_entry == null).to_string(),
-                   title_changed().to_string(),
-                   image_changed().to_string(),
-                   text_changed().to_string() );
-                   */
-
     /* If the text area is not editable or has not changed, there's no need to save */
     if( (_journal == null) || (_entry == null) || (!title_changed() && !image_changed() && !text_changed()) ) {
       return;
