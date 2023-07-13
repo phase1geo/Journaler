@@ -66,6 +66,16 @@
       <summary>Array of news feeds that can be inserted</summary>
       <description>Array of news feeds where each element in the array is the name of the feed, the feed URL, and the number of news items to pull from the feed</description>
     </key>
+    <key name="enable-quotations" type="b">
+      <default>true</default>
+      <summary>Enables the daily quotation in the editor</summary>
+      <description>Enables the daily quotation in the editor</description>
+    </key>
+    <key name="dismiss-quotation-on-write" type="b">
+      <default>true</default>
+      <summary>Automatically dismisses the daily quotation when writing starts.</summary>
+      <description>Automatically dismisses the daily quotation when writing starts.</description>
+    </key>
     <key name="character-goal" type="i">
       <default>1000</default>
       <summary>Specifies the entry character count to reach the daily goal</summary>

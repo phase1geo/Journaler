@@ -186,11 +186,19 @@ public class Preferences : Gtk.Dialog {
 
     grid.attach( make_spacer(), 0, 4 );
 
-    grid.attach( make_label( _( "Character Count Goal" ) ), 0, 5 );
-    grid.attach( make_spinner( "character-goal", 100, 100000, 100 ), 1, 5 );
+    grid.attach( make_label( _( "Enable daily quotations" ) ), 0, 5 );
+    grid.attach( make_switch( "enable-quotations" ), 1, 5 );
 
-    grid.attach( make_label( _( "Word Count Goal" ) ), 0, 6 );
-    grid.attach( make_spinner( "word-goal", 50, 5000, 50 ), 1, 6 );
+    grid.attach( make_label( _( "Dismiss daily quotation when writing" ) ), 0, 6 );
+    grid.attach( make_switch( "dismiss-quotation-on-write" ), 1, 6 );
+
+    grid.attach( make_spacer(), 0, 7 );
+
+    grid.attach( make_label( _( "Character Count Goal" ) ), 0, 8 );
+    grid.attach( make_spinner( "character-goal", 100, 100000, 100 ), 1, 8 );
+
+    grid.attach( make_label( _( "Word Count Goal" ) ), 0, 9 );
+    grid.attach( make_spinner( "word-goal", 50, 5000, 50 ), 1, 9 );
 
     return( grid );
 
