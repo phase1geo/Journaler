@@ -12,6 +12,7 @@ sources += files(
     'MainWindow.vala',
     'Preferences.vala',
     'Quotes.vala',
+    'Reviewer.vala',
     'RSS.vala',
     'Security.vala',
     'SidebarEditor.vala',
