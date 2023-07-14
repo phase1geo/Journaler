@@ -7,6 +7,19 @@ public enum DBLoadResult {
   CREATED
 }
 
+public class JournalEntry {
+
+  public string   journal_name { set; get; default = ""; }
+  public DBEntry? entry        { set; get; default = null; }
+
+  /* Default constructor */
+  public JournalEntry( string journal_name, DBEntry entry ) {
+    this.journal_name = journal_name;
+    this.entry        = entry;
+  }
+
+}
+
 public class DBEntry {
 
   private List<string> _tags = new List<string>();
@@ -340,6 +353,64 @@ public class Database {
     show_all_tables( "After entry creation\n" );
 
     return( true );
+
+  }
+
+  /* Performs search query using tags, date and search string */
+  public bool query_entries( string journal_name, List<string> tags, string? start_date, string? end_date, string str,
+                             Gee.List<JournalEntry> matched_entries ) {
+
+    string[] where = {};
+
+    if( (start_date != null) || (end_date != null) ) { 
+      string[] where_date = {};
+      if( start_date != null ) {
+        where_date += "(Entry.date >= '%s')".printf( start_date );
+      }
+      if( end_date != null ) {
+        where_date += "(Entry.date <= '%s')".printf( end_date );
+      }
+      if( where_date.length == 1 ) {
+        where += where_date[0];
+      } else {
+        where += "(%s)".printf( string.joinv( " AND ", where_date ) );
+      }
+    }
+
+    var untagged = false;
+    if( (tags.length() > 0) && (tags.nth_data( 0 ) == _( "Untagged" )) ) {
+      untagged = true;
+    }
+
+    if( str != "" ) {
+      where += "((Entry.title LIKE '%%%s%%') OR (Entry.txt LIKE '%%%s%%'))".printf( str, str );
+    }
+
+    var query = """
+      SELECT
+        Entry.*,
+        Tag.name
+      FROM
+        Entry
+        LEFT JOIN TagMap ON TagMap.entry_id = Entry.id
+        LEFT JOIN Tag    ON TagMap.tag_id = Tag.id
+      %s
+      ORDER BY Entry.date;
+    """.printf( (where.length == 0) ? "" : "WHERE %s".printf( string.joinv( " AND ", where ) ) );
+
+    var last_id = "";
+    var retval = exec_query( query, (ncols, vals, names) => {
+      var tag = vals[9];
+      if( (vals[0] != last_id) && ((tag == null) ? untagged : (tags.find(tag) != null)) ) {
+        var entry  = new DBEntry.for_list( vals[1], vals[3] );
+        var jentry = new JournalEntry( journal_name, entry );
+        matched_entries.add( jentry );
+        last_id = vals[0];
+      }
+      return( 0 );
+    });
+
+    return( retval );
 
   }
 

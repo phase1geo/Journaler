@@ -1,16 +1,5 @@
 using Gtk;
 
-/* Helper class for matched entries */
-public class JournalEntry {
-  public string   journal { set; get; default = ""; }
-  public DBEntry? entry   { set; get; default = null; }
-
-  public JournalEntry( string journal, DBEntry entry ) {
-    this.journal = journal;
-    this.entry   = entry;
-  }
-}
-
 public class Reviewer : Box {
 
   private MainWindow _win;
@@ -29,8 +18,10 @@ public class Reviewer : Box {
   private int        _num_tags = 0;
   private bool       _ignore_toggled = false;
 
-  private ListBox        _match_lb;
-  private Array<DBEntry> _match_entries;
+  private SearchEntry _search_entry;
+
+  private ListBox                     _match_lb;
+  private Gee.ArrayList<JournalEntry> _match_entries;
 
   private Gee.HashMap<string,Array<DBEntry> > _all_entries;
 
@@ -44,7 +35,7 @@ public class Reviewer : Box {
     _win           = win;
     _journals      = journals;
     _all_entries   = new Gee.HashMap<string,Array<DBEntry> >();
-    _match_entries = new Array<DBEntry>();
+    _match_entries = new Gee.ArrayList<JournalEntry>();
 
     /* Add the UI components */
     add_journal_list();
@@ -182,7 +173,15 @@ public class Reviewer : Box {
   /* Add the search UI */
   private void add_search() {
 
-    // TBD
+    _search_entry = new SearchEntry() {
+      halign  = Align.FILL,
+      hexpand = true
+    };
+    _search_entry.search_changed.connect(() => {
+      do_search();
+    });
+
+    append( _search_entry );
 
   }
 
@@ -208,7 +207,7 @@ public class Reviewer : Box {
   }
 
   /* Gathers the list of all activated items from the given list */
-  private void get_activated_items_from_list( ListBox lb, Array<string> items ) {
+  private void get_activated_items_from_list( ListBox lb, ref List<string> items ) {
 
     var i   = 0;
     var row = lb.get_row_at_index( i++ );
@@ -216,7 +215,7 @@ public class Reviewer : Box {
     while( row != null ) {
       var cb = (CheckButton)row.child;
       if( cb.active ) {
-        items.append_val( cb.label );
+        items.append( cb.label );
       }
       row = lb.get_row_at_index( i++ );
     }
@@ -333,31 +332,43 @@ public class Reviewer : Box {
   // --------------------------------------------------------------
 
   /* Creates the label that will be displayed on the journals or tags menubutton based on what is currently selected */
-  private string make_menubutton_label( Array<string> list, int max_length, string all_str, string none_str ) {
-    if( list.length == 0 ) {
+  private string make_menubutton_label( List<string> list, int max_length, string all_str, string none_str ) {
+    if( list.length() == 0 ) {
       return( none_str );
-    } else if( list.length == max_length ) {
+    } else if( list.length() == max_length ) {
       return( all_str );
     } else {
-      switch( list.length ) {
-        case 1  :  return( list.index( 0 ) );
+      string[] values = {};
+      int      index  = 0;
+      switch( list.length() ) {
+        case 1  :  return( list.nth_data( 0 ) );
         case 2  :
-        case 3  :  return( string.joinv( ", ", list.data[0:list.length] ) );
-        default :  return( "%s + %d more".printf( string.joinv( ", ", list.data[0:3] ), ((int)list.length - 3) ) );
+        case 3  :
+          foreach( var item in list ) {
+            values += item;
+          }
+          return( string.joinv( ",", values ) );
+        default :
+          foreach( var item in list ) {
+            if( index++ < 3 ) {
+              values += item;
+            }
+          }
+          return( "%s + %d more".printf( string.joinv( ", ", values ), ((int)list.length() - 3) ) );
       }
     }
   }
 
   /* Updates the state of the UI */
-  private void update_ui_state( Array<string> journals, Array<string> tags ) {
+  private void update_ui_state( List<string> journals, List<string> tags ) {
 
     /* Update journal and tag listboxes */
-    _journal_set_all.sensitive   = (journals.length < _num_journals);
-    _journal_clear_all.sensitive = (journals.length > 0);
+    _journal_set_all.sensitive   = (journals.length() < _num_journals);
+    _journal_clear_all.sensitive = (journals.length() > 0);
     _journal_mb.label = make_menubutton_label( journals, _num_journals, _( "All Journals" ), _( "No Journals" ) );
 
-    _tag_set_all.sensitive   = (tags.length < (_num_tags + 1));
-    _tag_clear_all.sensitive = (tags.length > 0);
+    _tag_set_all.sensitive   = (tags.length() < (_num_tags + 1));
+    _tag_clear_all.sensitive = (tags.length() > 0);
     _tag_mb.label = make_menubutton_label( tags, _num_tags, _( "All Tags" ), _( "No Tags" ) );
 
   }
@@ -365,50 +376,40 @@ public class Reviewer : Box {
   /* Performs search of selected items, date ranges, and search terms */
   private void do_search() {
 
-    var journals = new Array<string>();
-    var tags     = new Array<string>();
+    var journals = new List<string>();
+    var tags     = new List<string>();
 
     /* Get the selected journals and tags */
-    get_activated_items_from_list( _journal_lb, journals );
-    get_activated_items_from_list( _tag_lb,     tags );
+    get_activated_items_from_list( _journal_lb, ref journals );
+    get_activated_items_from_list( _tag_lb,     ref tags );
 
     /* Update the state of the UI */
     update_ui_state( journals, tags );
 
     /* Clear the list of match entries */
     clear_listbox( _match_lb );
-    _match_entries.remove_range( 0, _match_entries.length );
+    _match_entries.clear();
 
     /* Add the matching entries to the list */
-    var journal_entries = new List<JournalEntry>();
-    for( int i=0; i<journals.length; i++ ) {
-      var journal = journals.index( i );
-      var entries = _all_entries.get( journal );
-      for( int j=0; j<entries.length; j++ ) {
-        var entry = entries.index( j );
-        for( int k=0; k<tags.length; k++ ) {
-          var tag = tags.index( k );
-          if( ((tag == _( "Untagged" )) ? (entry.tags.length() == 0) : entry.contains_tag( tag )) && true /* Include date and search criteria here */ ) {
-            var journal_entry = new JournalEntry( journal, entry );
-            journal_entries.append( journal_entry );
-          }
-        }
-      }
+    foreach( var journal_name in journals ) {
+      var journal = _journals.get_journal_by_name( journal_name );
+      journal.db.query_entries( journal_name, tags, null, null, _search_entry.text, _match_entries );
     }
 
     /* Sort the entries */
-    journal_entries.sort((a, b) => {
+    _match_entries.sort((a, b) => {
       var date_match = strcmp( b.entry.date, a.entry.date );
       if( date_match == 0 ) {
-        return( strcmp( a.journal, b.journal ) );
+        return( strcmp( a.journal_name, b.journal_name ) );
       }
       return( date_match );
     });
 
     /* Add the entries */
-    foreach( var journal_entry in journal_entries ) {
-      add_match_entry( journal_entry.journal, journal_entry.entry );
-    }
+    _match_entries.foreach((journal_entry) => {
+      add_match_entry( journal_entry );
+      return( true );
+    });
 
   }
 
@@ -424,13 +425,17 @@ public class Reviewer : Box {
 
     _match_lb.row_selected.connect((row) => {
       _win.reset_timer();
-      /*
-      if( _ignore_select || (row == null) ) {
+      if( row == null ) {
         return;
       }
-      */
-      var index = row.get_index();
-      show_matched_entry( _match_entries.index( index ) );
+      var index   = row.get_index();
+      var jentry  = _match_entries.get( index );
+      var entry   = new DBEntry();
+      var journal = _journals.get_journal_by_name( jentry.journal_name );
+      entry.date = jentry.entry.date;
+      if( journal.db.load_entry( entry, false ) == DBLoadResult.LOADED ) {
+        show_matched_entry( entry );
+      }
     });
 
     var lb_scroll = new ScrolledWindow() {
@@ -460,21 +465,21 @@ public class Reviewer : Box {
   }
 
   /* Adds the given match entry to the list of matching entries */
-  private void add_match_entry( string journal_name, DBEntry entry ) {
+  private void add_match_entry( JournalEntry jentry ) {
 
     /* Populate the listbox */
-    var label = new Label( "<b>" + entry.gen_title() + "</b>" ) {
+    var label = new Label( "<b>" + jentry.entry.gen_title() + "</b>" ) {
       halign     = Align.START,
       hexpand    = true,
       use_markup = true,
       ellipsize  = Pango.EllipsizeMode.END
     };
     label.add_css_class( "listbox-head" );
-    var journal = new Label( journal_name ) {
+    var journal = new Label( jentry.journal_name ) {
       halign  = Align.START,
       hexpand = true
     };
-    var date = new Label( entry.date ) {
+    var date = new Label( jentry.entry.date ) {
       halign  = Align.END,
       hexpand = true
     };
@@ -496,8 +501,6 @@ public class Reviewer : Box {
     box.append( label );
     box.append( dbox );
     _match_lb.append( box );
-
-    _match_entries.append_val( entry );
 
   }
 
