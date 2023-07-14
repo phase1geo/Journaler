@@ -1,4 +1,5 @@
 using Gtk;
+using Granite;
 
 public class Reviewer : Box {
 
@@ -17,6 +18,9 @@ public class Reviewer : Box {
   private Button     _tag_clear_all;
   private int        _num_tags = 0;
   private bool       _ignore_toggled = false;
+
+  private DatePicker _start_date;
+  private DatePicker _end_date;
 
   private SearchEntry _search_entry;
 
@@ -166,7 +170,18 @@ public class Reviewer : Box {
   /* Add the date selection UI */
   private void add_date_selector() {
 
-    // TBD
+    _start_date = new Granite.DatePicker.with_format( "%Y-%m-%d" );
+    _start_date.changed.connect(() => {
+      do_search();
+    });
+
+    _end_date = new Granite.DatePicker.with_format( "%Y-%m-%d" );
+    _end_date.changed.connect(() => {
+      do_search();
+    });
+
+    append( _start_date );
+    append( _end_date );
 
   }
 
@@ -257,6 +272,11 @@ public class Reviewer : Box {
     }
   }
 
+  /* Returns the string date for the given picker */
+  private string get_date( DatePicker picker ) {
+    return( DBEntry.datetime_date( picker.date ) );
+  }
+
   /* Populates the journal listbox with the available journals to review */
   private void populate_journals() {
 
@@ -308,12 +328,20 @@ public class Reviewer : Box {
 
   }
 
+  private void populate_dates() {
+
+    _start_date.date = new GLib.DateTime.local( 2000, 1, 1, 0, 0, 0 ); 
+    _end_date.date   = new GLib.DateTime.now_local();
+
+  }
+
   /* Initializes the reviewer UI when this is shown */
   public void initialize() {
 
     /* Populate the journals and tags lists */
     populate_journals();
     populate_tags();
+    populate_dates();
 
     /* Populate the all entries list */
     _all_entries.clear();
@@ -383,6 +411,9 @@ public class Reviewer : Box {
     get_activated_items_from_list( _journal_lb, ref journals );
     get_activated_items_from_list( _tag_lb,     ref tags );
 
+    var start_date = get_date( _start_date );
+    var end_date   = get_date( _end_date );
+
     /* Update the state of the UI */
     update_ui_state( journals, tags );
 
@@ -393,7 +424,7 @@ public class Reviewer : Box {
     /* Add the matching entries to the list */
     foreach( var journal_name in journals ) {
       var journal = _journals.get_journal_by_name( journal_name );
-      journal.db.query_entries( journal_name, tags, null, null, _search_entry.text, _match_entries );
+      journal.db.query_entries( journal_name, tags, start_date, end_date, _search_entry.text, _match_entries );
     }
 
     /* Sort the entries */

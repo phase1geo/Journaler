@@ -162,7 +162,7 @@ public class TagEntry : Box {
     _button_revealer.reveal_child = false;
     _entry_revealer.reveal_child  = true;
     _entry.can_focus = true;
-    stdout.printf( "grab_focus: %s\n", _entry.grab_focus().to_string() );
+    _entry.grab_focus();
   }
 
   /* Hides the text entry field and just shows the tag */
