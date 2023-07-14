@@ -29,12 +29,13 @@ public class Reviewer : Box {
 
   private Gee.HashMap<string,Array<DBEntry> > _all_entries;
 
-  public signal void show_matched_entry( DBEntry entry );
+  public signal void show_matched_entry( Journal journal, DBEntry entry );
+  public signal void close_requested();
 
   /* Default constructor */
   public Reviewer( MainWindow win, Journals journals ) {
 
-    Object( orientation: Orientation.HORIZONTAL, spacing: 5, margin_start: 5, margin_end: 5, margin_top: 5, margin_bottom: 5 );
+    Object( orientation: Orientation.VERTICAL, spacing: 5, margin_start: 5, margin_end: 5, margin_top: 5, margin_bottom: 5 );
 
     _win           = win;
     _journals      = journals;
@@ -42,15 +43,29 @@ public class Reviewer : Box {
     _match_entries = new Gee.ArrayList<JournalEntry>();
 
     /* Add the UI components */
-    add_journal_list();
-    add_tag_list();
-    add_date_selector();
+    var lbox = new Box( Orientation.HORIZONTAL, 5 ) {
+      homogeneous = true
+    };
+
+    var hbox = new Box( Orientation.HORIZONTAL, 5 );
+    hbox.append( lbox );
+
+    append( hbox );
+
+    add_journal_list( lbox );
+    add_tag_list( lbox );
+    add_date_selector( hbox );
+    add_close( hbox );
     add_search();
 
   }
 
   /* Creates the journal selection UI */
-  private void add_journal_list() {
+  private void add_journal_list( Box box ) {
+
+    var label = new Label( Utils.make_title( _( "Journals:" ) ) ) {
+      use_markup = true
+    };
 
     _journal_lb = new ListBox();
 
@@ -86,30 +101,40 @@ public class Reviewer : Box {
     bbox.append( _journal_set_all );
     bbox.append( _journal_clear_all );
 
-    var box = new Box( Orientation.VERTICAL, 5 ) {
+    var lbox = new Box( Orientation.VERTICAL, 5 ) {
       margin_start  = 5,
       margin_end    = 5,
       margin_top    = 5,
       margin_bottom = 5
     };
-    box.set_size_request( -1, 400 );
-    box.append( bbox );
-    box.append( lb_scroll );
+    lbox.set_size_request( -1, 400 );
+    lbox.append( bbox );
+    lbox.append( lb_scroll );
 
     var popover = new Popover() {
-      child = box
+      has_arrow = false,
+      child     = lbox
     };
 
     _journal_mb = new MenuButton() {
+      halign  = Align.START,
       popover = popover
     };
 
-    append( _journal_mb );
+    var jbox = new Box( Orientation.HORIZONTAL, 5 );
+    jbox.append( label );
+    jbox.append( _journal_mb );
+
+    box.append( jbox );
 
   }
 
   /* Creates the tag selection UI */
-  private void add_tag_list() {
+  private void add_tag_list( Box box ) {
+
+    var label = new Label( Utils.make_title( _( "Tags:" ) ) ) {
+      use_markup = true
+    };
 
     _tag_lb = new ListBox();
 
@@ -145,43 +170,77 @@ public class Reviewer : Box {
     bbox.append( _tag_set_all );
     bbox.append( _tag_clear_all );
 
-    var box = new Box( Orientation.VERTICAL, 5 ) {
+    var lbox = new Box( Orientation.VERTICAL, 5 ) {
       margin_start  = 5,
       margin_end    = 5,
       margin_top    = 5,
       margin_bottom = 5
     };
-    box.set_size_request( -1, 400 );
-    box.append( bbox );
-    box.append( lb_scroll );
+    lbox.set_size_request( -1, 400 );
+    lbox.append( bbox );
+    lbox.append( lb_scroll );
 
     var popover = new Popover() {
-      child = box
+      has_arrow = false,
+      child     = lbox
     };
 
     _tag_mb = new MenuButton() {
+      halign  = Align.START,
       popover = popover
     };
 
-    append( _tag_mb );
+    var tbox = new Box( Orientation.HORIZONTAL, 5 );
+    tbox.append( label );
+    tbox.append( _tag_mb );
+
+    box.append( tbox );
 
   }
 
   /* Add the date selection UI */
-  private void add_date_selector() {
+  private void add_date_selector( Box box ) {
+
+    var range = new Label( Utils.make_title( _( "Date Range:" ) ) ) {
+      use_markup = true
+    };
 
     _start_date = new Granite.DatePicker.with_format( "%Y-%m-%d" );
     _start_date.changed.connect(() => {
       do_search();
     });
 
+    var to = new Label( Utils.make_title( "-" ) ) {
+      use_markup = true
+    };
+
     _end_date = new Granite.DatePicker.with_format( "%Y-%m-%d" );
     _end_date.changed.connect(() => {
       do_search();
     });
 
-    append( _start_date );
-    append( _end_date );
+    var dbox = new Box( Orientation.HORIZONTAL, 5 ) {
+      halign  = Align.END,
+      hexpand = true
+    };
+    dbox.append( range );
+    dbox.append( _start_date );
+    dbox.append( to );
+    dbox.append( _end_date );
+
+    box.append( dbox );
+
+  }
+
+  /* Adds a close button */
+  private void add_close( Box box ) {
+
+    var close_btn = new Button.from_icon_name( "window-close-symbolic" );
+    close_btn.clicked.connect(() => {
+      close_requested();
+    });
+
+    box.append( close_btn );
 
   }
 
@@ -328,9 +387,10 @@ public class Reviewer : Box {
 
   }
 
+  /* Initializes the dates in the range selectors */
   private void populate_dates() {
 
-    _start_date.date = new GLib.DateTime.local( 2000, 1, 1, 0, 0, 0 ); 
+    _start_date.date = new GLib.DateTime.now_local();
     _end_date.date   = new GLib.DateTime.now_local();
 
   }
@@ -343,6 +403,8 @@ public class Reviewer : Box {
     populate_tags();
     populate_dates();
 
+    _search_entry.text = "";
+
     /* Populate the all entries list */
     _all_entries.clear();
     for( int i=0; i<_journals.num_journals(); i++ ) {
@@ -352,8 +414,19 @@ public class Reviewer : Box {
       _all_entries.set( journal.name, entries );
     }
 
+    /* Tell the TextArea that we need to enter Reviewer mode */
+    // TBD
+
     /* Do an initial search */
     do_search();
+
+  }
+
+  /* This should be called prior to exiting the review mode. */
+  public void on_close() {
+
+    /* Gell the TextArea that we need to leave Reviewer mode */
+    // TBD
 
   }
 
@@ -461,12 +534,8 @@ public class Reviewer : Box {
       }
       var index   = row.get_index();
       var jentry  = _match_entries.get( index );
-      var entry   = new DBEntry();
       var journal = _journals.get_journal_by_name( jentry.journal_name );
-      entry.date = jentry.entry.date;
-      if( journal.db.load_entry( entry, false ) == DBLoadResult.LOADED ) {
-        show_matched_entry( entry );
-      }
+      show_matched_entry( journal, jentry.entry );
     });
 
     var lb_scroll = new ScrolledWindow() {

@@ -459,10 +459,12 @@ public class TextArea : Box {
 
   }
 
+  /* Returns true if the title of the entry has changed since it was loaded */
   private bool title_changed() {
     return( _title.editable && (_title.text != _entry.title) );
   }
 
+  /* Returns true if the image of the entry or its positioning information had changed since it was loaded */
   private bool image_changed() {
     return( _pixbuf_changed ||
             ((_pixbuf != null) &&
@@ -471,6 +473,7 @@ public class TextArea : Box {
               (_iscroll.hadjustment.value != _entry.image_hadj))) );
   }
 
+  /* Returns true if the text of the entry has changed since it was loaded */
   private bool text_changed() {
     return( _text.editable && _text.buffer.get_modified() );
   }
@@ -519,8 +522,10 @@ public class TextArea : Box {
     _entry   = entry;
 
     /* Set the title */
-    _title.text = entry.title;
-    _title.editable = editable;
+    _title.text      = entry.title;
+    _title.editable  = editable;
+    _title.can_focus = editable;
+    _title.focusable = editable;
 
     /* Set the date */
     var dt = entry.datetime();
@@ -535,12 +540,16 @@ public class TextArea : Box {
     _tags.journal = _journal;
     _tags.entry   = entry;
     _tags.update_tags();
+    _tags.editable = editable;
 
     /* Show the quote of the day if the text field is empty */
-    if( (entry.text == "") && Journaler.settings.get_boolean( "enable-quotations" ) ) {
+    if( (entry.text == "") && Journaler.settings.get_boolean( "enable-quotations" ) && editable ) {
       _quote.label                        = _quotes.get_quote();
       _quote_revealer.transition_duration = 0;
       _quote_revealer.reveal_child        = true;
+    } else {
+      _quote_revealer.transition_duration = 0;
+      _quote_revealer.reveal_child        = false;
     }
 
     /* Set the buffer text to the entry text or insert the snippet */
@@ -552,23 +561,39 @@ public class TextArea : Box {
     _text.buffer.end_irreversible_action();
 
     /* Set the editable bit */
-    _text.editable = editable;
+    _text.editable  = editable;
+    _text.can_focus = editable;
+    _text.focusable = editable;
 
     /* Clear the modified bits */
     _text.buffer.set_modified( false );
 
     /* Set the grab */
-    var title_empty = _title.text == "";
-    var tags_empty  = _tags.entry.tags.length() == 0;
-    var text_empty  = _text.buffer.text == "";
-    if( title_empty && tags_empty && text_empty ) {
-      _title.grab_focus();
-    } else if( tags_empty && text_empty ) {
-      _tags.grab_focus();
-    } else {
-      _text.grab_focus();
+    if( editable ) {
+      var title_empty = _title.text == "";
+      var tags_empty  = _tags.entry.tags.length() == 0;
+      var text_empty  = _text.buffer.text == "";
+      if( title_empty && tags_empty && text_empty ) {
+        _title.grab_focus();
+      } else if( tags_empty && text_empty ) {
+        _tags.grab_focus();
+      } else {
+        _text.grab_focus();
+      }
     }
 
+    /* Handle other UI state related to the editable indicator */
+    if( editable ) {
+      _burger.show();
+    } else {
+      _burger.hide();
+    }
+
+  }
+
+  /* Sets the reviewer mode */
+  public void set_reviewer_mode( bool review_mode ) {
+    set_buffer( _entry, !review_mode );
   }
 
 }

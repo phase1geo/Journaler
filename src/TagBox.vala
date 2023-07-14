@@ -11,6 +11,7 @@ public class TagBox : Box {
 
   private List<Widget>  _tag_widgets;
   private Array<string> _all_tags;
+  private bool          _editable = true;
 
   public Journal? journal {
     get {
@@ -28,6 +29,22 @@ public class TagBox : Box {
     set {
       _entry = value;
       update_tags();
+    }
+  }
+
+  public bool editable {
+    get {
+      return( _editable );
+    }
+    set {
+      if( _editable != value ) {
+        _editable = value;
+        if( _editable ) {
+          _new_tag_entry.show();
+        } else {
+          _new_tag_entry.hide();
+        }
+      }
     }
   }
 

@@ -255,9 +255,11 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     /* Create the reviewer UI */
     _reviewer = new Reviewer( this, _journals );
-    _reviewer.show_matched_entry.connect((entry) => {
-      _text_area.set_buffer( entry, false );
+    _reviewer.show_matched_entry.connect((journal, entry) => {
+      _journals.current = journal;
+      _entries.show_entry_for_date( entry.date, false, false );
     });
+    _reviewer.close_requested.connect( action_review );
 
     _reviewer_revealer = new Revealer() {
       reveal_child = false,
@@ -833,9 +835,16 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   /* Creates a new file */
   public void action_today() {
+
     reset_timer();
     if( locked ) return;
-    _entries.show_entry_for_date( DBEntry.todays_date(), true );
+
+    if( _reviewer_revealer.reveal_child ) {
+      action_review();
+    }
+
+    _entries.show_entry_for_date( DBEntry.todays_date(), true, true );
+
   }
 
   /* Save the current entry to the database */
@@ -940,12 +949,17 @@ public class MainWindow : Gtk.ApplicationWindow {
     reset_timer();
     if( locked ) return;
 
-    /* Initialize the reviewer */
-    _reviewer.initialize();
-
-    /* Show the UI */
-    _reviewer_revealer.reveal_child = true;
-    _sidebar_stack.visible_child_name = "review";
+    if( _reviewer_revealer.reveal_child ) {
+      _reviewer.on_close();
+      _reviewer_revealer.reveal_child = false;
+      _sidebar_stack.visible_child_name = "entries";
+      _text_area.set_reviewer_mode( false );
+    } else {
+      _reviewer.initialize();
+      _reviewer_revealer.reveal_child = true;
+      _sidebar_stack.visible_child_name = "review";
+      _text_area.set_reviewer_mode( true );
+    }
 
   }
 
