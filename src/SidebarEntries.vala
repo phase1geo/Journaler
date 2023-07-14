@@ -57,12 +57,12 @@ public class SidebarEntries : Box {
     _journals.current_changed.connect((refresh) => {
       populate( refresh );
       if( !refresh ) {
-        show_entry_for_date( DBEntry.todays_date(), true );
+        show_entry_for_date( DBEntry.todays_date(), true, true );
       }
     });
     _journals.list_changed.connect(() => {
       populate_journal_menu();
-      show_entry_for_date( DBEntry.todays_date(), true );
+      show_entry_for_date( DBEntry.todays_date(), true, true );
     });
     _listbox_entries = new Array<DBEntry>();
 
@@ -147,7 +147,7 @@ public class SidebarEntries : Box {
       }
       var index = row.get_index();
       var date  = _listbox_entries.index( index ).date;
-      show_entry_for_date( date, false );
+      show_entry_for_date( date, false, true );
     });
 
     _lb_scroll = new ScrolledWindow() {
@@ -191,7 +191,7 @@ public class SidebarEntries : Box {
         _listbox.select_row( _listbox.get_row_at_index( index ) );
       } else {
         _listbox.select_row( null );
-        show_entry_for_date( date, false );
+        show_entry_for_date( date, false, true );
       }
     });
 
@@ -342,8 +342,22 @@ public class SidebarEntries : Box {
     return( -1 );
   }
 
+  /*
+   Selects the given entry in the listbox without changing the entry in the textbox.  This
+   is useful for updating UI state only.
+  */
+  private void select_entry_only( DBEntry entry ) {
+    var index = get_listbox_index_for_date( entry.date );
+    if( index != -1 ) {
+      _ignore_select = true;
+      _listbox.select_row( _listbox.get_row_at_index( index ) );
+      _cal.select_day( entry.datetime() );
+      _ignore_select = false;
+    }
+  }
+
   /* Displays the entry for the given date */
-  public void show_entry_for_date( string date, bool create_if_needed ) {
+  public void show_entry_for_date( string date, bool create_if_needed, bool editable ) {
 
     var entry = new DBEntry();
     entry.date = date;
@@ -357,16 +371,10 @@ public class SidebarEntries : Box {
     }
 
     /* Make sure that the date is selected in the listbox */
-    var index = get_listbox_index_for_date( entry.date );
-    if( index != -1 ) {
-      _ignore_select = true;
-      _listbox.select_row( _listbox.get_row_at_index( index ) );
-      _cal.select_day( entry.datetime() );
-      _ignore_select = false;
-    }
+    select_entry_only( entry );
 
     /* Indicate that the entry should be displayed */
-    show_journal_entry( entry, (load_result != DBLoadResult.FAILED) );
+    show_journal_entry( entry, (editable && (load_result != DBLoadResult.FAILED)) );
 
   }
 

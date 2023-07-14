@@ -77,6 +77,12 @@ case $1 in
 "flatpak")
     sudo flatpak-builder --install --force-clean ../build-journaler com.github.phase1geo.journaler.yml
     ;;
+"flat-run")
+    flatpak run com.github.phase1geo.journaler
+    ;;
+"flat-debug")
+    flatpak run --command=sh --devel com.github.phase1geo.journaler
+    ;;
 *)
     echo "Usage:"
     echo "  ./app [OPTION]"

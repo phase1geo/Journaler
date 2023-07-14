@@ -108,6 +108,8 @@ public class MainWindow : Gtk.ApplicationWindow {
   private FlowBox                    _awards_box;
   private Label                      _awards_status;
   private Locker                     _locker;
+  private Revealer                   _reviewer_revealer;
+  private Reviewer                   _reviewer;
 
   private const GLib.ActionEntry[] action_entries = {
     { "action_today",         action_today },
@@ -116,6 +118,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     { "action_quit",          action_quit },
     { "action_new_template",  action_new_template },
     { "action_edit_template", action_edit_template, "s" },
+    { "action_review",        action_review },
     { "action_awards",        action_awards },
     { "action_shortcuts",     action_shortcuts },
     { "action_preferences",   action_preferences },
@@ -236,12 +239,32 @@ public class MainWindow : Gtk.ApplicationWindow {
     _header_buttons.append( misc_btn );
     header.pack_end( misc_btn );
 
+    /* Create review button */
+    var review_btn = new Button.from_icon_name( get_header_icon_name( "media-seek-backward" ) );
+    review_btn.set_tooltip_markup( Utils.tooltip_with_accel( _( "Review Entries" ), "<Control>r" ) );
+    review_btn.clicked.connect( action_review );
+    _header_buttons.append( review_btn );
+    header.pack_end( review_btn );
+
     /* Create lock */
     var lock_btn = new Button.from_icon_name( get_header_icon_name( "changes-prevent" ) );
     lock_btn.set_tooltip_markup( Utils.tooltip_with_accel( _( "Lock Journaler" ), "<Control>l" ) );
     lock_btn.clicked.connect( action_lock );
     _header_buttons.append( lock_btn );
     header.pack_end( lock_btn );
+
+    /* Create the reviewer UI */
+    _reviewer = new Reviewer( this, _journals );
+    _reviewer.show_matched_entry.connect((journal, entry) => {
+      _journals.current = journal;
+      _entries.show_entry_for_date( entry.date, false, false );
+    });
+    _reviewer.close_requested.connect( action_review );
+
+    _reviewer_revealer = new Revealer() {
+      reveal_child = false,
+      child        = _reviewer
+    };
 
     var lbox = new Box( Orientation.VERTICAL, 0 );
     var rbox = new Box( Orientation.VERTICAL, 0 );
@@ -257,6 +280,15 @@ public class MainWindow : Gtk.ApplicationWindow {
       shrink_start_child = true,
       shrink_end_child   = false
     };
+
+    var ebox = new Box( Orientation.VERTICAL, 0 ) {
+      halign  = Align.FILL,
+      valign  = Align.FILL,
+      vexpand = true,
+      hexpand = true
+    };
+    ebox.append( _reviewer_revealer );
+    ebox.append( pw );
 
     var sbox = new Box( Orientation.VERTICAL, 0 ) {
       halign  = Align.FILL,
@@ -308,7 +340,7 @@ public class MainWindow : Gtk.ApplicationWindow {
       vexpand = true
     };
     _lock_stack.add_named( pbox, "lock-view" );
-    _lock_stack.add_named( pw,   "entry-view" );
+    _lock_stack.add_named( ebox, "entry-view" );
     _lock_stack.add_named( sbox, "setlock-view" );
     _lock_stack.add_named( tbox, "template-view" );
     _lock_stack.add_named( abox, "awards-view" );
@@ -529,6 +561,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     _sidebar_stack = new Stack();
     _sidebar_stack.add_named( add_current_sidebar(), "entries" );
     _sidebar_stack.add_named( add_journal_edit(),    "editor" );
+    _sidebar_stack.add_named( _reviewer.create_reviewer_match_sidebar(), "review" );
 
     box.append( _sidebar_stack );
 
@@ -793,6 +826,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     app.set_accels_for_action( "win.action_save",        { "<Control>s" } );
     app.set_accels_for_action( "win.action_lock",        { "<Control>l" } );
     app.set_accels_for_action( "win.action_quit",        { "<Control>q" } );
+    app.set_accels_for_action( "win.action_review",      { "<Control>r" } );
     app.set_accels_for_action( "win.action_awards",      { "<Control>1" } );
     app.set_accels_for_action( "win.action_shortcuts",   { "<Control>question" } );
     app.set_accels_for_action( "win.action_preferences", { "<Control>comma" } );
@@ -801,9 +835,16 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   /* Creates a new file */
   public void action_today() {
+
     reset_timer();
     if( locked ) return;
-    _entries.show_entry_for_date( DBEntry.todays_date(), true );
+
+    if( _reviewer_revealer.reveal_child ) {
+      action_review();
+    }
+
+    _entries.show_entry_for_date( DBEntry.todays_date(), true, true );
+
   }
 
   /* Save the current entry to the database */
@@ -898,6 +939,26 @@ public class MainWindow : Gtk.ApplicationWindow {
 
       _awards_box.append( hbox );
 
+    }
+
+  }
+
+  /* Displays the review view */
+  private void action_review() {
+
+    reset_timer();
+    if( locked ) return;
+
+    if( _reviewer_revealer.reveal_child ) {
+      _reviewer.on_close();
+      _reviewer_revealer.reveal_child = false;
+      _sidebar_stack.visible_child_name = "entries";
+      _text_area.set_reviewer_mode( false );
+    } else {
+      _reviewer.initialize();
+      _reviewer_revealer.reveal_child = true;
+      _sidebar_stack.visible_child_name = "review";
+      _text_area.set_reviewer_mode( true );
     }
 
   }

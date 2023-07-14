@@ -1,10 +1,16 @@
 src/Application.vala
+src/Database.vala
+src/exports/ExportJSON.vala
 src/exports/ExportXML.vala
+src/Goals.vala
 src/Journals.vala
 src/MainWindow.vala
 src/Preferences.vala
+src/Quotes.vala
+src/Reviewer.vala
 src/SidebarEditor.vala
 src/SidebarEntries.vala
+src/Statistics.vala
 src/TagBox.vala
 src/TagEntry.vala
 src/Templater.vala
