@@ -19,15 +19,13 @@ public class Reviewer : Box {
   private int        _num_tags = 0;
   private bool       _ignore_toggled = false;
 
-  private DatePicker _start_date;
-  private DatePicker _end_date;
+  private DateSelector _start_date;
+  private DateSelector _end_date;
 
   private SearchEntry _search_entry;
 
   private ListBox                     _match_lb;
   private Gee.ArrayList<JournalEntry> _match_entries;
-
-  private Gee.HashMap<string,Array<DBEntry> > _all_entries;
 
   public signal void show_matched_entry( Journal journal, DBEntry entry );
   public signal void close_requested();
@@ -39,7 +37,6 @@ public class Reviewer : Box {
 
     _win           = win;
     _journals      = journals;
-    _all_entries   = new Gee.HashMap<string,Array<DBEntry> >();
     _match_entries = new Gee.ArrayList<JournalEntry>();
 
     /* Add the UI components */
@@ -205,7 +202,7 @@ public class Reviewer : Box {
       use_markup = true
     };
 
-    _start_date = new Granite.DatePicker.with_format( "%Y-%m-%d" );
+    _start_date = new DateSelector();
     _start_date.changed.connect(() => {
       do_search();
     });
@@ -214,7 +211,7 @@ public class Reviewer : Box {
       use_markup = true
     };
 
-    _end_date = new Granite.DatePicker.with_format( "%Y-%m-%d" );
+    _end_date = new DateSelector();
     _end_date.changed.connect(() => {
       do_search();
     });
@@ -332,8 +329,8 @@ public class Reviewer : Box {
   }
 
   /* Returns the string date for the given picker */
-  private string get_date( DatePicker picker ) {
-    return( DBEntry.datetime_date( picker.date ) );
+  private string get_date( DateSelector selector ) {
+    return( DBEntry.datetime_date( selector.date ) );
   }
 
   /* Populates the journal listbox with the available journals to review */
@@ -405,18 +402,6 @@ public class Reviewer : Box {
 
     _search_entry.text = "";
 
-    /* Populate the all entries list */
-    _all_entries.clear();
-    for( int i=0; i<_journals.num_journals(); i++ ) {
-      var journal = _journals.get_journal( i );
-      var entries = new Array<DBEntry>();
-      journal.db.get_all_entries( entries );
-      _all_entries.set( journal.name, entries );
-    }
-
-    /* Tell the TextArea that we need to enter Reviewer mode */
-    // TBD
-
     /* Do an initial search */
     do_search();
 
@@ -425,8 +410,7 @@ public class Reviewer : Box {
   /* This should be called prior to exiting the review mode. */
   public void on_close() {
 
-    /* Gell the TextArea that we need to leave Reviewer mode */
-    // TBD
+    // TBD - We may not need this at this point
 
   }
 

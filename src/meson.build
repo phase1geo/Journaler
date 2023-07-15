@@ -2,6 +2,7 @@ sources += files(
     'Application.vala',
     'Crypt.vala',
     'Database.vala',
+    'DateSelector.vala',
     'Export.vala',
     'Exports.vala',
     'Goal.vala',
