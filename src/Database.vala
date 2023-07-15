@@ -552,6 +552,48 @@ public class Database {
 
   }
 
+  /* Removes the entry that matches the given entry  */
+  public bool remove_entry( DBEntry entry ) {
+
+    var entry_query = "DELETE FROM Entry WHERE date = '%s' RETURNING id;".printf( entry.date );
+
+    var entry_id = -1;
+    var res = exec_query( entry_query, (ncols, vals, names) => {
+      entry_id = int.parse( vals[0] );
+      return( 0 );
+    });
+
+    if( res && (entry_id != -1) ) {
+      var map_query = "DELETE FROM TagMap WHERE entry_id = %d;".printf( entry_id );
+      res = exec_query( map_query );
+    }
+
+    return( res );
+
+  }
+
+  /* Removes all entries that contain empty text strings.  This may only be useful for debugging. */
+  public bool purge_empty_entries() {
+
+    var entry_query = "DELETE FROM Entry WHERE txt = '' RETURNING id;";
+
+    int[] entry_ids = {};
+    var res = exec_query( entry_query, (ncols, vals, names) => {
+      entry_ids += int.parse( vals[0] );
+      return( 0 );
+    });
+
+    if( res && (entry_ids.length > 0) ) {
+      foreach( var entry_id in entry_ids ) {
+        var map_query = "DELETE FROM TagMap WHERE entry_id = %d;".printf( entry_id );
+        exec_query( map_query );
+      }
+    }
+
+    return( res );
+
+  }
+
   /* Executes the given query on the database */
   private bool exec_query( string query, Sqlite.Callback? callback = null ) {
 

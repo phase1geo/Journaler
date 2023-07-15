@@ -105,6 +105,24 @@ public class Journals {
     }
   }
 
+  /* Purges all of the empty journal entries */
+  public bool purge_empty_entries() {
+
+    var res = true;
+
+    for( int i=0; i<_journals.length; i++ ) {
+      var journal = _journals.index( i );
+      res &= journal.db.purge_empty_entries();
+    }
+
+    if( res ) {
+      current_changed( true );
+    }
+
+    return( res );
+
+  }
+
   /* Returns the pathname of the journals.xml file */
   private string xml_file() {
     return( GLib.Path.build_filename( Environment.get_user_data_dir(), "journaler", "journals.xml" ) );

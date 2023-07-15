@@ -500,7 +500,7 @@ namespace GCrypt {
 	}
 	public Error control (ControlCommand cmd, ...);
 
-	[CCode (lower_case_cname = "cipher_")]
+	[CCode (lower_case_cprefix = "cipher_")]
 	namespace Cipher {
 		[CCode (cname = "enum gcry_cipher_algos", cprefix = "GCRY_CIPHER_")]
 		public enum Algorithm {

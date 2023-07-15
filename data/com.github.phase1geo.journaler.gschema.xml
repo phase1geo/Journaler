@@ -86,5 +86,9 @@
       <summary>Specifies the entry word count to reach the daily goal</summary>
       <description>Specifies the entry word count to reach the daily goal</description>
     </key>
+    <key name="developer-mode" type="b">
+      <default>false</default>
+      <summary>This values is not recommended for Journaler non-developers</summary>
+    </key>
   </schema>
 </schemalist>

@@ -496,6 +496,16 @@ public class Preferences : Gtk.Dialog {
     box.append( create_advanced_export() );
     box.append( create_advanced_import() );
 
+    if( Journaler.settings.get_boolean( "developer-mode" ) ) {
+      var purge_btn = new Button.with_label( "Purge empty entries" );
+      purge_btn.clicked.connect(() => {
+        if( !_journals.purge_empty_entries() ) {
+          stderr.printf( "Purge error\n" );
+        }
+      });
+      box.append( purge_btn );
+    }
+
     return( box );
 
   }
