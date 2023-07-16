@@ -46,6 +46,7 @@ public class TextArea : Box {
   private Label            _quote;
   private Revealer         _quote_revealer;
   private Quotes           _quotes;
+  private SpellChecker     _spell;
 
   private const GLib.ActionEntry action_entries[] = {
     { "action_add_entry_image",    action_add_entry_image },
@@ -276,6 +277,49 @@ public class TextArea : Box {
     append( sep2 );
     append( _stats );
 
+    connect_spell_checker();
+
+  }
+
+  /* Connects the text widget to the spell checker */
+  private void connect_spell_checker() {
+
+    _spell = new SpellChecker();
+
+    var lang_exists = false;
+    var lang      = Environment.get_variable( "LANGUAGE" );
+    var lang_list = new Gee.ArrayList<string>();
+    _spell.get_language_list( lang_list );
+
+    lang_list.foreach((elem) => {
+      if( elem == lang ) {
+        _spell.set_language( lang );
+        lang_exists = true;
+        return( false );
+      }
+      return( true );
+    });
+
+    if( lang_list.size == 0 ) {
+      _spell.set_language( null );
+    } else if( !lang_exists ) {
+      _spell.set_language( lang_list.get( 0 ) );
+    }
+
+    if( true /*Journaler.settings.get_boolean( "enable-spell-checking" )*/ ) {
+      activate_spell_checking();
+    }
+
+  }
+
+  /* Enables the spell checker */
+  public void activate_spell_checking() {
+    _spell.attach( _text );
+  }
+
+  /* Disables the spell checker */
+  public void deactivate_spell_checking() {
+    _spell.detach();
   }
 
   /* Creates burger menu and populates it with features */

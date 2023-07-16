@@ -18,6 +18,7 @@ sources += files(
     'Security.vala',
     'SidebarEditor.vala',
     'SidebarEntries.vala',
+    'SpellChecker.vala',
     'Statistics.vala',
     'TagBox.vala',
     'TagEntry.vala',
