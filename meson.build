@@ -43,7 +43,8 @@ core_deps = [
     dependency('libxml-2.0'),
     dependency('gtksourceview-5'),
     dependency('sqlite3'),
-    dependency('json-glib-1.0')
+    dependency('json-glib-1.0'),
+    dependency('enchant-2')
 ]
 
 e = executable('com.github.phase1geo.journaler',
