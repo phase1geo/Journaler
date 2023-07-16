@@ -195,8 +195,8 @@ public class SpellChecker {
     string old_word = view.buffer.get_text( start, end, false );
 
     view.buffer.begin_user_action();
-    view.buffer.delete_range( start, end );
-    view.buffer.insert_text( ref start, new_word, new_word.length );
+    view.buffer.delete( ref start, ref end );
+    view.buffer.insert( ref start, new_word, new_word.length );
     view.buffer.end_user_action();
 
     dict.store_replacement( old_word, new_word );
@@ -208,32 +208,36 @@ public class SpellChecker {
 
     string[] suggestions = dict.suggest( word, word.length );
 
-    var section_menu = new GLib.Menu();
+    var suggest_menu = new GLib.Menu();
     var more_menu    = new GLib.Menu();
 
     if( suggestions.length == 0 ) {
-      section_menu.append( _( "No suggestions" ), "" );
+      suggest_menu.append( _( "No suggestions" ), "" );
     } else {
-      var count     = 0;
+      var count = 0;
       foreach( var suggestion in suggestions ) {
         var suggest = suggestion.replace( "'", "\\'" );
         if( count++ < 5 ) {
-          section_menu.append( suggestion, "spell.action_replace_word('%s')".printf( suggest ) );
+          suggest_menu.append( suggestion, "spell.action_replace_word('%s')".printf( suggest ) );
         } else {
           more_menu.append( suggestion, "spell.action_replace_word('%s')".printf( suggest ) );
         }
       }
+      if( more_menu.get_n_items() > 0 ) {
+        suggest_menu.append_submenu( _( "More Suggestions" ), more_menu );
+      }
     }
 
-    if( more_menu.get_n_items() > 0 ) {
-      section_menu.append_submenu( _( "More Suggestions" ), more_menu );
-    }
+    var add_ign_menu = new GLib.Menu();
+    add_ign_menu.append( _( "Add \"%s\" to Dictionary" ).printf( word ), "spell.action_add_to_dictionary" );
+    add_ign_menu.append( _( "Ignore All" ), "spell.action_ignore_all" );
 
-    section_menu.append( _( "Add \"%s\" to Dictionary" ).printf( word ), "spell.action_add_to_dictionary" );
-    section_menu.append( _( "Ignore All" ), "spell.action_ignore_all" );
+    var spell_menu   = new GLib.Menu();
+    spell_menu.append_section( null, suggest_menu );
+    spell_menu.append_section( null, add_ign_menu );
 
     var top_menu = new GLib.Menu();
-    top_menu.append_section( _( "Spell Check" ), section_menu );
+    top_menu.append_section( _( "Spell Check" ), spell_menu );
 
     view.extra_menu = top_menu;
 
@@ -311,7 +315,7 @@ public class SpellChecker {
       view.buffer.mark_set.connect( mark_set );
 
       var actions = new SimpleActionGroup();
-      actions.add_action_entries( action_entries, view );
+      actions.add_action_entries( action_entries, this );
       view.insert_action_group( "spell", actions );
 
       var tagtable = view.buffer.get_tag_table();
