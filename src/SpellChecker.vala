@@ -15,6 +15,12 @@ public class SpellChecker {
   private TextMark?    mark_click = null;
   private bool         deferred_check = false;
 
+  private const GLib.ActionEntry action_entries[] = {
+    { "action_replace_word",      action_replace_word, "s" },
+    { "action_add_to_dictionary", action_add_to_dictionary },
+    { "action_ignore_all",        action_ignore_all }
+  };
+
   /* Default constructor */
   public SpellChecker() {
     broker = new Broker();
@@ -194,44 +200,61 @@ public class SpellChecker {
 
   }
 
-  private void add_suggestion_menus( string word, GLib.Menu top_menu ) {
+  private void add_suggestion_menus( string word ) {
 
     string[] suggestions = dict.suggest( word, word.length );
 
+    var section_menu = new GLib.Menu();
+    var more_menu    = new GLib.Menu();
+
     if( suggestions.length == 0 ) {
-      top_menu.append( _( "No suggestions" ), "" );
+      section_menu.append( _( "No suggestions" ), "" );
     } else {
+      var count     = 0;
       foreach( var suggestion in suggestions ) {
-        top_menu.append( suggestion, "action_replace_word('%s')".printf( suggestion ) );
+        var suggest = suggestion.replace( "'", "\\'" );
+        if( count++ < 5 ) {
+          section_menu.append( suggestion, "spell.action_replace_word('%s')".printf( suggest ) );
+        } else {
+          more_menu.append( suggestion, "spell.action_replace_word('%s')".printf( suggest ) );
+        }
       }
     }
 
-    top_menu.append( _( "Add \"%s\" to Dictionary" ), "action_add_to_dictionary('%s')".printf( word ) );
-    top_menu.append( _( "Ignore All" ), "action_ignore_all('%s')".printf( word ) );
+    if( more_menu.get_n_items() > 0 ) {
+      section_menu.append_submenu( _( "More Suggestions" ), more_menu );
+    }
 
-  }
+    section_menu.append( _( "Add \"%s\" to Dictionary" ).printf( word ), "spell.action_add_to_dictionary" );
+    section_menu.append( _( "Ignore All" ), "spell.action_ignore_all" );
 
-  private GLib.Menu build_suggestion_menu( string word ) {
     var top_menu = new GLib.Menu();
-    add_suggestion_menus( word, top_menu );
-    return( top_menu );
+    top_menu.append_section( _( "Spell Check" ), section_menu );
+
+    view.extra_menu = top_menu;
+
   }
 
-  private void populate_popup( TextView textview, GLib.Menu menu ) {
+  private void populate_popup() {
 
     TextIter start, end;
     get_word_extents_from_mark( out start, out end, mark_click );
 
+    stdout.printf( "In populate_popup, start: %s, end: %s, is_highlighted: %s\n", iter_string( start ), iter_string( end ), start.has_tag( tag_highlight ).to_string() );
+
     if( !start.has_tag( tag_highlight ) ) {
+      view.extra_menu = null;
       return;
     }
 
     var word = view.buffer.get_text( start, end, false );
-    add_suggestion_menus( word, menu );
+    stdout.printf( "  word: %s\n", word );
+    add_suggestion_menus( word );
 
   }
 
   private void right_button_press_event( int n_press, double x, double y ) {
+    stdout.printf( "In right_button_press_event, deferred_check: %s\n", deferred_check.to_string() );
     TextIter iter;
     int buf_x, buf_y;
     if( deferred_check ) {
@@ -239,7 +262,9 @@ public class SpellChecker {
     }
     view.window_to_buffer_coords( TextWindowType.TEXT, (int)x, (int)y, out buf_x, out buf_y );
     view.get_iter_at_location( out iter, buf_x, buf_y );
+    stdout.printf( "  iter: %s\n", iter_string( iter ) );
     view.buffer.move_mark( mark_click, iter );
+    populate_popup();
   }
 
   // Not sure if this should return bool or not yet
@@ -248,6 +273,18 @@ public class SpellChecker {
     view.buffer.get_iter_at_mark( out iter, view.buffer.get_insert() );
     view.buffer.move_mark( mark_click, iter );
     return( false );
+  }
+
+  private void action_replace_word( SimpleAction action, Variant? variant ) {
+    replace_word( variant.get_string() );
+  }
+
+  private void action_add_to_dictionary() {
+    add_to_dictionary();
+  }
+
+  private void action_ignore_all() {
+    ignore_all();
   }
 
   /* Good? */
@@ -276,6 +313,10 @@ public class SpellChecker {
       view.buffer.insert_text.connect_after( insert_text_after );
       view.buffer.delete_range.connect_after( delete_range_after );
       view.buffer.mark_set.connect( mark_set );
+
+      var actions = new SimpleActionGroup();
+      actions.add_action_entries( action_entries, view );
+      view.insert_action_group( "spell", actions );
 
       var tagtable = view.buffer.get_tag_table();
       tag_highlight = tagtable.lookup( "misspelled-tag" );
