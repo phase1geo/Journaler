@@ -64,6 +64,7 @@ public class SpellChecker {
     }
   }
 
+  /* Good */
   private string iter_string( TextIter iter ) {
     return( "%d.%d".printf( iter.get_line(), iter.get_line_offset() ) );
   }
@@ -128,10 +129,12 @@ public class SpellChecker {
     check_range( start, end, force_all );
   }
 
+  /* Good */
   private void insert_text_before( ref TextIter iter, string text ) {
     view.buffer.move_mark( mark_insert_start, iter );
   }
 
+  /* Good */
   private void insert_text_after( ref TextIter iter, string text ) {
     TextIter start;
     view.buffer.get_iter_at_mark( out start, mark_insert_start );
@@ -200,6 +203,7 @@ public class SpellChecker {
 
   }
 
+  /* Good */
   private void add_suggestion_menus( string word ) {
 
     string[] suggestions = dict.suggest( word, word.length );
@@ -235,12 +239,11 @@ public class SpellChecker {
 
   }
 
+  /* Good */
   private void populate_popup() {
 
     TextIter start, end;
     get_word_extents_from_mark( out start, out end, mark_click );
-
-    stdout.printf( "In populate_popup, start: %s, end: %s, is_highlighted: %s\n", iter_string( start ), iter_string( end ), start.has_tag( tag_highlight ).to_string() );
 
     if( !start.has_tag( tag_highlight ) ) {
       view.extra_menu = null;
@@ -248,13 +251,12 @@ public class SpellChecker {
     }
 
     var word = view.buffer.get_text( start, end, false );
-    stdout.printf( "  word: %s\n", word );
     add_suggestion_menus( word );
 
   }
 
+  /* Good */
   private void right_button_press_event( int n_press, double x, double y ) {
-    stdout.printf( "In right_button_press_event, deferred_check: %s\n", deferred_check.to_string() );
     TextIter iter;
     int buf_x, buf_y;
     if( deferred_check ) {
@@ -262,27 +264,21 @@ public class SpellChecker {
     }
     view.window_to_buffer_coords( TextWindowType.TEXT, (int)x, (int)y, out buf_x, out buf_y );
     view.get_iter_at_location( out iter, buf_x, buf_y );
-    stdout.printf( "  iter: %s\n", iter_string( iter ) );
     view.buffer.move_mark( mark_click, iter );
     populate_popup();
   }
 
-  // Not sure if this should return bool or not yet
-  private bool popup_menu_event() {
-    TextIter iter;
-    view.buffer.get_iter_at_mark( out iter, view.buffer.get_insert() );
-    view.buffer.move_mark( mark_click, iter );
-    return( false );
-  }
-
+  /* Good */
   private void action_replace_word( SimpleAction action, Variant? variant ) {
     replace_word( variant.get_string() );
   }
 
+  /* Good */
   private void action_add_to_dictionary() {
     add_to_dictionary();
   }
 
+  /* Good */
   private void action_ignore_all() {
     ignore_all();
   }
