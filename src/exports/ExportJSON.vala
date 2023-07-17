@@ -119,7 +119,7 @@ public class ExportJSON : Export {
         builder.end_array();
 
         if( (load_entry.image != null) && include_images ) {
-          var path = create_image( load_entry.image );
+          var path = create_image( load_entry.image.pixbuf );
           if( path != null ) {
             builder.set_member_name( "image" );
             builder.add_string_value( path );

@@ -24,10 +24,10 @@ public class Reviewer : Box {
 
   private SearchEntry _search_entry;
 
-  private ListBox                     _match_lb;
-  private Gee.ArrayList<JournalEntry> _match_entries;
+  private ListBox                _match_lb;
+  private Gee.ArrayList<DBEntry> _match_entries;
 
-  public signal void show_matched_entry( Journal journal, DBEntry entry );
+  public signal void show_matched_entry( DBEntry entry );
   public signal void close_requested();
 
   /* Default constructor */
@@ -37,7 +37,7 @@ public class Reviewer : Box {
 
     _win           = win;
     _journals      = journals;
-    _match_entries = new Gee.ArrayList<JournalEntry>();
+    _match_entries = new Gee.ArrayList<DBEntry>();
 
     /* Add the UI components */
     var lbox = new Box( Orientation.HORIZONTAL, 5 ) {
@@ -486,9 +486,9 @@ public class Reviewer : Box {
 
     /* Sort the entries */
     _match_entries.sort((a, b) => {
-      var date_match = strcmp( b.entry.date, a.entry.date );
+      var date_match = strcmp( b.date, a.date );
       if( date_match == 0 ) {
-        return( strcmp( a.journal_name, b.journal_name ) );
+        return( strcmp( a.journal, b.journal ) );
       }
       return( date_match );
     });
@@ -516,10 +516,9 @@ public class Reviewer : Box {
       if( row == null ) {
         return;
       }
-      var index   = row.get_index();
-      var jentry  = _match_entries.get( index );
-      var journal = _journals.get_journal_by_name( jentry.journal_name );
-      show_matched_entry( journal, jentry.entry );
+      var index = row.get_index();
+      var entry = _match_entries.get( index );
+      show_matched_entry( entry );
     });
 
     var lb_scroll = new ScrolledWindow() {
@@ -549,21 +548,21 @@ public class Reviewer : Box {
   }
 
   /* Adds the given match entry to the list of matching entries */
-  private void add_match_entry( JournalEntry jentry ) {
+  private void add_match_entry( DBEntry entry ) {
 
     /* Populate the listbox */
-    var label = new Label( "<b>" + jentry.entry.gen_title() + "</b>" ) {
+    var label = new Label( "<b>" + entry.gen_title() + "</b>" ) {
       halign     = Align.START,
       hexpand    = true,
       use_markup = true,
       ellipsize  = Pango.EllipsizeMode.END
     };
     label.add_css_class( "listbox-head" );
-    var journal = new Label( jentry.journal_name ) {
+    var journal = new Label( entry.journal ) {
       halign  = Align.START,
       hexpand = true
     };
-    var date = new Label( jentry.entry.date ) {
+    var date = new Label( entry.date ) {
       halign  = Align.END,
       hexpand = true
     };

@@ -15,7 +15,7 @@ public class Journal {
         var new_db = db_path( value );
         if( rename_db( old_db, new_db ) ) {
           _name = value;
-          _db   = new Database( db_path() );
+          _db   = new Database( db_path(), false );
         }
       }
     }
@@ -41,13 +41,24 @@ public class Journal {
       return( _db );
     }
   }
+  public bool is_trash {
+    get {
+      return( _db.include_journal );
+    }
+  }
 
   /* Default constructor */
   public Journal( string name, string template, string description ) {
     _name        = name;
     _template    = template;
     _description = description;
-    _db          = new Database( db_path() );
+    _db          = new Database( db_path(), false );
+  }
+
+  /* Constructor for trash */
+  public Journal.trash() {
+    _name = _( "Trash" );
+    _db   = new Database( db_path(), true );
   }
 
   /* Constructor */
@@ -104,7 +115,7 @@ public class Journal {
 
     /* If the name was set and the database file exists, create the database */
     if( (_name != "") && FileUtils.test( db_path(), FileTest.EXISTS ) ) {
-      _db = new Database( db_path() );
+      _db = new Database( db_path(), false );
       return( true );
     }
 

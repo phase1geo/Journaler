@@ -51,7 +51,8 @@ public class TextArea : Box {
   private const GLib.ActionEntry action_entries[] = {
     { "action_add_entry_image",    action_add_entry_image },
     { "action_remove_entry_image", action_remove_entry_image },
-    { "action_insert_template",    action_insert_template, "s" }
+    { "action_insert_template",    action_insert_template, "s" },
+    { "action_delete_entry",       action_delete_entry }
   };
 
   /* Create the main window UI */
@@ -338,6 +339,7 @@ public class TextArea : Box {
     var menu = new GLib.Menu();
     menu.append_section( null, _image_menu );
     menu.append_section( null, template_menu );
+    menu.append( _( "Delete Entry" ), "action_delete_entry" );
 
     return( menu );
 
@@ -415,6 +417,23 @@ public class TextArea : Box {
   private void action_insert_template( SimpleAction action, Variant? variant ) {
     _win.reset_timer();
     insert_template( variant.get_string() );
+  }
+
+  /* Moves the current entry to the trash */
+  private void action_delete_entry() {
+
+    var journal = _journals.get_journal_by_name( _entry.journal );
+    if( journal != null ) {
+
+      /* Save the current entry so that we have _entry up-to-date */
+      save();
+
+      /* Move the entry to the trash */
+      if( _journals.trash.db.save_entry( _entry ) && journal.db.remove_entry( _entry ) ) {
+      }
+
+    }
+
   }
 
   /* Inserts the given snippet name */
@@ -512,9 +531,9 @@ public class TextArea : Box {
   private bool image_changed() {
     return( _pixbuf_changed ||
             ((_pixbuf != null) &&
-             ((_pane.position != _entry.image_pos) ||
-              (_iscroll.vadjustment.value != _entry.image_vadj) ||
-              (_iscroll.hadjustment.value != _entry.image_hadj))) );
+             ((_pane.position != _entry.image.pos) ||
+              (_iscroll.vadjustment.value != _entry.image.vadj) ||
+              (_iscroll.hadjustment.value != _entry.image.hadj))) );
   }
 
   /* Returns true if the text of the entry has changed since it was loaded */
@@ -530,10 +549,12 @@ public class TextArea : Box {
       return;
     }
 
+    DBImage? image = null;
+    if( _pixbuf != null ) {
+      image = new DBImage( _pixbuf, _pane.position, _iscroll.vadjustment.value, _iscroll.hadjustment.value );
+    }
     var entry = new DBEntry.with_date( 
-      _title.text, _text.buffer.text, _pixbuf, _pane.position,
-      _iscroll.vadjustment.value, _iscroll.hadjustment.value,
-      _pixbuf_changed, _tags.entry.get_tag_list(), _entry.date, _entry.time
+      _entry.journal, _title.text, _text.buffer.text, image, _pixbuf_changed, _tags.entry.get_tag_list(), _entry.date, _entry.time
     );
 
     if( _journal.db.save_entry( entry ) ) {
@@ -576,9 +597,13 @@ public class TextArea : Box {
     _date.label = dt.format( "%A, %B %e, %Y  %I:%M %p" );
 
     /* Set the image */
-    _pixbuf = entry.image;
+    if( entry.image == null ) {
+      _pixbuf = null;
+    } else {
+      _pixbuf = entry.image.pixbuf;
+      display_pixbuf( entry.image.pos, entry.image.vadj, entry.image.hadj );
+    }
     _pixbuf_changed = false;
-    display_pixbuf( entry.image_pos, entry.image_vadj, entry.image_hadj );
 
     /* Set the tags */
     _tags.journal = _journal;

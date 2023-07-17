@@ -102,7 +102,8 @@ public class ExportXML : Export {
 
       if( (load_entry.image != null) && include_images ) {
 
-        var path = create_image( load_entry.image );
+        var img  = load_entry.image;
+        var path = create_image( img.pixbuf );
         stdout.printf( "Attempted to create image with path: %s\n", path );
 
         if( path != null ) {
@@ -111,9 +112,9 @@ public class ExportXML : Export {
           image->set_prop( "path", path );
 
           if( for_import ) {
-            image->set_prop( "pos",  load_entry.image_pos.to_string() );
-            image->set_prop( "vadj", load_entry.image_vadj.to_string() );
-            image->set_prop( "hadj", load_entry.image_hadj.to_string() );
+            image->set_prop( "pos",  img.pos.to_string() );
+            image->set_prop( "vadj", img.vadj.to_string() );
+            image->set_prop( "hadj", img.hadj.to_string() );
           }
 
           node->add_child( image );
@@ -271,31 +272,21 @@ public class ExportXML : Export {
   private void import_image( Xml.Node* node, DBEntry entry ) {
 
     var path = node->get_prop( "path" );
-    if( path != null ) {
+    var pos  = node->get_prop( "pos" );
+    var vadj = node->get_prop( "vadj" );
+    var hadj = node->get_prop( "hadj" );
+
+    if( (path != null) && (pos != null) && (vadj != null) && (hadj != null) ) {
       try {
         if( !Path.is_absolute( path ) ) {
           path = Path.build_filename( _directory, path );
         }
-        entry.image = new Pixbuf.from_file( path );
+        var pixbuf  = new Pixbuf.from_file( path );
+        entry.image = new DBImage( pixbuf, int.parse( pos ), double.parse( vadj ), double.parse( hadj ) );
         entry.image_changed = true;
       } catch( Error e ) {
         stderr.printf( "ERROR: %s\n", e.message );
       }
-    }
-
-    var pos = node->get_prop( "pos" );
-    if( pos != null ) {
-      entry.image_pos = int.parse( pos );
-    }
-
-    var vadj = node->get_prop( "vadj" );
-    if( vadj != null ) {
-      entry.image_vadj = double.parse( vadj );
-    }
-
-    var hadj = node->get_prop( "hadj" );
-    if( hadj != null ) {
-      entry.image_hadj = double.parse( hadj );
     }
 
   }
