@@ -291,6 +291,11 @@ public class Database {
 
   }
 
+  /* Creates a string that is suitable for SQL operations */
+  private string sql_string( string str ) {
+    return( str.replace( "'", "''" ) );
+  }
+
   /* Creates the database tables if they do not already exist */
   private bool create_tables() {
 
@@ -390,11 +395,18 @@ public class Database {
     });
 
     if( journal_id == -1 ) {
-      var journal_insert = "INSERT INTO Journal (name, template, description) VALUES('%s', '', '') RETURNING id;".printf( entry.journal );
+
+      var journal_insert = """
+        INSERT INTO Journal (name, template, description)
+        VALUES('%s', '', '')
+        RETURNING id;
+        """.printf( sql_string( entry.journal ) );
+
       res = exec_query( journal_insert, (ncols, vals, names) => {
         journal_id = int.parse( vals[0] );
         return( 0 );
       });
+
     }
 
     assert( journal_id != -1 );
@@ -403,7 +415,7 @@ public class Database {
     var entry_query = """
         INSERT INTO Entry (title, txt, date, time, image, image_pos, image_vadj, image_hadj, journal_id)
         VALUES ('', '%s', '%s', '%s', NULL, NULL, NULL, NULL, %d);
-        """.printf( entry.text.replace("'", "''"), entry.date, entry.time, journal_id );
+        """.printf( sql_string( entry.text ), entry.date, entry.time, journal_id );
 
     if( !exec_query( entry_query ) ) {
       return( false );
@@ -489,7 +501,7 @@ public class Database {
       WHERE
         Entry.date = '%s' AND Journal.name = '%s'
       ORDER BY Entry.date;
-    """.printf( entry.date, entry.journal );
+    """.printf( entry.date, sql_string( entry.journal ) );
 
     var loaded = false;
     exec_query( query, (ncols, vals, names) => {
@@ -529,11 +541,45 @@ public class Database {
   public bool save_tags_only( DBEntry entry ) {
 
     foreach( var tag in entry.tags ) {
-      var tag_query = "INSERT INTO Tag (name) VALUES('%s');".printf( tag );
+      var tag_query = "INSERT INTO Tag (name) VALUES('%s');".printf( sql_string( tag ) );
       exec_query( tag_query );
     }
 
     return( true );
+
+  }
+
+  /* Save any changes to the given journal data */
+  public bool save_journal( string orig_name, string name, string template, string description ) {
+
+    var query = """
+      UPDATE Journal
+      SET name = '%s', template = '%s', description = '%s'
+      WHERE name = '%s';
+      """.printf( sql_string( name ), sql_string( template ), sql_string( description ), sql_string( orig_name ) );
+
+    return( exec_query( query ) );
+
+  }
+
+  /* Loads the journal information for the Journal with the given name */
+  public bool load_journal( string name, out string template, out string description ) {
+
+    var query = "SELECT * FROM Journal WHERE name = '%s';".printf( sql_string( name ) );
+
+    var rd_template = "";
+    var rd_description = "";
+
+    var res = exec_query( query, (ncols, vals, names) => {
+      rd_template    = vals[1];
+      rd_description = vals[2];
+      return( 0 );
+    });
+
+    template = rd_template;
+    description = rd_description;
+
+    return( res );
 
   }
 
@@ -544,7 +590,7 @@ public class Database {
 
     if( entry.image_changed ) {
       if( entry.image == null ) {
-        image_query = ", image = NULL, image_pos = NULL, image_vadj = NULL, image_hadj = NULL";
+        image_query = ", image = NULL";
       } else {
         try {
           uint8[]  buffer  = {};
@@ -553,9 +599,7 @@ public class Database {
           DBImage  image   = entry.image;
           options += "compression";  values += "7";  // TODO - Make this value configurable?
           image.pixbuf.save_to_bufferv( out buffer, "png", options, values );
-          image_query = ", image = '%s', image_pos = %d, image_vadj = %g, image_hadj = %g".printf(
-            Base64.encode( (uchar[])buffer ), image.pos, image.vadj, image.hadj
-          );
+          image_query = "image = '%s',".printf( Base64.encode( (uchar[])buffer ) );
         } catch( Error e ) {
           stderr.printf( "ERROR: %s\n", e.message );
         }
@@ -564,10 +608,10 @@ public class Database {
 
     var entry_query = """ 
       UPDATE Entry
-      SET title = '%s', txt = '%s' %s
+      SET title = '%s', txt = '%s', %s image_pos = %d, image_vadj = %g, image_hadj = %g
       WHERE date = '%s'
       RETURNING id;
-      """.printf( entry.title.replace("'", "''"), entry.text.replace("'", "''"), image_query, entry.date );
+      """.printf( sql_string( entry.title ), sql_string( entry.text ), image_query, entry.image.pos, entry.image.vadj, entry.image.hadj, entry.date );
 
     var entry_id = -1;
     var res = exec_query( entry_query, (ncols, vals, names) => {
