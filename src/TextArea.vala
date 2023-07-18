@@ -42,6 +42,7 @@ public class TextArea : Box {
   private bool             _pixbuf_changed = false;
   private GLib.Menu        _image_menu;
   private GLib.Menu        _templates_menu;
+  private GLib.Menu        _trash_menu;
   private Statistics       _stats;
   private Label            _quote;
   private Revealer         _quote_revealer;
@@ -52,7 +53,9 @@ public class TextArea : Box {
     { "action_add_entry_image",    action_add_entry_image },
     { "action_remove_entry_image", action_remove_entry_image },
     { "action_insert_template",    action_insert_template, "s" },
-    { "action_delete_entry",       action_delete_entry }
+    { "action_restore_entry",      action_restore_entry },
+    { "action_delete_entry",       action_delete_entry },
+    { "action_trash_entry",        action_trash_entry }
   };
 
   /* Create the main window UI */
@@ -336,13 +339,13 @@ public class TextArea : Box {
     var template_menu = new GLib.Menu();
     template_menu.append_submenu( _( "Insert Template" ), _templates_menu );
 
-    var delete_menu = new GLib.Menu();
-    delete_menu.append( _( "Delete Entry" ), "textarea.action_delete_entry" );
+    /* Create trash menu */
+    _trash_menu = new GLib.Menu();
 
     var menu = new GLib.Menu();
     menu.append_section( null, _image_menu );
     menu.append_section( null, template_menu );
-    menu.append_section( null, delete_menu );
+    menu.append_section( null, _trash_menu );
 
     return( menu );
 
@@ -423,7 +426,7 @@ public class TextArea : Box {
   }
 
   /* Moves the current entry to the trash */
-  private void action_delete_entry() {
+  private void action_trash_entry() {
 
     var journal = _journals.get_journal_by_name( _entry.journal );
     if( journal != null ) {
@@ -436,7 +439,6 @@ public class TextArea : Box {
       load_entry.date    = _entry.date;
 
       var load_result = _journals.trash.db.load_entry( load_entry, true );
-      stdout.printf( "load_result: %s\n", load_result.to_string() );
 
       if( load_result != DBLoadResult.FAILED ) {
         load_entry.merge_with_entry( _entry );
@@ -446,6 +448,41 @@ public class TextArea : Box {
         }
       }
 
+    }
+
+  }
+
+  /* Moves an entry from the trash back to the originating journal */
+  private void action_restore_entry() {
+
+    var journal = _journals.get_journal_by_name( _entry.journal );
+
+    /* If the journal needs to be created, do it now */
+    if( journal == null ) {
+      string template    = "";
+      string description = "";
+      if( _journals.trash.db.load_journal( _entry.journal, out template, out description ) ) {
+        journal = new Journal( _entry.journal, template, description );
+        _journals.add_journal( journal, true );
+      } else {
+        return;
+      }
+    }
+
+    /* Save the current entry to the original journal and then remove it from the trash */
+    if( journal.db.save_entry( _entry ) && _journals.trash.db.remove_entry( _entry ) ) {
+      _journals.current_changed( true );
+      stdout.printf( "Entry successfully restored from trash\n" );
+    }
+
+  }
+
+  /* Permanently delete the entry from teh trash */
+  private void action_delete_entry() {
+
+    if( _journals.trash.db.remove_entry( _entry ) ) {
+      _journals.current_changed( true );
+      stdout.printf( "Entry permanently deleted from trash\n" );
     }
 
   }
@@ -650,6 +687,15 @@ public class TextArea : Box {
 
     /* Clear the modified bits */
     _text.buffer.set_modified( false );
+
+    /* Update the _trash_menu */
+    _trash_menu.remove_all();
+    if( _journals.current.is_trash ) {
+      _trash_menu.append( _( "Restore entry" ),            "textarea.action_restore_entry" );
+      _trash_menu.append( _( "Delete entry permanently" ), "textarea.action_delete_entry" );
+    } else {
+      _trash_menu.append( _( "Move entry to trash" ),      "textarea.action_trash_entry" );
+    }
 
     /* Set the grab */
     if( editable ) {
