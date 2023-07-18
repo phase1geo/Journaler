@@ -262,7 +262,7 @@ public class Database {
   private bool             _include_journal = false;
 
   /* Useful for debugging database issues by displaying the table contents */
-  private bool debug = true;
+  private bool debug = false;
 
   public bool include_journal {
     get {

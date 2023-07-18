@@ -82,6 +82,7 @@ public class Journals {
   public bool empty_trash() {
     if( _trash.remove_db() ) {
       _trash = new Journal.trash();
+      current_changed( true );
       return( true );
     }
     return( false );

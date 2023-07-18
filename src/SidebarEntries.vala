@@ -36,11 +36,16 @@ public class SidebarEntries : Box {
   private ScrolledWindow _lb_scroll;
   private Calendar       _cal;
   private bool           _ignore_select = false;
+  private MenuButton     _burger_mb;
+  private GLib.Menu      _journal_burger_menu;
+  private GLib.Menu      _trash_burger_menu;
 
   private const GLib.ActionEntry action_entries[] = {
-    { "action_select_trash",   action_select_trash },
-    { "action_select_journal", action_select_journal, "s" },
-    { "action_new_journal",    action_new_journal },
+    { "action_select_trash",         action_select_trash },
+    { "action_select_journal",       action_select_journal, "s" },
+    { "action_new_journal",          action_new_journal },
+    { "action_edit_current_journal", action_edit_current_journal },
+    { "action_empty_trash",          action_empty_trash }
   };
 
   public signal void edit_journal( Journal? journal );
@@ -59,9 +64,14 @@ public class SidebarEntries : Box {
       populate( refresh );
       if( !refresh ) {
         if( _journals.current.is_trash ) {
-          var listbox_entry = _listbox_entries.index( 0 );
-          show_entry_for_date( listbox_entry.journal, listbox_entry.date, true, true );
+          _burger_mb.menu_model = _trash_burger_menu;
+          action_set_enabled( "entries.action_empty_trash", (_listbox_entries.length > 0) );
+          if( _listbox_entries.length > 0 ) {
+            var listbox_entry = _listbox_entries.index( 0 );
+            show_entry_for_date( listbox_entry.journal, listbox_entry.date, true, true );
+          }
         } else {
+          _burger_mb.menu_model = _journal_burger_menu;
           show_entry_for_date( _journals.current.name, DBEntry.todays_date(), true, true );
         }
       }
@@ -119,17 +129,20 @@ public class SidebarEntries : Box {
       menu_model = journal_menu
     };
 
-    var edit = new Button.from_icon_name( "edit-symbolic" ) {
-      tooltip_text = _( "Edit Current Journal" )
+    _journal_burger_menu = new GLib.Menu();
+    _journal_burger_menu.append( _( "Edit current journal" ), "entries.action_edit_current_journal" );
+
+    _trash_burger_menu = new GLib.Menu();
+    _trash_burger_menu.append( _( "Empty trash" ), "entries.action_empty_trash" );
+
+    _burger_mb = new MenuButton() {
+      icon_name  = "view-more-symbolic",
+      menu_model = _journal_burger_menu
     };
-    edit.clicked.connect(() => {
-      _win.reset_timer();
-      edit_journal( _journals.current );
-    });
 
     var box = new Box( Orientation.HORIZONTAL, 5 );
     box.append( _journal_mb );
-    box.append( edit );
+    box.append( _burger_mb );
 
     append( box );
 
@@ -151,6 +164,19 @@ public class SidebarEntries : Box {
   private void action_new_journal() {
     _win.reset_timer();
     edit_journal( null );
+  }
+
+  /* Edits the current journal */
+  private void action_edit_current_journal() {
+    _win.reset_timer();
+    edit_journal( _journals.current );
+  }
+
+  /* Empties the trash */
+  private void action_empty_trash() {
+    _win.reset_timer();
+    // TBD
+    _journals.empty_trash();
   }
 
   /* Adds the current listbox UI */
@@ -398,8 +424,6 @@ public class SidebarEntries : Box {
     entry.journal = journal_name;
     entry.date    = date;
 
-    stdout.printf( "Current journal: %s, entry: %s\n", _journals.current.name, entry.to_string() );
-
     /* Attempt to load the entry */
     var load_result = _journals.current.db.load_entry( entry, (!is_trash && create_if_needed) );
 
@@ -412,7 +436,6 @@ public class SidebarEntries : Box {
     select_entry_only( entry );
 
     /* Indicate that the entry should be displayed */
-    stdout.printf( "Showing trash (%s), load_result (%s), entry: %s\n", is_trash.to_string(), load_result.to_string(), entry.to_string() );
     show_journal_entry( entry, (editable && !is_trash && (load_result != DBLoadResult.FAILED)) );
 
   }
