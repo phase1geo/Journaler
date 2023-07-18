@@ -257,10 +257,10 @@ public class Reviewer : Box {
   }
 
   /* Adds the given label as a checkbutton to the list */
-  private void add_item_to_list( ListBox lb, string label ) {
+  private void add_item_to_list( ListBox lb, string label, bool active ) {
 
     var btn = new CheckButton.with_label( label ) {
-      active        = true,
+      active        = active,
       margin_start  = 5,
       margin_end    = 5,
       margin_top    = 5,
@@ -346,8 +346,9 @@ public class Reviewer : Box {
     journals.sort( strcmp );
 
     foreach( var journal_name in journals ) {
-      add_item_to_list( _journal_lb, journal_name );
+      add_item_to_list( _journal_lb, journal_name, true );
     }
+    add_item_to_list( _journal_lb, _journals.trash.name, false );
 
     _num_journals = (int)journals.length();
 
@@ -375,9 +376,9 @@ public class Reviewer : Box {
     all_tags.sort( strcmp );
 
     /* Populate the listbox */
-    add_item_to_list( _tag_lb, _( "Untagged" ) );
+    add_item_to_list( _tag_lb, _( "Untagged" ), true );
     foreach( var tag in all_tags ) {
-      add_item_to_list( _tag_lb, tag );
+      add_item_to_list( _tag_lb, tag, true );
     }
 
     _num_tags = (int)all_tags.length();
