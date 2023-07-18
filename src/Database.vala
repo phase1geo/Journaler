@@ -81,7 +81,11 @@ public class DBEntry {
 
     /* If the text does not match, append the text of the entry to the end of our text, placing a horizontal separator line */
     if( text != entry.text ) {
-      text += "\n\n---\n\n%s".printf( entry.text );
+      if( text == "" ) {
+        text = entry.text;
+      } else if( entry.text != "" ) {
+        text += "\n\n---\n\n%s".printf( entry.text );
+      }
     }
 
     /* If this entry doesn't contain an image but the other one does, use the other entry's image data */
@@ -230,7 +234,7 @@ public class DBEntry {
     foreach( string tag in tags ) {
       tag_array += tag;
     }
-    return( "title: %s, text: %s, date: %s, tags: %s".printf( title, text, date, string.joinv( ":", tag_array ) ) );
+    return( "journal: %s, title: %s, text: %s, date: %s, tags: %s".printf( journal, title, text, date, string.joinv( ":", tag_array ) ) );
   }
 
 }
@@ -258,7 +262,7 @@ public class Database {
   private bool             _include_journal = false;
 
   /* Useful for debugging database issues by displaying the table contents */
-  private bool debug = false;
+  private bool debug = true;
 
   public bool include_journal {
     get {
@@ -558,7 +562,11 @@ public class Database {
       WHERE name = '%s';
       """.printf( sql_string( name ), sql_string( template ), sql_string( description ), sql_string( orig_name ) );
 
-    return( exec_query( query ) );
+    var res = exec_query( query );
+
+    show_all_tables( "After journal save" );
+
+    return( res );
 
   }
 
@@ -588,10 +596,10 @@ public class Database {
 
     var image_query = "";
 
-    if( entry.image_changed ) {
-      if( entry.image == null ) {
-        image_query = ", image = NULL";
-      } else {
+    if( entry.image == null ) {
+      image_query = ", image = NULL";
+    } else {
+      if( entry.image_changed ) {
         try {
           uint8[]  buffer  = {};
           string[] options = {};
@@ -599,19 +607,20 @@ public class Database {
           DBImage  image   = entry.image;
           options += "compression";  values += "7";  // TODO - Make this value configurable?
           image.pixbuf.save_to_bufferv( out buffer, "png", options, values );
-          image_query = "image = '%s',".printf( Base64.encode( (uchar[])buffer ) );
+          image_query = ", image = '%s'".printf( Base64.encode( (uchar[])buffer ) );
         } catch( Error e ) {
           stderr.printf( "ERROR: %s\n", e.message );
         }
       }
+      image_query += ", image_pos = %d, image_vadj = %g, image_hadj = %g".printf( entry.image.pos, entry.image.vadj, entry.image.hadj );
     }
 
     var entry_query = """ 
       UPDATE Entry
-      SET title = '%s', txt = '%s', %s image_pos = %d, image_vadj = %g, image_hadj = %g
+      SET title = '%s', txt = '%s' %s
       WHERE date = '%s'
       RETURNING id;
-      """.printf( sql_string( entry.title ), sql_string( entry.text ), image_query, entry.image.pos, entry.image.vadj, entry.image.hadj, entry.date );
+      """.printf( sql_string( entry.title ), sql_string( entry.text ), image_query, entry.date );
 
     var entry_id = -1;
     var res = exec_query( entry_query, (ncols, vals, names) => {
@@ -673,6 +682,8 @@ public class Database {
       res = exec_query( map_query );
     }
 
+    show_all_tables( "After entry removed" );
+
     return( res );
 
   }
@@ -694,6 +705,8 @@ public class Database {
         exec_query( map_query );
       }
     }
+
+    show_all_tables( "After entry purging" );
 
     return( res );
 
@@ -749,6 +762,7 @@ public class Database {
     if( !debug ) return;
     stdout.printf( "%s\n", msg );
     stdout.printf( "==========================\n" );
+    show_table( "Journal" );
     show_table( "Entry" );
     show_table( "Tag" );
     show_table( "TagMap" );

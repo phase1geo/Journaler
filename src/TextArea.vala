@@ -339,7 +339,7 @@ public class TextArea : Box {
     var menu = new GLib.Menu();
     menu.append_section( null, _image_menu );
     menu.append_section( null, template_menu );
-    menu.append( _( "Delete Entry" ), "action_delete_entry" );
+    menu.append( _( "Delete Entry" ), "textarea.action_delete_entry" );
 
     return( menu );
 
@@ -428,8 +428,19 @@ public class TextArea : Box {
       /* Save the current entry so that we have _entry up-to-date */
       save();
 
-      /* Move the entry to the trash */
-      if( _journals.trash.db.save_entry( _entry ) && journal.db.remove_entry( _entry ) ) {
+      var load_entry     = new DBEntry();
+      load_entry.journal = _entry.journal;
+      load_entry.date    = _entry.date;
+
+      var load_result = _journals.trash.db.load_entry( load_entry, true );
+      stdout.printf( "load_result: %s\n", load_result.to_string() );
+
+      if( load_result != DBLoadResult.FAILED ) {
+        load_entry.merge_with_entry( _entry );
+        if( _journals.trash.db.save_entry( load_entry ) && journal.db.remove_entry( load_entry ) ) {
+          _journals.current_changed( true );
+          stdout.printf( "Entry successfully moved to the trash\n" );
+        }
       }
 
     }

@@ -58,12 +58,22 @@ public class SidebarEntries : Box {
     _journals.current_changed.connect((refresh) => {
       populate( refresh );
       if( !refresh ) {
-        show_entry_for_date( DBEntry.todays_date(), true, true );
+        if( _journals.current.is_trash ) {
+          var listbox_entry = _listbox_entries.index( 0 );
+          show_entry_for_date( listbox_entry.journal, listbox_entry.date, true, true );
+        } else {
+          show_entry_for_date( _journals.current.name, DBEntry.todays_date(), true, true );
+        }
       }
     });
     _journals.list_changed.connect(() => {
       populate_journal_menu();
-      show_entry_for_date( DBEntry.todays_date(), true, true );
+      if( _journals.current.is_trash ) {
+        var listbox_entry = _listbox_entries.index( 0 );
+        show_entry_for_date( listbox_entry.journal, listbox_entry.date, true, true );
+      } else {
+        show_entry_for_date( _journals.current.name, DBEntry.todays_date(), true, true );
+      }
     });
     _listbox_entries = new Array<DBEntry>();
 
@@ -156,9 +166,10 @@ public class SidebarEntries : Box {
       if( _ignore_select || (row == null) ) {
         return;
       }
-      var index = row.get_index();
-      var date  = _listbox_entries.index( index ).date;
-      show_entry_for_date( date, false, true );
+      var index   = row.get_index();
+      var journal = _listbox_entries.index( index ).journal;
+      var date    = _listbox_entries.index( index ).date;
+      show_entry_for_date( journal, date, false, true );
     });
 
     _lb_scroll = new ScrolledWindow() {
@@ -202,7 +213,7 @@ public class SidebarEntries : Box {
         _listbox.select_row( _listbox.get_row_at_index( index ) );
       } else {
         _listbox.select_row( null );
-        show_entry_for_date( date, false, true );
+        show_entry_for_date( _journals.current.name, date, false, true );
       }
     });
 
@@ -379,13 +390,15 @@ public class SidebarEntries : Box {
   }
 
   /* Displays the entry for the given date */
-  public void show_entry_for_date( string date, bool create_if_needed, bool editable ) {
+  public void show_entry_for_date( string journal_name, string date, bool create_if_needed, bool editable ) {
 
     var is_trash = _journals.current.is_trash;
 
     var entry = new DBEntry();
-    entry.journal = _journals.current.name;
+    entry.journal = journal_name;
     entry.date    = date;
+
+    stdout.printf( "Current journal: %s, entry: %s\n", _journals.current.name, entry.to_string() );
 
     /* Attempt to load the entry */
     var load_result = _journals.current.db.load_entry( entry, (!is_trash && create_if_needed) );
@@ -399,6 +412,7 @@ public class SidebarEntries : Box {
     select_entry_only( entry );
 
     /* Indicate that the entry should be displayed */
+    stdout.printf( "Showing trash (%s), load_result (%s), entry: %s\n", is_trash.to_string(), load_result.to_string(), entry.to_string() );
     show_journal_entry( entry, (editable && !is_trash && (load_result != DBLoadResult.FAILED)) );
 
   }
