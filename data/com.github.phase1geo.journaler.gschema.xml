@@ -86,6 +86,11 @@
       <summary>Specifies the entry word count to reach the daily goal</summary>
       <description>Specifies the entry word count to reach the daily goal</description>
     </key>
+    <key name="enable-spellchecker" type="b">
+      <default>true</default>
+      <summary>Enables or disables the spelling checker</summary>
+      <description>Enables or disables the spelling checker</description>
+    </key>
     <key name="developer-mode" type="b">
       <default>false</default>
       <summary>This values is not recommended for Journaler non-developers</summary>

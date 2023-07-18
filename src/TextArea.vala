@@ -88,6 +88,7 @@ public class TextArea : Box {
         case "editor-font-size"    :  set_font_size();      break;
         case "editor-margin"       :  set_margin( false );  break;
         case "editor-line-spacing" :  set_line_spacing();   break;
+        case "enable-spellchecker" :  set_spellchecker();   break;
         case "enable-quotations"   :  
           if( _buffer.text == "" ) {
             _quote_revealer.reveal_child = Journaler.settings.get_boolean( "enable-quotations" );
@@ -133,6 +134,17 @@ public class TextArea : Box {
 
     _text.pixels_below_lines = line_spacing;
     _text.pixels_inside_wrap = line_spacing;
+
+  }
+
+  /* Enables or disables the spellchecker */
+  private void set_spellchecker() {
+
+    if( Journaler.settings.get_boolean( "enable-spellchecker" ) ) {
+      _spell.attach( _text );
+    } else {
+      _spell.detach();
+    }
 
   }
 
@@ -278,12 +290,12 @@ public class TextArea : Box {
     append( sep2 );
     append( _stats );
 
-    connect_spell_checker();
+    initialize_spell_checker();
 
   }
 
   /* Connects the text widget to the spell checker */
-  private void connect_spell_checker() {
+  private void initialize_spell_checker() {
 
     _spell = new SpellChecker();
 
@@ -307,20 +319,8 @@ public class TextArea : Box {
       _spell.set_language( lang_list.get( 0 ) );
     }
 
-    if( true /*Journaler.settings.get_boolean( "enable-spell-checking" )*/ ) {
-      activate_spell_checking();
-    }
+    set_spellchecker();
 
-  }
-
-  /* Enables the spell checker */
-  public void activate_spell_checking() {
-    _spell.attach( _text );
-  }
-
-  /* Disables the spell checker */
-  public void deactivate_spell_checking() {
-    _spell.detach();
   }
 
   /* Creates burger menu and populates it with features */
@@ -336,10 +336,13 @@ public class TextArea : Box {
     var template_menu = new GLib.Menu();
     template_menu.append_submenu( _( "Insert Template" ), _templates_menu );
 
+    var delete_menu = new GLib.Menu();
+    delete_menu.append( _( "Delete Entry" ), "textarea.action_delete_entry" );
+
     var menu = new GLib.Menu();
     menu.append_section( null, _image_menu );
     menu.append_section( null, template_menu );
-    menu.append( _( "Delete Entry" ), "textarea.action_delete_entry" );
+    menu.append_section( null, delete_menu );
 
     return( menu );
 

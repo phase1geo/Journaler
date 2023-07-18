@@ -4,7 +4,7 @@ using Enchant;
 /* My implementation of gtkspell that is compatible with Gtk4 and gtksourceview-5 */
 public class SpellChecker {
 
-  private Broker broker = null;
+  private Broker       broker = null;
   private unowned Dict dict;
 
   private TextView?    view = null;
@@ -361,8 +361,9 @@ public class SpellChecker {
     if( view == null ) {
       return;
     }
-    view = null;
+    view.remove_controller( right_click );
     set_buffer( null );
+    view = null;
     deferred_check = false;
   }
 
