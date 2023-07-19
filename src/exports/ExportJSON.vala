@@ -72,7 +72,7 @@ public class ExportJSON : Export {
         builder.add_string_value( journal.description );
 
         var entries = new Array<DBEntry>();
-        journal.db.get_all_entries( entries );
+        journal.db.get_all_entries( false, entries );
 
         builder.set_member_name( "entries" );
         builder.begin_array();

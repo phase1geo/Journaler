@@ -42,7 +42,6 @@ public class TextArea : Box {
   private bool             _pixbuf_changed = false;
   private GLib.Menu        _image_menu;
   private GLib.Menu        _templates_menu;
-  private GLib.Menu        _trash_menu;
   private Statistics       _stats;
   private Label            _quote;
   private Revealer         _quote_revealer;
@@ -179,7 +178,7 @@ public class TextArea : Box {
     _burger = new MenuButton() {
       icon_name  = "view-more-symbolic",
       halign     = Align.END,
-      menu_model = create_burger_menu()
+      menu_model = create_burger_menu( false )
     };
 
     var tbox = new Box( Orientation.HORIZONTAL, 5 );
@@ -327,25 +326,36 @@ public class TextArea : Box {
   }
 
   /* Creates burger menu and populates it with features */
-  private MenuModel create_burger_menu() {
+  private MenuModel create_burger_menu( bool for_trash ) {
 
-    /* Create image menu */
-    _image_menu = new GLib.Menu();
-    _image_menu.append( _( "Add Image" ), "textarea.action_add_entry_image" );
+    GLib.Menu menu = new GLib.Menu();
 
-    /* Create templates menu */
-    _templates_menu = new GLib.Menu();
+    if( for_trash ) {
 
-    var template_menu = new GLib.Menu();
-    template_menu.append_submenu( _( "Insert Template" ), _templates_menu );
+      menu.append( _( "Restore entry" ),            "textarea.action_restore_entry" );
+      menu.append( _( "Delete entry permanently" ), "textarea.action_delete_entry" );
 
-    /* Create trash menu */
-    _trash_menu = new GLib.Menu();
+    } else {
 
-    var menu = new GLib.Menu();
-    menu.append_section( null, _image_menu );
-    menu.append_section( null, template_menu );
-    menu.append_section( null, _trash_menu );
+      /* Create image menu */
+      _image_menu = new GLib.Menu();
+      _image_menu.append( _( "Add Image" ), "textarea.action_add_entry_image" );
+
+      /* Create templates menu */
+      _templates_menu = new GLib.Menu();
+
+      var template_menu = new GLib.Menu();
+      template_menu.append_submenu( _( "Insert Template" ), _templates_menu );
+
+      /* Create trash menu */
+      var trash_menu = new GLib.Menu();
+      trash_menu.append( _( "Move entry to trash" ), "textarea.action_trash_entry" );
+
+      menu.append_section( null, _image_menu );
+      menu.append_section( null, template_menu );
+      menu.append_section( null, trash_menu );
+
+    }
 
     return( menu );
 
@@ -634,18 +644,29 @@ public class TextArea : Box {
       save();
     }
 
+    /* Update the burger menu, if necessary */
+    if( (_journal == null) || (_journal.is_trash != _journals.current.is_trash) ) {
+      _burger.menu_model = create_burger_menu( _journals.current.is_trash );
+    }
+
     _journal = _journals.current;
     _entry   = entry;
 
+    var enable_ui = editable && !_journal.is_trash && _entry.loaded;
+
     /* Set the title */
     _title.text      = entry.title;
-    _title.editable  = editable;
-    _title.can_focus = editable;
-    _title.focusable = editable;
+    _title.editable  = enable_ui;
+    _title.can_focus = enable_ui;
+    _title.focusable = enable_ui;
 
     /* Set the date */
-    var dt = entry.datetime();
-    _date.label = dt.format( "%A, %B %e, %Y  %I:%M %p" );
+    if( entry.date == "" ) {
+      _date.label = "";
+    } else {
+      var dt = entry.datetime();
+      _date.label = dt.format( "%A, %B %e, %Y  %I:%M %p" );
+    }
 
     /* Set the image */
     if( entry.image == null ) {
@@ -660,10 +681,10 @@ public class TextArea : Box {
     _tags.journal = _journal;
     _tags.entry   = entry;
     _tags.update_tags();
-    _tags.editable = editable;
+    _tags.editable = enable_ui;
 
     /* Show the quote of the day if the text field is empty */
-    if( (entry.text == "") && Journaler.settings.get_boolean( "enable-quotations" ) && editable ) {
+    if( (entry.text == "") && Journaler.settings.get_boolean( "enable-quotations" ) && enable_ui ) {
       _quote.label                        = _quotes.get_quote();
       _quote_revealer.transition_duration = 0;
       _quote_revealer.reveal_child        = true;
@@ -681,24 +702,15 @@ public class TextArea : Box {
     _text.buffer.end_irreversible_action();
 
     /* Set the editable bit */
-    _text.editable  = editable;
-    _text.can_focus = editable;
-    _text.focusable = editable;
+    _text.editable  = enable_ui;
+    _text.can_focus = enable_ui;
+    _text.focusable = enable_ui;
 
     /* Clear the modified bits */
     _text.buffer.set_modified( false );
 
-    /* Update the _trash_menu */
-    _trash_menu.remove_all();
-    if( _journals.current.is_trash ) {
-      _trash_menu.append( _( "Restore entry" ),            "textarea.action_restore_entry" );
-      _trash_menu.append( _( "Delete entry permanently" ), "textarea.action_delete_entry" );
-    } else {
-      _trash_menu.append( _( "Move entry to trash" ),      "textarea.action_trash_entry" );
-    }
-
     /* Set the grab */
-    if( editable ) {
+    if( enable_ui ) {
       var title_empty = _title.text == "";
       var tags_empty  = _tags.entry.tags.length() == 0;
       var text_empty  = _text.buffer.text == "";
@@ -712,7 +724,7 @@ public class TextArea : Box {
     }
 
     /* Handle other UI state related to the editable indicator */
-    if( editable ) {
+    if( (editable || _journal.is_trash) && _entry.loaded ) {
       _burger.show();
     } else {
       _burger.hide();

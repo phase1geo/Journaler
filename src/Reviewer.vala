@@ -481,8 +481,8 @@ public class Reviewer : Box {
 
     /* Add the matching entries to the list */
     foreach( var journal_name in journals ) {
-      var journal = _journals.get_journal_by_name( journal_name );
-      journal.db.query_entries( journal_name, tags, start_date, end_date, _search_entry.text, _match_entries );
+      var journal = (journal_name == _journals.trash.name) ? _journals.trash : _journals.get_journal_by_name( journal_name );
+      journal.db.query_entries( (journal_name == _journals.trash.name), tags, start_date, end_date, _search_entry.text, _match_entries );
     }
 
     /* Sort the entries */
@@ -559,7 +559,7 @@ public class Reviewer : Box {
       ellipsize  = Pango.EllipsizeMode.END
     };
     label.add_css_class( "listbox-head" );
-    var journal = new Label( entry.journal ) {
+    var journal = new Label( entry.trash ? _journals.trash.name : entry.journal ) {
       halign  = Align.START,
       hexpand = true
     };

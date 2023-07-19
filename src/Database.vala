@@ -26,15 +26,17 @@ public class DBImage {
 
 public class DBEntry {
 
-  private List<string> _tags = new List<string>();
+  private List<string> _tags   = new List<string>();
 
   public string   journal       { get; set; default = ""; }
+  public bool     trash         { get; set; default = false; }
   public string   title         { get; set; default = ""; }
   public string   text          { get; set; default = ""; }
   public string   date          { get; set; default = ""; }
   public string   time          { get; set; default = ""; }
   public DBImage? image         { get; set; default = null; }
   public bool     image_changed { get; set; default = false; }
+  public bool     loaded        { get; set; default = false; }
 
   public List<string> tags  {
     get {
@@ -58,8 +60,9 @@ public class DBEntry {
   }
 
   /* Constructor */
-  public DBEntry.for_list( string journal, string title, string date ) {
+  public DBEntry.for_list( string journal, bool trash, string title, string date ) {
     this.journal = journal;
+    this.trash   = trash;
     this.title   = title;
     this.date    = date;
   }
@@ -352,7 +355,7 @@ public class Database {
   }
 
   /* Returns the list of all entries to be displayed in the listbox */
-  public bool get_all_entries( Array<DBEntry> entries ) {
+  public bool get_all_entries( bool trash, Array<DBEntry> entries ) {
 
     var query = """
       SELECT
@@ -365,7 +368,7 @@ public class Database {
       """;
 
     var retval = exec_query( query, (ncols, vals, names) => {
-      var entry = new DBEntry.for_list( vals[EntryPos.JOURNAL], vals[EntryPos.TITLE], vals[EntryPos.DATE] );
+      var entry = new DBEntry.for_list( vals[EntryPos.JOURNAL], trash, vals[EntryPos.TITLE], vals[EntryPos.DATE] );
       entries.append_val( entry );
       return( 0 );
     });
@@ -425,6 +428,9 @@ public class Database {
       return( false );
     }
 
+    /* Indicate that this entry has data from the database */
+    entry.loaded = true;
+
     show_all_tables( "After entry creation\n" );
 
     return( true );
@@ -432,7 +438,7 @@ public class Database {
   }
 
   /* Performs search query using tags, date and search string */
-  public bool query_entries( string journal_name, List<string> tags, string? start_date, string? end_date, string str,
+  public bool query_entries( bool trash, List<string> tags, string? start_date, string? end_date, string str,
                              Gee.List<DBEntry> matched_entries ) {
 
     string[] where = {};
@@ -479,7 +485,7 @@ public class Database {
     var retval = exec_query( query, (ncols, vals, names) => {
       var tag = vals[EntryPos.TAG];
       if( (vals[EntryPos.ID] != last_id) && ((tag == null) ? untagged : (tags.find(tag) != null)) ) {
-        var entry = new DBEntry.for_list( vals[EntryPos.JOURNAL], vals[EntryPos.TITLE], vals[EntryPos.DATE] );
+        var entry = new DBEntry.for_list( vals[EntryPos.JOURNAL], trash, vals[EntryPos.TITLE], vals[EntryPos.DATE] );
         matched_entries.add( entry );
         last_id = vals[EntryPos.ID];
       }
@@ -507,11 +513,11 @@ public class Database {
       ORDER BY Entry.date;
     """.printf( entry.date, sql_string( entry.journal ) );
 
-    var loaded = false;
     exec_query( query, (ncols, vals, names) => {
-      entry.title = vals[EntryPos.TITLE];
-      entry.text  = vals[EntryPos.TEXT];
-      entry.time  = vals[EntryPos.TIME];
+      entry.loaded = true;
+      entry.title  = vals[EntryPos.TITLE];
+      entry.text   = vals[EntryPos.TEXT];
+      entry.time   = vals[EntryPos.TIME];
       if( vals[EntryPos.IMAGE] != null ) {
         try {
           var pixload = new PixbufLoader.with_type( "png" );
@@ -527,11 +533,10 @@ public class Database {
       if( tag != null ) {
         entry.add_tag( tag );
       }
-      loaded = true;
       return( 0 );
     });
 
-    if( loaded ) {
+    if( entry.loaded ) {
       return( DBLoadResult.LOADED );
     } else if( create_if_not_found && create_entry( entry ) ) {
       return( DBLoadResult.CREATED );

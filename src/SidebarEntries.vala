@@ -68,7 +68,9 @@ public class SidebarEntries : Box {
           action_set_enabled( "entries.action_empty_trash", (_listbox_entries.length > 0) );
           if( _listbox_entries.length > 0 ) {
             var listbox_entry = _listbox_entries.index( 0 );
-            show_entry_for_date( listbox_entry.journal, listbox_entry.date, true, true );
+            show_entry_for_date( listbox_entry.journal, listbox_entry.date, false, true );
+          } else {
+            show_entry_for_date( _journals.current.name, "", false, false );
           }
         } else {
           _burger_mb.menu_model = _journal_burger_menu;
@@ -85,6 +87,7 @@ public class SidebarEntries : Box {
         show_entry_for_date( _journals.current.name, DBEntry.todays_date(), true, true );
       }
     });
+
     _listbox_entries = new Array<DBEntry>();
 
     /* Add UI elements */
@@ -295,7 +298,7 @@ public class SidebarEntries : Box {
       _listbox_entries.remove_range( 0, _listbox_entries.length );
     }
 
-    if( !_journals.current.db.get_all_entries( _listbox_entries ) ) {
+    if( !_journals.current.db.get_all_entries( _journals.current.is_trash, _listbox_entries ) ) {
       stdout.printf( "ERROR:  Unable to get all entries in the journal\n" );
       return;
     }
@@ -436,7 +439,7 @@ public class SidebarEntries : Box {
     select_entry_only( entry );
 
     /* Indicate that the entry should be displayed */
-    show_journal_entry( entry, (editable && !is_trash && (load_result != DBLoadResult.FAILED)) );
+    show_journal_entry( entry, editable );
 
   }
 

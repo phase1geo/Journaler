@@ -256,7 +256,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     /* Create the reviewer UI */
     _reviewer = new Reviewer( this, _journals );
     _reviewer.show_matched_entry.connect((entry) => {
-      _journals.current = _journals.get_journal_by_name( entry.journal );
+      _journals.current = entry.trash ? _journals.trash : _journals.get_journal_by_name( entry.journal );
       _entries.show_entry_for_date( entry.journal, entry.date, false, false );
     });
     _reviewer.close_requested.connect( action_review );

@@ -60,7 +60,7 @@ public class ExportXML : Export {
     var entries    = new Array<DBEntry>();
 
     // Gather all of the stored entries from the database
-    journal.db.get_all_entries( entries );
+    journal.db.get_all_entries( false, entries );
 
     node->set_prop( "name", journal.name );
 
