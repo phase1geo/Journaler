@@ -58,6 +58,7 @@ public class DBEntry {
   public DBEntry.for_list( string title, string date ) {
     this.title = title;
     this.date  = date;
+    this.time  = "00:00";
   }
 
   /* Constructor */
@@ -611,7 +612,7 @@ public class Database {
   }
 
   /* Displays the contents of the given table (loosely formatted) */
-  private void show_table( string table_name ) {
+  public void show_table( string table_name ) {
 
     var query = """
       SELECT * FROM %s;
