@@ -197,8 +197,13 @@ public class TextArea : Box {
 
     /* Add the tags */
     _tags = new TagBox( _win );
-    _tags.add_class( "date" );
-    _tags.add_class( "text-background" );
+
+    /* Delay adding the CSS classes to clean up a Gtk4 issue */
+    Idle.add(() => {
+      _tags.add_class( "date" );
+      _tags.add_class( "text-background" );
+      return( false );
+    });
 
     var sep1 = new Separator( Orientation.HORIZONTAL );
     var sep2 = new Separator( Orientation.HORIZONTAL );
