@@ -497,6 +497,7 @@ public class Preferences : Gtk.Dialog {
     box.append( create_advanced_import() );
 
     if( Journaler.settings.get_boolean( "developer-mode" ) ) {
+
       var purge_btn = new Button.with_label( "Purge empty entries" );
       purge_btn.clicked.connect(() => {
         if( !_journals.purge_empty_entries() ) {
@@ -504,9 +505,53 @@ public class Preferences : Gtk.Dialog {
         }
       });
       box.append( purge_btn );
+
+      var add_btn = new Button.with_label( "Add 100 entries" );
+      add_btn.clicked.connect( add_test_entries );
+      box.append( add_btn );
     }
 
     return( box );
+
+  }
+
+  private void add_test_entries() {
+
+    string[] words = {"foobar", "ante", "charisma", "goober", "comparison", "another", "sweet", "butterscotch", "peanuts", "sourkraut"};
+
+    var journal = _journals.current;
+    var entries = new Array<DBEntry>();
+    var date    = new DateTime.now_local();
+
+    stdout.printf( "Adding 100 test entries to journal %s\n", journal.name );
+
+    /* Find the oldest date and work backwards from there */
+    journal.db.get_all_entries( entries );
+    if( entries.length > 0 ) {
+      var entry = entries.index( entries.length - 1 );
+      date = entry.datetime();
+      date.add_days( -1 );
+    }
+
+    for( int i=0; i<100; i++ ) {
+
+      string[] text = {};
+      for( int j=0; j<200; j++ ) {
+        text += words[Random.int_range(0, 9)];
+      }
+
+      stdout.printf( "Adding date %s\n", DBEntry.datetime_date( date ) );
+
+      var entry = new DBEntry.with_date( "", string.joinv( " ", text ), null, 0, 0.0, 0.0, false, "", DBEntry.datetime_date( date ), DBEntry.datetime_time( date ) );
+      if( journal.db.create_entry( entry ) && journal.db.save_entry( entry ) ) {
+        stdout.printf( "  Saved entry %d\n", (i + 1) );
+      }
+
+      date = date.add_days( -1 );
+
+    }
+
+    _journals.current_changed( true );
 
   }
 
