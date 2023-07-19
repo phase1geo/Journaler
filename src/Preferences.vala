@@ -506,7 +506,7 @@ public class Preferences : Gtk.Dialog {
       });
       box.append( purge_btn );
 
-      var add_btn = new Button.with_label( "Add 100 entries" );
+      var add_btn = new Button.with_label( "Add 300 entries" );
       add_btn.clicked.connect( add_test_entries );
       box.append( add_btn );
     }
@@ -533,7 +533,7 @@ public class Preferences : Gtk.Dialog {
       date.add_days( -1 );
     }
 
-    for( int i=0; i<100; i++ ) {
+    for( int i=0; i<300; i++ ) {
 
       string[] text = {};
       for( int j=0; j<200; j++ ) {
