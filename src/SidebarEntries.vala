@@ -177,9 +177,22 @@ public class SidebarEntries : Box {
 
   /* Empties the trash */
   private void action_empty_trash() {
+
     _win.reset_timer();
-    // TBD
-    _journals.empty_trash();
+
+    var dialog = new MessageDialog( _win, DialogFlags.MODAL, MessageType.WARNING, ButtonsType.OK_CANCEL, _( "Empty Trash?" ) ) {
+      secondary_text = _( "All entries will be permanently deleted.  This operation cannot be undone." )
+    };
+
+    dialog.response.connect((response_id) => {
+      if( response_id == ResponseType.ACCEPT ) {
+        _journals.empty_trash();
+      }
+      dialog.close();
+    });
+
+    dialog.show();
+
   }
 
   /* Adds the current listbox UI */
