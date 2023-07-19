@@ -181,7 +181,7 @@ public class SidebarEntries : Box {
     _win.reset_timer();
 
     var dialog = new MessageDialog( _win, DialogFlags.MODAL, MessageType.WARNING, ButtonsType.OK_CANCEL, _( "Empty Trash?" ) ) {
-      secondary_text = _( "All entries will be permanently deleted.  This operation cannot be undone." )
+      secondary_text = _( "All entries will be permanently deleted.\nThis operation cannot be undone." )
     };
 
     dialog.response.connect((response_id) => {
