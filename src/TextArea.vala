@@ -485,7 +485,9 @@ public class TextArea : Box {
     }
 
     /* Save the current entry to the original journal and then remove it from the trash */
-    if( journal.db.save_entry( _entry ) && _journals.trash.db.remove_entry( _entry ) ) {
+    if( journal.db.create_entry( _entry ) &&
+        journal.db.save_entry( _entry ) &&
+        _journals.trash.db.remove_entry( _entry ) ) {
       _journals.current_changed( true );
       stdout.printf( "Entry successfully restored from trash\n" );
     }
