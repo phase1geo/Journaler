@@ -82,6 +82,13 @@ public class Journal {
     return( FileUtils.unlink( db_path() ) == 0 );
   }
 
+  /* Moves the given entry from this journal to the given to_journal */
+  public bool move_entry( DBEntry entry, Journal to_journal ) {
+    return( to_journal.db.create_entry( entry ) &&
+            to_journal.db.save_entry( entry ) &&
+            db.remove_entry( entry ) );
+  }
+
   /* Saves this journal in XML format */
   public Xml.Node* save() {
 

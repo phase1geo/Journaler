@@ -179,14 +179,22 @@ public class DBEntry {
 
   /* Returns the stored hour */
   public int get_hour() {
-    var time_bits = time.split( ":" );
-    return( int.parse( time_bits[0] ) );
+    if( time == "" ) {
+      return( 0 );
+    } else {
+      var time_bits = time.split( ":" );
+      return( int.parse( time_bits[0] ) );
+    }
   }
 
   /* Returns the stored minute */
   public int get_minute() {
-    var time_bits = time.split( ":" );
-    return( int.parse( time_bits[1] ) );
+    if( time == "" ) {
+      return( 0 );
+    } else {
+      var time_bits = time.split( ":" );
+      return( int.parse( time_bits[1] ) );
+    }
   }
 
   /* Returns the string version of today's date */
@@ -210,7 +218,7 @@ public class DBEntry {
 
   /* Returns the DateTime version of the date */
   public DateTime datetime() {
-    var dt = new DateTime.local( get_year(), get_month(), (int)get_day(), get_hour(), get_month(), 0 );
+    var dt = new DateTime.local( get_year(), get_month(), (int)get_day(), get_hour(), get_minute(), 0 );
     return( dt );
   }
 
