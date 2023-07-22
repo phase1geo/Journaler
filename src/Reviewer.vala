@@ -6,11 +6,12 @@ public class Reviewer : Grid {
   private MainWindow _win;
   private Journals   _journals;
 
-  private MenuButton _journal_mb;
-  private ListBox    _journal_lb;
-  private Button     _journal_set_all;
-  private Button     _journal_clear_all;
-  private int        _num_journals = 0;
+  private MenuButton  _journal_mb;
+  private ListBox     _journal_lb;
+  private Button      _journal_set_all;
+  private Button      _journal_clear_all;
+  private int         _num_journals = 0;
+  private CheckButton _trash_cb;
 
   private MenuButton _tag_mb;
   private ListBox    _tag_lb;
@@ -59,13 +60,6 @@ public class Reviewer : Grid {
 
     _journal_lb = new ListBox();
 
-    var lb_scroll = new ScrolledWindow() {
-      valign            = Align.FILL,
-      vexpand           = true,
-      vscrollbar_policy = PolicyType.AUTOMATIC,
-      child             = _journal_lb
-    };
-
     _journal_set_all = new Button.with_label( _( "Select All" ) ) {
       halign  = Align.START,
       hexpand = true
@@ -91,19 +85,43 @@ public class Reviewer : Grid {
     bbox.append( _journal_set_all );
     bbox.append( _journal_clear_all );
 
+    var sep = new Separator( Orientation.HORIZONTAL );
+
     var lbox = new Box( Orientation.VERTICAL, 5 ) {
       margin_start  = 5,
       margin_end    = 5,
       margin_top    = 5,
       margin_bottom = 5
     };
-    lbox.set_size_request( -1, 400 );
     lbox.append( bbox );
-    lbox.append( lb_scroll );
+    lbox.append( _journal_lb );
+    lbox.append( sep );
+
+    var lbox_revealer = new Revealer() {
+      reveal_child = true,
+      child = lbox
+    };
+
+    _trash_cb = new CheckButton.with_label( _journals.trash.name ) {
+      active        = false,
+      margin_start  = 10,
+      margin_end    = 5,
+      margin_top    = 5,
+      margin_bottom = 10 
+    };
+    _trash_cb.toggled.connect(() => {
+      _win.reset_timer();
+      lbox_revealer.reveal_child = !_trash_cb.active;
+      do_search();
+    });
+
+    var tlbox = new Box( Orientation.VERTICAL, 0 );
+    tlbox.append( lbox_revealer );
+    tlbox.append( _trash_cb );
 
     var popover = new Popover() {
       has_arrow = false,
-      child     = lbox
+      child     = tlbox
     };
 
     _journal_mb = new MenuButton() {
@@ -127,13 +145,6 @@ public class Reviewer : Grid {
     };
 
     _tag_lb = new ListBox();
-
-    var lb_scroll = new ScrolledWindow() {
-      valign            = Align.FILL,
-      vexpand           = true,
-      vscrollbar_policy = PolicyType.AUTOMATIC,
-      child             = _tag_lb
-    };
 
     _tag_set_all = new Button.with_label( _( "Select All" ) ) {
       halign  = Align.START,
@@ -166,9 +177,8 @@ public class Reviewer : Grid {
       margin_top    = 5,
       margin_bottom = 5
     };
-    lbox.set_size_request( -1, 400 );
     lbox.append( bbox );
-    lbox.append( lb_scroll );
+    lbox.append( _tag_lb );
 
     var popover = new Popover() {
       has_arrow = false,
@@ -251,7 +261,7 @@ public class Reviewer : Grid {
   }
 
   /* Adds the given label as a checkbutton to the list */
-  private void add_item_to_list( ListBox lb, string label, bool active, bool add_separator = false ) {
+  private void add_item_to_list( ListBox lb, string label, bool active ) {
 
     var btn = new CheckButton.with_label( label ) {
       active        = active,
@@ -267,15 +277,7 @@ public class Reviewer : Grid {
       }
     });
 
-    if( add_separator ) {
-      var sep = new Separator( Orientation.HORIZONTAL );
-      var box = new Box( Orientation.VERTICAL, 0 );
-      box.append( sep );
-      box.append( btn );
-      lb.append( box );
-    } else {
-      lb.append( btn );
-    }
+    lb.append( btn );
 
   }
 
@@ -355,7 +357,6 @@ public class Reviewer : Grid {
     foreach( var journal_name in journals ) {
       add_item_to_list( _journal_lb, journal_name, true );
     }
-    add_item_to_list( _journal_lb, _journals.trash.name, false, true );
 
     _num_journals = (int)journals.length();
 
@@ -473,8 +474,12 @@ public class Reviewer : Grid {
     var tags     = new List<string>();
 
     /* Get the selected journals and tags */
-    get_activated_items_from_list( _journal_lb, ref journals );
-    get_activated_items_from_list( _tag_lb,     ref tags );
+    if( _trash_cb.active ) {
+      journals.append( _journals.trash.name );
+    } else {
+      get_activated_items_from_list( _journal_lb, ref journals );
+    }
+    get_activated_items_from_list( _tag_lb, ref tags );
 
     var start_date = get_date( _start_date );
     var end_date   = get_date( _end_date );
@@ -513,7 +518,6 @@ public class Reviewer : Grid {
 
     /* Display the first entry */
     _match_lb.row_selected( (_match_entries.size == 0) ? null : _match_lb.get_row_at_index( 0 ) );
-    // show_entry( (_match_entries.size == 0) ? null : _match_lb.get_row_at_index( 0 ) );
 
   }
 
