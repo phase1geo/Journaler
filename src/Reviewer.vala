@@ -251,7 +251,7 @@ public class Reviewer : Grid {
   }
 
   /* Adds the given label as a checkbutton to the list */
-  private void add_item_to_list( ListBox lb, string label, bool active ) {
+  private void add_item_to_list( ListBox lb, string label, bool active, bool add_separator = false ) {
 
     var btn = new CheckButton.with_label( label ) {
       active        = active,
@@ -267,7 +267,15 @@ public class Reviewer : Grid {
       }
     });
 
-    lb.append( btn );
+    if( add_separator ) {
+      var sep = new Separator( Orientation.HORIZONTAL );
+      var box = new Box( Orientation.VERTICAL, 0 );
+      box.append( sep );
+      box.append( btn );
+      lb.append( box );
+    } else {
+      lb.append( btn );
+    }
 
   }
 
@@ -278,7 +286,12 @@ public class Reviewer : Grid {
     var row = lb.get_row_at_index( i++ );
 
     while( row != null ) {
-      var cb = (CheckButton)row.child;
+      CheckButton? cb = null;
+      if( (row.child as CheckButton) == null ) {
+        cb = (CheckButton)row.child.get_last_child();
+      } else {
+        cb = (CheckButton)row.child;
+      }
       if( cb.active ) {
         items.append( cb.label );
       }
@@ -342,7 +355,7 @@ public class Reviewer : Grid {
     foreach( var journal_name in journals ) {
       add_item_to_list( _journal_lb, journal_name, true );
     }
-    add_item_to_list( _journal_lb, _journals.trash.name, false );
+    add_item_to_list( _journal_lb, _journals.trash.name, false, true );
 
     _num_journals = (int)journals.length();
 
