@@ -52,7 +52,7 @@ public class SidebarEntries : Box {
   public signal void show_journal_entry( DBEntry entry, bool editable );
 
   /* Create the main window UI */
-  public SidebarEntries( MainWindow win, Journals journals, Templates templates ) {
+  public SidebarEntries( MainWindow win, TextArea text_area, Journals journals, Templates templates ) {
 
     Object( orientation: Orientation.VERTICAL, spacing: 5, margin_start: 5, margin_end: 5, margin_top: 5, margin_bottom: 5 );
 
@@ -85,6 +85,22 @@ public class SidebarEntries : Box {
         show_entry_for_date( listbox_entry.journal, listbox_entry.date, true, true );
       } else {
         show_entry_for_date( _journals.current.name, DBEntry.todays_date(), true, true );
+      }
+    });
+
+    text_area.entry_moved.connect((entry) => {
+      populate( true );
+      if( _journals.current.is_trash ) {
+        _burger_mb.menu_model = _trash_burger_menu;
+        action_set_enabled( "entries.action_empty_trash", (_listbox_entries.length > 0) );
+      } else {
+        _burger_mb.menu_model = _journal_burger_menu;
+      }
+      if( _listbox_entries.length > 0 ) {
+        var listbox_entry = _listbox_entries.index( 0 );
+        show_entry_for_date( listbox_entry.journal, listbox_entry.date, false, true );
+      } else {
+        show_entry_for_date( _journals.current.name, "", false, false );
       }
     });
 

@@ -777,7 +777,7 @@ public class MainWindow : Gtk.ApplicationWindow {
   /* Creates the current journal sidebar */
   private Box add_current_sidebar() {
 
-    _entries = new SidebarEntries( this, _journals, _templates );
+    _entries = new SidebarEntries( this, _text_area, _journals, _templates );
 
     _entries.edit_journal.connect((journal) => {
       _editor.edit_journal( journal );

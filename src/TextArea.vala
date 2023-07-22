@@ -57,6 +57,8 @@ public class TextArea : Box {
     { "action_trash_entry",        action_trash_entry }
   };
 
+  public signal void entry_moved( DBEntry entry );
+
   /* Create the main window UI */
   public TextArea( MainWindow win, Journals journals, Templates templates ) {
 
@@ -457,8 +459,8 @@ public class TextArea : Box {
 
       if( load_result != DBLoadResult.FAILED ) {
         load_entry.merge_with_entry( _entry );
-        if( _journals.trash.db.save_entry( load_entry ) && journal.db.remove_entry( load_entry ) ) {
-          _journals.current_changed( true );
+        if( journal.move_entry( load_entry, _journals.trash ) ) {
+          entry_moved( _entry );
           stdout.printf( "Entry successfully moved to the trash\n" );
         }
       }
@@ -485,20 +487,18 @@ public class TextArea : Box {
     }
 
     /* Save the current entry to the original journal and then remove it from the trash */
-    if( journal.db.create_entry( _entry ) &&
-        journal.db.save_entry( _entry ) &&
-        _journals.trash.db.remove_entry( _entry ) ) {
-      _journals.current_changed( true );
+    if( _journals.trash.move_entry( _entry, journal ) ) {
+      entry_moved( _entry );
       stdout.printf( "Entry successfully restored from trash\n" );
     }
 
   }
 
-  /* Permanently delete the entry from teh trash */
+  /* Permanently delete the entry from the trash */
   private void action_delete_entry() {
 
     if( _journals.trash.db.remove_entry( _entry ) ) {
-      _journals.current_changed( true );
+      entry_moved( _entry );
       stdout.printf( "Entry permanently deleted from trash\n" );
     }
 

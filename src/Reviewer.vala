@@ -511,9 +511,37 @@ public class Reviewer : Grid {
     _trash_btn.sensitive   = false;
     _restore_btn.sensitive = false;
 
+    /* Display the first entry */
+    _match_lb.row_selected( (_match_entries.size == 0) ? null : _match_lb.get_row_at_index( 0 ) );
+    // show_entry( (_match_entries.size == 0) ? null : _match_lb.get_row_at_index( 0 ) );
+
   }
 
   // --------------------------------------------------------------
+
+  /* Displays the given entry in the textarea */
+  private void show_entry( ListBoxRow? row ) {
+
+    if( row == null ) {
+      return;
+    } else {
+      var index    = row.get_index();
+      var entry    = _match_entries.get( index );
+      var selected = _match_lb.get_selected_rows().length();
+      if( selected == 1 ) {
+        show_matched_entry( entry );
+        _match_lb.grab_focus();
+        _trash_btn.sensitive   = false;
+        _restore_btn.sensitive = false;
+      }
+      if( entry.trash ) {
+        _restore_btn.sensitive = true;
+      } else {
+        _trash_btn.sensitive = true;
+      }
+    }
+
+  }
 
   /* Creates the sidebar where matched entries will be displayed */
   public Box create_reviewer_match_sidebar() {
@@ -527,24 +555,7 @@ public class Reviewer : Grid {
 
     _match_lb.row_selected.connect((row) => {
       _win.reset_timer();
-      if( row == null ) {
-        return;
-      } else {
-        var index    = row.get_index();
-        var entry    = _match_entries.get( index );
-        var selected = _match_lb.get_selected_rows().length();
-        if( selected == 1 ) {
-          show_matched_entry( entry );
-          _match_lb.grab_focus();
-          _trash_btn.sensitive   = false;
-          _restore_btn.sensitive = false;
-        }
-        if( entry.trash ) {
-          _restore_btn.sensitive = true;
-        } else {
-          _trash_btn.sensitive = true;
-        }
-      }
+      show_entry( row );
     });
 
     var lb_scroll = new ScrolledWindow() {
@@ -592,39 +603,29 @@ public class Reviewer : Grid {
   /* Moves all entries to the trash */
   private void move_to_trash() {
     _win.reset_timer();
-    var i   = 0;
-    var row = _match_lb.get_row_at_index( i );
-    while( row != null ) {
+    foreach( var row in _match_lb.get_selected_rows() ) {
       var index   = row.get_index();
       var entry   = _match_entries.get( index );
       var journal = _journals.get_journal_by_name( entry.journal );
-      if( !entry.trash && journal.move_entry( entry, _journals.trash ) ) {
-        _match_lb.remove( row.get_child() );
-        _match_entries.remove_at( index );
-      } else {
-        i++;
+      if( !entry.trash ) {
+        journal.move_entry( entry, _journals.trash );
       }
-      row = _match_lb.get_row_at_index( i );
     }
+    do_search();
   }
 
   /* Restores the entries from the trash */
   private void restore_from_trash() {
     _win.reset_timer();
-    var i   = 0;
-    var row = _match_lb.get_row_at_index( i );
-    while( row != null ) {
+    foreach( var row in _match_lb.get_selected_rows() ) {
       var index   = row.get_index();
       var entry   = _match_entries.get( index );
       var journal = _journals.get_journal_by_name( entry.journal );
-      if( entry.trash && _journals.trash.move_entry( entry, journal ) ) {
-        _match_lb.remove( row.get_child() );
-        _match_entries.remove_at( index );
-      } else {
-        i++;
+      if( entry.trash ) {
+        _journals.trash.move_entry( entry, journal );
       }
-      row = _match_lb.get_row_at_index( i );
     }
+    do_search();
   }
 
   /* Adds the given match entry to the list of matching entries */
