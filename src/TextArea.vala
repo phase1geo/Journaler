@@ -731,7 +731,7 @@ public class TextArea : Box {
     }
 
     /* Handle other UI state related to the editable indicator */
-    if( (editable || _journal.is_trash) && _entry.loaded ) {
+    if( editable && _entry.loaded ) {
       _burger.show();
     } else {
       _burger.hide();
