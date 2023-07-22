@@ -4,7 +4,7 @@ using Enchant;
 /* My implementation of gtkspell that is compatible with Gtk4 and gtksourceview-5 */
 public class SpellChecker {
 
-  private Broker broker = null;
+  private Broker       broker = null;
   private unowned Dict dict;
 
   private TextView?    view = null;
@@ -29,7 +29,6 @@ public class SpellChecker {
     };
   }
 
-  /* Good */
   private bool text_iter_forward_word_end( ref TextIter iter ) {
     if( !iter.forward_word_end() ) {
       return( false );
@@ -44,7 +43,6 @@ public class SpellChecker {
     return( true );
   }
 
-  /* Good */
   private bool text_iter_backward_word_start( ref TextIter iter ) {
     if( !iter.backward_word_start() ) {
       return( false );
@@ -56,7 +54,6 @@ public class SpellChecker {
     return( true );
   }
 
-  /* Good */
   private void check_word( TextIter start, TextIter end ) {
     var text = view.buffer.get_text( start, end, false );
     if( !text.get_char( 0 ).isdigit() && (dict.check( text ) != 0) ) {
@@ -64,12 +61,12 @@ public class SpellChecker {
     }
   }
 
-  /* Good */
+  /*
   private string iter_string( TextIter iter ) {
     return( "%d.%d".printf( iter.get_line(), iter.get_line_offset() ) );
   }
+  */
 
-  /* Good */
   private void check_range( TextIter start, TextIter end, bool force_all ) {
     TextIter wstart, wend, cursor, precursor;
     bool inword, highlight;
@@ -129,12 +126,10 @@ public class SpellChecker {
     check_range( start, end, force_all );
   }
 
-  /* Good */
   private void insert_text_before( ref TextIter iter, string text ) {
     view.buffer.move_mark( mark_insert_start, iter );
   }
 
-  /* Good */
   private void insert_text_after( ref TextIter iter, string text ) {
     TextIter start;
     view.buffer.get_iter_at_mark( out start, mark_insert_start );
@@ -203,7 +198,6 @@ public class SpellChecker {
 
   }
 
-  /* Good */
   private void add_suggestion_menus( string word ) {
 
     string[] suggestions = dict.suggest( word, word.length );
@@ -243,7 +237,6 @@ public class SpellChecker {
 
   }
 
-  /* Good */
   private void populate_popup() {
 
     TextIter start, end;
@@ -259,7 +252,6 @@ public class SpellChecker {
 
   }
 
-  /* Good */
   private void right_button_press_event( int n_press, double x, double y ) {
     TextIter iter;
     int buf_x, buf_y;
@@ -272,22 +264,18 @@ public class SpellChecker {
     populate_popup();
   }
 
-  /* Good */
   private void action_replace_word( SimpleAction action, Variant? variant ) {
     replace_word( variant.get_string() );
   }
 
-  /* Good */
   private void action_add_to_dictionary() {
     add_to_dictionary();
   }
 
-  /* Good */
   private void action_ignore_all() {
     ignore_all();
   }
 
-  /* Good? */
   private void set_buffer( TextView? new_view ) {
 
     TextIter start, end;
@@ -335,19 +323,6 @@ public class SpellChecker {
 
   }
 
-  private void buffer_changed( TextView new_view ) {
-    if( new_view.buffer != null ) {
-      set_buffer( new_view );
-    } else {
-      detach();
-    }
-  }
-
-  private void dispose() {
-    detach();
-  }
-
-  /* Good */
   public bool attach( TextView new_view ) {
     assert( view == null );
     new_view.add_controller( right_click );
@@ -361,8 +336,9 @@ public class SpellChecker {
     if( view == null ) {
       return;
     }
-    view = null;
+    view.remove_controller( right_click );
     set_buffer( null );
+    view = null;
     deferred_check = false;
   }
 
@@ -379,7 +355,6 @@ public class SpellChecker {
     recheck_all();
   }
 
-  /* Good */
   public List<string> get_suggestions( string word ) {
     var list = new List<string>();
     string[] suggestions = dict.suggest( word, word.length );
@@ -389,14 +364,12 @@ public class SpellChecker {
     return( list );
   }
 
-  /* Good */
   public void get_language_list( Gee.ArrayList<string> langs ) {
     broker.list_dicts((lang_tag, provider_name, provider_desc, provider_file) => {
       langs.add( lang_tag );
     });
   }
 
-  /* Good */
   private bool set_language_internal( string? lang ) {
     var language = lang;
     if( lang == null ) {
@@ -409,7 +382,6 @@ public class SpellChecker {
     return( true );
   }
 
-  /* Good */
   public bool set_language( string? lang ) {
     if( set_language_internal( lang ) ) {
       recheck_all();

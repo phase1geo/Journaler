@@ -51,8 +51,13 @@ public class TextArea : Box {
   private const GLib.ActionEntry action_entries[] = {
     { "action_add_entry_image",    action_add_entry_image },
     { "action_remove_entry_image", action_remove_entry_image },
-    { "action_insert_template",    action_insert_template, "s" }
+    { "action_insert_template",    action_insert_template, "s" },
+    { "action_restore_entry",      action_restore_entry },
+    { "action_delete_entry",       action_delete_entry },
+    { "action_trash_entry",        action_trash_entry }
   };
+
+  public signal void entry_moved( DBEntry entry );
 
   /* Create the main window UI */
   public TextArea( MainWindow win, Journals journals, Templates templates ) {
@@ -87,6 +92,7 @@ public class TextArea : Box {
         case "editor-font-size"    :  set_font_size();      break;
         case "editor-margin"       :  set_margin( false );  break;
         case "editor-line-spacing" :  set_line_spacing();   break;
+        case "enable-spellchecker" :  set_spellchecker();   break;
         case "enable-quotations"   :  
           if( _buffer.text == "" ) {
             _quote_revealer.reveal_child = Journaler.settings.get_boolean( "enable-quotations" );
@@ -135,6 +141,17 @@ public class TextArea : Box {
 
   }
 
+  /* Enables or disables the spellchecker */
+  private void set_spellchecker() {
+
+    if( Journaler.settings.get_boolean( "enable-spellchecker" ) ) {
+      _spell.attach( _text );
+    } else {
+      _spell.detach();
+    }
+
+  }
+
   /* Returns the widget that should receive the grab focus when this pane is placed into view */
   public Widget get_focus_widget() {
 
@@ -163,7 +180,7 @@ public class TextArea : Box {
     _burger = new MenuButton() {
       icon_name  = "view-more-symbolic",
       halign     = Align.END,
-      menu_model = create_burger_menu()
+      menu_model = create_burger_menu( false )
     };
 
     var tbox = new Box( Orientation.HORIZONTAL, 5 );
@@ -182,8 +199,13 @@ public class TextArea : Box {
 
     /* Add the tags */
     _tags = new TagBox( _win );
-    _tags.add_class( "date" );
-    _tags.add_class( "text-background" );
+
+    /* Delay adding the CSS classes to clean up a Gtk4 issue */
+    Idle.add(() => {
+      _tags.add_class( "date" );
+      _tags.add_class( "text-background" );
+      return( false );
+    });
 
     var sep1 = new Separator( Orientation.HORIZONTAL );
     var sep2 = new Separator( Orientation.HORIZONTAL );
@@ -277,12 +299,12 @@ public class TextArea : Box {
     append( sep2 );
     append( _stats );
 
-    connect_spell_checker();
+    initialize_spell_checker();
 
   }
 
   /* Connects the text widget to the spell checker */
-  private void connect_spell_checker() {
+  private void initialize_spell_checker() {
 
     _spell = new SpellChecker();
 
@@ -306,38 +328,41 @@ public class TextArea : Box {
       _spell.set_language( lang_list.get( 0 ) );
     }
 
-    if( true /*Journaler.settings.get_boolean( "enable-spell-checking" )*/ ) {
-      activate_spell_checking();
-    }
+    set_spellchecker();
 
-  }
-
-  /* Enables the spell checker */
-  public void activate_spell_checking() {
-    _spell.attach( _text );
-  }
-
-  /* Disables the spell checker */
-  public void deactivate_spell_checking() {
-    _spell.detach();
   }
 
   /* Creates burger menu and populates it with features */
-  private MenuModel create_burger_menu() {
+  private MenuModel create_burger_menu( bool for_trash ) {
 
-    /* Create image menu */
-    _image_menu = new GLib.Menu();
-    _image_menu.append( _( "Add Image" ), "textarea.action_add_entry_image" );
+    GLib.Menu menu = new GLib.Menu();
 
-    /* Create templates menu */
-    _templates_menu = new GLib.Menu();
+    if( for_trash ) {
 
-    var template_menu = new GLib.Menu();
-    template_menu.append_submenu( _( "Insert Template" ), _templates_menu );
+      menu.append( _( "Restore entry" ),            "textarea.action_restore_entry" );
+      menu.append( _( "Delete entry permanently" ), "textarea.action_delete_entry" );
 
-    var menu = new GLib.Menu();
-    menu.append_section( null, _image_menu );
-    menu.append_section( null, template_menu );
+    } else {
+
+      /* Create image menu */
+      _image_menu = new GLib.Menu();
+      _image_menu.append( _( "Add Image" ), "textarea.action_add_entry_image" );
+
+      /* Create templates menu */
+      _templates_menu = new GLib.Menu();
+
+      var template_menu = new GLib.Menu();
+      template_menu.append_submenu( _( "Insert Template" ), _templates_menu );
+
+      /* Create trash menu */
+      var trash_menu = new GLib.Menu();
+      trash_menu.append( _( "Move entry to trash" ), "textarea.action_trash_entry" );
+
+      menu.append_section( null, _image_menu );
+      menu.append_section( null, template_menu );
+      menu.append_section( null, trash_menu );
+
+    }
 
     return( menu );
 
@@ -415,6 +440,68 @@ public class TextArea : Box {
   private void action_insert_template( SimpleAction action, Variant? variant ) {
     _win.reset_timer();
     insert_template( variant.get_string() );
+  }
+
+  /* Moves the current entry to the trash */
+  private void action_trash_entry() {
+
+    var journal = _journals.get_journal_by_name( _entry.journal );
+    if( journal != null ) {
+
+      /* Save the current entry so that we have _entry up-to-date */
+      save();
+
+      var load_entry     = new DBEntry();
+      load_entry.journal = _entry.journal;
+      load_entry.date    = _entry.date;
+
+      var load_result = _journals.trash.db.load_entry( load_entry, true );
+
+      if( load_result != DBLoadResult.FAILED ) {
+        load_entry.merge_with_entry( _entry );
+        if( journal.move_entry( load_entry, _journals.trash ) ) {
+          entry_moved( _entry );
+          stdout.printf( "Entry successfully moved to the trash\n" );
+        }
+      }
+
+    }
+
+  }
+
+  /* Moves an entry from the trash back to the originating journal */
+  private void action_restore_entry() {
+
+    var journal = _journals.get_journal_by_name( _entry.journal );
+
+    /* If the journal needs to be created, do it now */
+    if( journal == null ) {
+      string template    = "";
+      string description = "";
+      if( _journals.trash.db.load_journal( _entry.journal, out template, out description ) ) {
+        journal = new Journal( _entry.journal, template, description );
+        _journals.add_journal( journal, true );
+      } else {
+        return;
+      }
+    }
+
+    /* Save the current entry to the original journal and then remove it from the trash */
+    if( _journals.trash.move_entry( _entry, journal ) ) {
+      entry_moved( _entry );
+      stdout.printf( "Entry successfully restored from trash\n" );
+    }
+
+  }
+
+  /* Permanently delete the entry from the trash */
+  private void action_delete_entry() {
+
+    if( _journals.trash.db.remove_entry( _entry ) ) {
+      entry_moved( _entry );
+      stdout.printf( "Entry permanently deleted from trash\n" );
+    }
+
   }
 
   /* Inserts the given snippet name */
@@ -512,9 +599,9 @@ public class TextArea : Box {
   private bool image_changed() {
     return( _pixbuf_changed ||
             ((_pixbuf != null) &&
-             ((_pane.position != _entry.image_pos) ||
-              (_iscroll.vadjustment.value != _entry.image_vadj) ||
-              (_iscroll.hadjustment.value != _entry.image_hadj))) );
+             ((_pane.position != _entry.image.pos) ||
+              (_iscroll.vadjustment.value != _entry.image.vadj) ||
+              (_iscroll.hadjustment.value != _entry.image.hadj))) );
   }
 
   /* Returns true if the text of the entry has changed since it was loaded */
@@ -530,10 +617,12 @@ public class TextArea : Box {
       return;
     }
 
+    DBImage? image = null;
+    if( _pixbuf != null ) {
+      image = new DBImage( _pixbuf, _pane.position, _iscroll.vadjustment.value, _iscroll.hadjustment.value );
+    }
     var entry = new DBEntry.with_date( 
-      _title.text, _text.buffer.text, _pixbuf, _pane.position,
-      _iscroll.vadjustment.value, _iscroll.hadjustment.value,
-      _pixbuf_changed, _tags.entry.get_tag_list(), _entry.date, _entry.time
+      _entry.journal, _title.text, _text.buffer.text, image, _pixbuf_changed, _tags.entry.get_tag_list(), _entry.date, _entry.time
     );
 
     if( _journal.db.save_entry( entry ) ) {
@@ -562,32 +651,47 @@ public class TextArea : Box {
       save();
     }
 
+    /* Update the burger menu, if necessary */
+    if( (_journal == null) || (_journal.is_trash != _journals.current.is_trash) ) {
+      _burger.menu_model = create_burger_menu( _journals.current.is_trash );
+    }
+
     _journal = _journals.current;
     _entry   = entry;
 
+    var enable_ui = editable && !_journal.is_trash && _entry.loaded;
+
     /* Set the title */
     _title.text      = entry.title;
-    _title.editable  = editable;
-    _title.can_focus = editable;
-    _title.focusable = editable;
+    _title.editable  = enable_ui;
+    _title.can_focus = enable_ui;
+    _title.focusable = enable_ui;
 
     /* Set the date */
-    var dt = entry.datetime();
-    _date.label = dt.format( "%A, %B %e, %Y  %I:%M %p" );
+    if( entry.date == "" ) {
+      _date.label = "";
+    } else {
+      var dt = entry.datetime();
+      _date.label = dt.format( "%A, %B %e, %Y  %I:%M %p" );
+    }
 
     /* Set the image */
-    _pixbuf = entry.image;
+    if( entry.image == null ) {
+      _pixbuf = null;
+    } else {
+      _pixbuf = entry.image.pixbuf;
+      display_pixbuf( entry.image.pos, entry.image.vadj, entry.image.hadj );
+    }
     _pixbuf_changed = false;
-    display_pixbuf( entry.image_pos, entry.image_vadj, entry.image_hadj );
 
     /* Set the tags */
     _tags.journal = _journal;
     _tags.entry   = entry;
     _tags.update_tags();
-    _tags.editable = editable;
+    _tags.editable = enable_ui;
 
     /* Show the quote of the day if the text field is empty */
-    if( (entry.text == "") && Journaler.settings.get_boolean( "enable-quotations" ) && editable ) {
+    if( (entry.text == "") && Journaler.settings.get_boolean( "enable-quotations" ) && enable_ui ) {
       _quote.label                        = _quotes.get_quote();
       _quote_revealer.transition_duration = 0;
       _quote_revealer.reveal_child        = true;
@@ -605,15 +709,15 @@ public class TextArea : Box {
     _text.buffer.end_irreversible_action();
 
     /* Set the editable bit */
-    _text.editable  = editable;
-    _text.can_focus = editable;
-    _text.focusable = editable;
+    _text.editable  = enable_ui;
+    _text.can_focus = enable_ui;
+    _text.focusable = enable_ui;
 
     /* Clear the modified bits */
     _text.buffer.set_modified( false );
 
     /* Set the grab */
-    if( editable ) {
+    if( enable_ui ) {
       var title_empty = _title.text == "";
       var tags_empty  = _tags.entry.tags.length() == 0;
       var text_empty  = _text.buffer.text == "";
@@ -627,7 +731,7 @@ public class TextArea : Box {
     }
 
     /* Handle other UI state related to the editable indicator */
-    if( editable ) {
+    if( editable && _entry.loaded ) {
       _burger.show();
     } else {
       _burger.hide();

@@ -255,9 +255,9 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     /* Create the reviewer UI */
     _reviewer = new Reviewer( this, _journals );
-    _reviewer.show_matched_entry.connect((journal, entry) => {
-      _journals.current = journal;
-      _entries.show_entry_for_date( entry.date, false, false );
+    _reviewer.show_matched_entry.connect((entry) => {
+      _journals.current = entry.trash ? _journals.trash : _journals.get_journal_by_name( entry.journal );
+      _entries.show_entry_for_date( entry.journal, entry.date, false, false );
     });
     _reviewer.close_requested.connect( action_review );
 
@@ -777,7 +777,7 @@ public class MainWindow : Gtk.ApplicationWindow {
   /* Creates the current journal sidebar */
   private Box add_current_sidebar() {
 
-    _entries = new SidebarEntries( this, _journals, _templates );
+    _entries = new SidebarEntries( this, _text_area, _journals, _templates );
 
     _entries.edit_journal.connect((journal) => {
       _editor.edit_journal( journal );
@@ -843,7 +843,7 @@ public class MainWindow : Gtk.ApplicationWindow {
       action_review();
     }
 
-    _entries.show_entry_for_date( DBEntry.todays_date(), true, true );
+    _entries.show_entry_for_date( _journals.current.name, DBEntry.todays_date(), true, true );
 
   }
 

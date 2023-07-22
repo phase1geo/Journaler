@@ -7,32 +7,36 @@ public enum DBLoadResult {
   CREATED
 }
 
-public class JournalEntry {
+public class DBImage {
 
-  public string   journal_name { set; get; default = ""; }
-  public DBEntry? entry        { set; get; default = null; }
+  public Pixbuf pixbuf { get; set; }
+  public int    pos    { get; set; default = 200; }
+  public double vadj   { get; set; default = 0.0; }
+  public double hadj   { get; set; default = 0.0; }
 
   /* Default constructor */
-  public JournalEntry( string journal_name, DBEntry entry ) {
-    this.journal_name = journal_name;
-    this.entry        = entry;
+  public DBImage( Pixbuf pixbuf, int pos, double vadj, double hadj ) {
+    this.pixbuf = pixbuf;
+    this.pos    = pos;
+    this.vadj   = vadj;
+    this.hadj   = hadj;
   }
 
 }
 
 public class DBEntry {
 
-  private List<string> _tags = new List<string>();
+  private List<string> _tags   = new List<string>();
 
-  public string  title         { get; set; default = ""; }
-  public string  text          { get; set; default = ""; }
-  public string  date          { get; set; default = ""; }
-  public string  time          { get; set; default = ""; }
-  public Pixbuf? image         { get; set; default = null; }
-  public int     image_pos     { get; set; default = 200; }
-  public double  image_vadj    { get; set; default = 0.0; }
-  public double  image_hadj    { get; set; default = 0.0; }
-  public bool    image_changed { get; set; default = false; }
+  public string   journal       { get; set; default = ""; }
+  public bool     trash         { get; set; default = false; }
+  public string   title         { get; set; default = ""; }
+  public string   text          { get; set; default = ""; }
+  public string   date          { get; set; default = ""; }
+  public string   time          { get; set; default = ""; }
+  public DBImage? image         { get; set; default = null; }
+  public bool     image_changed { get; set; default = false; }
+  public bool     loaded        { get; set; default = false; }
 
   public List<string> tags  {
     get {
@@ -47,30 +51,30 @@ public class DBEntry {
   }
 
   /* Constructor */
-  public DBEntry.for_save( string title, string text, string tag_list ) {
-    this.title = title;
-    this.text  = text;
-    this.date  = todays_date();
+  public DBEntry.for_save( string journal, string title, string text, string tag_list ) {
+    this.journal = journal;
+    this.title   = title;
+    this.text    = text;
+    this.date    = todays_date();
     store_tag_list( tag_list );
   }
 
   /* Constructor */
-  public DBEntry.for_list( string title, string date ) {
-    this.title = title;
-    this.date  = date;
-    this.time  = "00:00";
+  public DBEntry.for_list( string journal, bool trash, string title, string date ) {
+    this.journal = journal;
+    this.trash   = trash;
+    this.title   = title;
+    this.date    = date;
   }
 
   /* Constructor */
-  public DBEntry.with_date( string title, string text, Pixbuf? image, int image_pos, double image_vadj, double image_hadj, bool image_changed, string tag_list, string date, string time ) {
+  public DBEntry.with_date( string journal, string title, string text, DBImage? image, bool image_changed, string tag_list, string date, string time ) {
+    this.journal       = journal;
     this.title         = title;
     this.text          = text;
     this.date          = date;
     this.time          = time;
     this.image         = image;
-    this.image_pos     = image_pos;
-    this.image_vadj    = image_vadj;
-    this.image_hadj    = image_hadj;
     this.image_changed = image_changed;
     store_tag_list( tag_list );
   }
@@ -80,15 +84,16 @@ public class DBEntry {
 
     /* If the text does not match, append the text of the entry to the end of our text, placing a horizontal separator line */
     if( text != entry.text ) {
-      text += "\n\n---\n\n%s".printf( entry.text );
+      if( text == "" ) {
+        text = entry.text;
+      } else if( entry.text != "" ) {
+        text += "\n\n---\n\n%s".printf( entry.text );
+      }
     }
 
     /* If this entry doesn't contain an image but the other one does, use the other entry's image data */
     if( (image == null) && (entry.image != null) ) {
-      image         = entry.image;
-      image_pos     = entry.image_pos;
-      image_vadj    = entry.image_vadj;
-      image_hadj    = entry.image_hadj;
+      image = entry.image;
       image_changed = true;
     }
 
@@ -174,14 +179,22 @@ public class DBEntry {
 
   /* Returns the stored hour */
   public int get_hour() {
-    var time_bits = time.split( ":" );
-    return( int.parse( time_bits[0] ) );
+    if( time == "" ) {
+      return( 0 );
+    } else {
+      var time_bits = time.split( ":" );
+      return( int.parse( time_bits[0] ) );
+    }
   }
 
   /* Returns the stored minute */
   public int get_minute() {
-    var time_bits = time.split( ":" );
-    return( int.parse( time_bits[1] ) );
+    if( time == "" ) {
+      return( 0 );
+    } else {
+      var time_bits = time.split( ":" );
+      return( int.parse( time_bits[1] ) );
+    }
   }
 
   /* Returns the string version of today's date */
@@ -205,7 +218,7 @@ public class DBEntry {
 
   /* Returns the DateTime version of the date */
   public DateTime datetime() {
-    var dt = new DateTime.local( get_year(), get_month(), (int)get_day(), get_hour(), get_month(), 0 );
+    var dt = new DateTime.local( get_year(), get_month(), (int)get_day(), get_hour(), get_minute(), 0 );
     return( dt );
   }
 
@@ -232,22 +245,46 @@ public class DBEntry {
     foreach( string tag in tags ) {
       tag_array += tag;
     }
-    return( "title: %s, text: %s, date: %s, tags: %s".printf( title, text, date, string.joinv( ":", tag_array ) ) );
+    return( "journal: %s, title: %s, text: %s, date: %s, tags: %s".printf( journal, title, text, date, string.joinv( ":", tag_array ) ) );
   }
 
 }
 
 public class Database {
 
+  private enum EntryPos {
+    ID = 0,
+    TITLE,
+    TEXT,
+    DATE,
+    TIME,
+    IMAGE,
+    IMAGE_POS,
+    IMAGE_VADJ,
+    IMAGE_HADJ,
+    JOURNAL_ID,
+    JOURNAL,
+    TAG
+  }
+
   private const int ERRCODE_NOT_UNIQUE = 19;
 
   private Sqlite.Database? _db = null;
+  private bool             _include_journal = false;
 
   /* Useful for debugging database issues by displaying the table contents */
   private bool debug = false;
 
+  public bool include_journal {
+    get {
+      return( _include_journal );
+    }
+  }
+
   /* Default constructor */
-  public Database( string db_file ) {
+  public Database( string db_file, bool include_journal ) {
+
+    _include_journal = include_journal;
 
     // Open the database
     var err = Sqlite.Database.open( db_file, out _db );
@@ -269,8 +306,22 @@ public class Database {
 
   }
 
+  /* Creates a string that is suitable for SQL operations */
+  private string sql_string( string str ) {
+    return( str.replace( "'", "''" ) );
+  }
+
   /* Creates the database tables if they do not already exist */
   private bool create_tables() {
+
+    var journal_query = """
+      CREATE TABLE IF NOT EXISTS Journal (
+        id          INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
+        name        TEXT                              NUT NULL UNIQUE,
+        template    TEXT,
+        description TEXT
+      );
+      """;
 
     // Create the table if it doesn't already exist
     var entry_query = """
@@ -283,7 +334,8 @@ public class Database {
         image      BLOB,
         image_pos  INTEGER,
         image_vadj REAL,
-        image_hadj REAL
+        image_hadj REAL,
+        journal_id INTEGER                           NOT NULL
       );
       """;
 
@@ -303,19 +355,28 @@ public class Database {
       );
       """;
 
-    return( exec_query( entry_query ) &&
+    return( exec_query( journal_query ) &&
+            exec_query( entry_query ) &&
             exec_query( tag_query ) &&
             exec_query( tag_map_query ) );
 
   }
 
   /* Returns the list of all entries to be displayed in the listbox */
-  public bool get_all_entries( Array<DBEntry> entries ) {
+  public bool get_all_entries( bool trash, Array<DBEntry> entries ) {
 
-    var query = "SELECT * FROM Entry ORDER BY date DESC;";
+    var query = """
+      SELECT
+        Entry.*,
+        Journal.name 
+      FROM
+        Entry
+        LEFT JOIN Journal ON Journal.id = Entry.journal_id
+      ORDER BY Entry.date DESC;
+      """;
 
     var retval = exec_query( query, (ncols, vals, names) => {
-      var entry = new DBEntry.for_list( vals[1], vals[3] );
+      var entry = new DBEntry.for_list( vals[EntryPos.JOURNAL], trash, vals[EntryPos.TITLE], vals[EntryPos.DATE] );
       entries.append_val( entry );
       return( 0 );
     });
@@ -341,15 +402,42 @@ public class Database {
   /* Creates a new entry with the given date if one could not be found */
   public bool create_entry( DBEntry entry ) {
 
+    var journal_select = "SELECT id FROM Journal WHERE name = '%s';".printf( entry.journal );
+    var journal_id     = -1;
+    var res = exec_query( journal_select, (ncols, vals, names) => {
+      journal_id = int.parse( vals[0] );
+      return( 0 );
+    });
+
+    if( journal_id == -1 ) {
+
+      var journal_insert = """
+        INSERT INTO Journal (name, template, description)
+        VALUES('%s', '', '')
+        RETURNING id;
+        """.printf( sql_string( entry.journal ) );
+
+      res = exec_query( journal_insert, (ncols, vals, names) => {
+        journal_id = int.parse( vals[0] );
+        return( 0 );
+      });
+
+    }
+
+    assert( journal_id != -1 );
+
     /* Insert the entry */
     var entry_query = """
-      INSERT INTO Entry (title, txt, date, time, image, image_pos, image_vadj, image_hadj)
-      VALUES ('', '%s', '%s', '%s', NULL, NULL, NULL, NULL);
-      """.printf( entry.text.replace("'", "''"), entry.date, entry.time );
+        INSERT INTO Entry (title, txt, date, time, image, image_pos, image_vadj, image_hadj, journal_id)
+        VALUES ('', '%s', '%s', '%s', NULL, NULL, NULL, NULL, %d);
+        """.printf( sql_string( entry.text ), entry.date, entry.time, journal_id );
 
     if( !exec_query( entry_query ) ) {
       return( false );
     }
+
+    /* Indicate that this entry has data from the database */
+    entry.loaded = true;
 
     show_all_tables( "After entry creation\n" );
 
@@ -358,8 +446,8 @@ public class Database {
   }
 
   /* Performs search query using tags, date and search string */
-  public bool query_entries( string journal_name, List<string> tags, string? start_date, string? end_date, string str,
-                             Gee.List<JournalEntry> matched_entries ) {
+  public bool query_entries( bool trash, List<string> tags, string? start_date, string? end_date, string str,
+                             Gee.List<DBEntry> matched_entries ) {
 
     string[] where = {};
 
@@ -390,23 +478,24 @@ public class Database {
     var query = """
       SELECT
         Entry.*,
+        Journal.name,
         Tag.name
       FROM
         Entry
-        LEFT JOIN TagMap ON TagMap.entry_id = Entry.id
-        LEFT JOIN Tag    ON TagMap.tag_id = Tag.id
+        LEFT JOIN Journal ON Journal.id = Entry.journal_id
+        LEFT JOIN TagMap  ON TagMap.entry_id = Entry.id
+        LEFT JOIN Tag     ON TagMap.tag_id = Tag.id
       %s
       ORDER BY Entry.date;
     """.printf( (where.length == 0) ? "" : "WHERE %s".printf( string.joinv( " AND ", where ) ) );
 
     var last_id = "";
     var retval = exec_query( query, (ncols, vals, names) => {
-      var tag = vals[9];
-      if( (vals[0] != last_id) && ((tag == null) ? untagged : (tags.find(tag) != null)) ) {
-        var entry  = new DBEntry.for_list( vals[1], vals[3] );
-        var jentry = new JournalEntry( journal_name, entry );
-        matched_entries.add( jentry );
-        last_id = vals[0];
+      var tag = vals[EntryPos.TAG];
+      if( (vals[EntryPos.ID] != last_id) && ((tag == null) ? untagged : (tags.find(tag) != null)) ) {
+        var entry = new DBEntry.for_list( vals[EntryPos.JOURNAL], trash, vals[EntryPos.TITLE], vals[EntryPos.DATE] );
+        matched_entries.add( entry );
+        last_id = vals[EntryPos.ID];
       }
       return( 0 );
     });
@@ -424,40 +513,38 @@ public class Database {
         Tag.name
       FROM
         Entry
-        LEFT JOIN TagMap ON TagMap.entry_id = Entry.id
-        LEFT JOIN Tag    ON TagMap.tag_id = Tag.id
+        LEFT JOIN Journal ON Journal.id = Entry.journal_id
+        LEFT JOIN TagMap  ON TagMap.entry_id = Entry.id
+        LEFT JOIN Tag     ON TagMap.tag_id = Tag.id
       WHERE
-        Entry.date = '%s'
+        Entry.date = '%s' AND Journal.name = '%s'
       ORDER BY Entry.date;
-    """.printf( entry.date );
+    """.printf( entry.date, sql_string( entry.journal ) );
 
-    var loaded = false;
     exec_query( query, (ncols, vals, names) => {
-      entry.title = vals[1];
-      entry.text  = vals[2];
-      entry.time  = vals[4];
-      if( vals[5] != null ) {
+      entry.loaded = true;
+      entry.title  = vals[EntryPos.TITLE];
+      entry.text   = vals[EntryPos.TEXT];
+      entry.time   = vals[EntryPos.TIME];
+      if( vals[EntryPos.IMAGE] != null ) {
         try {
           var pixload = new PixbufLoader.with_type( "png" );
-          pixload.write( (uint8[])Base64.decode( vals[5] ) );
+          pixload.write( (uint8[])Base64.decode( vals[EntryPos.IMAGE] ) );
           pixload.close();
-          entry.image      = pixload.get_pixbuf();
-          entry.image_pos  = int.parse( vals[6] );
-          entry.image_vadj = double.parse( vals[7] );
-          entry.image_hadj = double.parse( vals[8] );
+          entry.image = new DBImage( pixload.get_pixbuf(), int.parse( vals[EntryPos.IMAGE_POS] ),
+                                     double.parse( vals[EntryPos.IMAGE_VADJ] ), double.parse( vals[EntryPos.IMAGE_HADJ] ) );
         } catch( Error e ) {
           stderr.printf( "ERROR: %s\n", e.message );
         }
       }
-      var tag = vals[9];
+      var tag = vals[EntryPos.TAG];
       if( tag != null ) {
         entry.add_tag( tag );
       }
-      loaded = true;
       return( 0 );
     });
 
-    if( loaded ) {
+    if( entry.loaded ) {
       return( DBLoadResult.LOADED );
     } else if( create_if_not_found && create_entry( entry ) ) {
       return( DBLoadResult.CREATED );
@@ -471,11 +558,49 @@ public class Database {
   public bool save_tags_only( DBEntry entry ) {
 
     foreach( var tag in entry.tags ) {
-      var tag_query = "INSERT INTO Tag (name) VALUES('%s');".printf( tag );
+      var tag_query = "INSERT INTO Tag (name) VALUES('%s');".printf( sql_string( tag ) );
       exec_query( tag_query );
     }
 
     return( true );
+
+  }
+
+  /* Save any changes to the given journal data */
+  public bool save_journal( string orig_name, string name, string template, string description ) {
+
+    var query = """
+      UPDATE Journal
+      SET name = '%s', template = '%s', description = '%s'
+      WHERE name = '%s';
+      """.printf( sql_string( name ), sql_string( template ), sql_string( description ), sql_string( orig_name ) );
+
+    var res = exec_query( query );
+
+    show_all_tables( "After journal save" );
+
+    return( res );
+
+  }
+
+  /* Loads the journal information for the Journal with the given name */
+  public bool load_journal( string name, out string template, out string description ) {
+
+    var query = "SELECT * FROM Journal WHERE name = '%s';".printf( sql_string( name ) );
+
+    var rd_template = "";
+    var rd_description = "";
+
+    var res = exec_query( query, (ncols, vals, names) => {
+      rd_template    = vals[1];
+      rd_description = vals[2];
+      return( 0 );
+    });
+
+    template = rd_template;
+    description = rd_description;
+
+    return( res );
 
   }
 
@@ -484,34 +609,35 @@ public class Database {
 
     var image_query = "";
 
-    if( entry.image_changed ) {
-      if( entry.image == null ) {
-        image_query = ", image = NULL";
-      } else {
+    if( entry.image == null ) {
+      image_query = ", image = NULL";
+    } else {
+      if( entry.image_changed ) {
         try {
           uint8[]  buffer  = {};
           string[] options = {};
           string[] values  = {};
+          DBImage  image   = entry.image;
           options += "compression";  values += "7";  // TODO - Make this value configurable?
-          entry.image.save_to_bufferv( out buffer, "png", options, values );
+          image.pixbuf.save_to_bufferv( out buffer, "png", options, values );
           image_query = ", image = '%s'".printf( Base64.encode( (uchar[])buffer ) );
         } catch( Error e ) {
           stderr.printf( "ERROR: %s\n", e.message );
         }
       }
+      image_query += ", image_pos = %d, image_vadj = %g, image_hadj = %g".printf( entry.image.pos, entry.image.vadj, entry.image.hadj );
     }
 
     var entry_query = """ 
       UPDATE Entry
-      SET title = '%s', txt = '%s' %s, image_pos = %d, image_vadj = %g, image_hadj = %g
+      SET title = '%s', txt = '%s' %s
       WHERE date = '%s'
       RETURNING id;
-      """.printf( entry.title.replace("'", "''"), entry.text.replace("'", "''"), image_query,
-                  entry.image_pos, entry.image_vadj, entry.image_hadj,entry.date );
+      """.printf( sql_string( entry.title ), sql_string( entry.text ), image_query, entry.date );
 
     var entry_id = -1;
     var res = exec_query( entry_query, (ncols, vals, names) => {
-      entry_id = int.parse( vals[0] );
+      entry_id = int.parse( vals[EntryPos.ID] );
       return( 0 );
     });
 
@@ -560,7 +686,7 @@ public class Database {
 
     var entry_id = -1;
     var res = exec_query( entry_query, (ncols, vals, names) => {
-      entry_id = int.parse( vals[0] );
+      entry_id = int.parse( vals[EntryPos.ID] );
       return( 0 );
     });
 
@@ -568,6 +694,8 @@ public class Database {
       var map_query = "DELETE FROM TagMap WHERE entry_id = %d;".printf( entry_id );
       res = exec_query( map_query );
     }
+
+    show_all_tables( "After entry removed" );
 
     return( res );
 
@@ -580,7 +708,7 @@ public class Database {
 
     int[] entry_ids = {};
     var res = exec_query( entry_query, (ncols, vals, names) => {
-      entry_ids += int.parse( vals[0] );
+      entry_ids += int.parse( vals[EntryPos.ID] );
       return( 0 );
     });
 
@@ -590,6 +718,8 @@ public class Database {
         exec_query( map_query );
       }
     }
+
+    show_all_tables( "After entry purging" );
 
     return( res );
 
@@ -645,6 +775,7 @@ public class Database {
     if( !debug ) return;
     stdout.printf( "%s\n", msg );
     stdout.printf( "==========================\n" );
+    show_table( "Journal" );
     show_table( "Entry" );
     show_table( "Tag" );
     show_table( "TagMap" );

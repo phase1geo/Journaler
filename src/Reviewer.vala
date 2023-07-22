@@ -1,16 +1,17 @@
 using Gtk;
 using Granite;
 
-public class Reviewer : Box {
+public class Reviewer : Grid {
 
   private MainWindow _win;
   private Journals   _journals;
 
-  private MenuButton _journal_mb;
-  private ListBox    _journal_lb;
-  private Button     _journal_set_all;
-  private Button     _journal_clear_all;
-  private int        _num_journals = 0;
+  private MenuButton  _journal_mb;
+  private ListBox     _journal_lb;
+  private Button      _journal_set_all;
+  private Button      _journal_clear_all;
+  private int         _num_journals = 0;
+  private CheckButton _trash_cb;
 
   private MenuButton _tag_mb;
   private ListBox    _tag_lb;
@@ -24,54 +25,40 @@ public class Reviewer : Box {
 
   private SearchEntry _search_entry;
 
-  private ListBox                     _match_lb;
-  private Gee.ArrayList<JournalEntry> _match_entries;
+  private ListBox                _match_lb;
+  private Gee.ArrayList<DBEntry> _match_entries;
+  private Button                 _trash_btn;
+  private Button                 _restore_btn;
 
-  public signal void show_matched_entry( Journal journal, DBEntry entry );
+  public signal void show_matched_entry( DBEntry entry );
   public signal void close_requested();
 
   /* Default constructor */
   public Reviewer( MainWindow win, Journals journals ) {
 
-    Object( orientation: Orientation.VERTICAL, spacing: 5, margin_start: 5, margin_end: 5, margin_top: 5, margin_bottom: 5 );
+    Object( row_spacing: 5, column_spacing: 5, margin_start: 5, margin_end: 5, margin_top: 5, margin_bottom: 5 );
 
     _win           = win;
     _journals      = journals;
-    _match_entries = new Gee.ArrayList<JournalEntry>();
+    _match_entries = new Gee.ArrayList<DBEntry>();
 
     /* Add the UI components */
-    var lbox = new Box( Orientation.HORIZONTAL, 5 ) {
-      homogeneous = true
-    };
-
-    var hbox = new Box( Orientation.HORIZONTAL, 5 );
-    hbox.append( lbox );
-
-    append( hbox );
-
-    add_journal_list( lbox );
-    add_tag_list( lbox );
-    add_date_selector( hbox );
-    add_close( hbox );
+    add_journal_list();
+    add_tag_list();
+    add_date_selector();
+    add_close();
     add_search();
 
   }
 
   /* Creates the journal selection UI */
-  private void add_journal_list( Box box ) {
+  private void add_journal_list() {
 
     var label = new Label( Utils.make_title( _( "Journals:" ) ) ) {
       use_markup = true
     };
 
     _journal_lb = new ListBox();
-
-    var lb_scroll = new ScrolledWindow() {
-      valign            = Align.FILL,
-      vexpand           = true,
-      vscrollbar_policy = PolicyType.AUTOMATIC,
-      child             = _journal_lb
-    };
 
     _journal_set_all = new Button.with_label( _( "Select All" ) ) {
       halign  = Align.START,
@@ -98,19 +85,43 @@ public class Reviewer : Box {
     bbox.append( _journal_set_all );
     bbox.append( _journal_clear_all );
 
+    var sep = new Separator( Orientation.HORIZONTAL );
+
     var lbox = new Box( Orientation.VERTICAL, 5 ) {
       margin_start  = 5,
       margin_end    = 5,
       margin_top    = 5,
       margin_bottom = 5
     };
-    lbox.set_size_request( -1, 400 );
     lbox.append( bbox );
-    lbox.append( lb_scroll );
+    lbox.append( _journal_lb );
+    lbox.append( sep );
+
+    var lbox_revealer = new Revealer() {
+      reveal_child = true,
+      child = lbox
+    };
+
+    _trash_cb = new CheckButton.with_label( _journals.trash.name ) {
+      active        = false,
+      margin_start  = 10,
+      margin_end    = 5,
+      margin_top    = 5,
+      margin_bottom = 10 
+    };
+    _trash_cb.toggled.connect(() => {
+      _win.reset_timer();
+      lbox_revealer.reveal_child = !_trash_cb.active;
+      do_search();
+    });
+
+    var tlbox = new Box( Orientation.VERTICAL, 0 );
+    tlbox.append( lbox_revealer );
+    tlbox.append( _trash_cb );
 
     var popover = new Popover() {
       has_arrow = false,
-      child     = lbox
+      child     = tlbox
     };
 
     _journal_mb = new MenuButton() {
@@ -122,25 +133,18 @@ public class Reviewer : Box {
     jbox.append( label );
     jbox.append( _journal_mb );
 
-    box.append( jbox );
+    attach( jbox, 0, 0 );
 
   }
 
   /* Creates the tag selection UI */
-  private void add_tag_list( Box box ) {
+  private void add_tag_list() {
 
     var label = new Label( Utils.make_title( _( "Tags:" ) ) ) {
       use_markup = true
     };
 
     _tag_lb = new ListBox();
-
-    var lb_scroll = new ScrolledWindow() {
-      valign            = Align.FILL,
-      vexpand           = true,
-      vscrollbar_policy = PolicyType.AUTOMATIC,
-      child             = _tag_lb
-    };
 
     _tag_set_all = new Button.with_label( _( "Select All" ) ) {
       halign  = Align.START,
@@ -173,9 +177,8 @@ public class Reviewer : Box {
       margin_top    = 5,
       margin_bottom = 5
     };
-    lbox.set_size_request( -1, 400 );
     lbox.append( bbox );
-    lbox.append( lb_scroll );
+    lbox.append( _tag_lb );
 
     var popover = new Popover() {
       has_arrow = false,
@@ -191,12 +194,12 @@ public class Reviewer : Box {
     tbox.append( label );
     tbox.append( _tag_mb );
 
-    box.append( tbox );
+    attach( tbox, 1, 0 );
 
   }
 
   /* Add the date selection UI */
-  private void add_date_selector( Box box ) {
+  private void add_date_selector() {
 
     var range = new Label( Utils.make_title( _( "Date Range:" ) ) ) {
       use_markup = true
@@ -225,19 +228,19 @@ public class Reviewer : Box {
     dbox.append( to );
     dbox.append( _end_date );
 
-    box.append( dbox );
+    attach( dbox, 2, 0 );
 
   }
 
   /* Adds a close button */
-  private void add_close( Box box ) {
+  private void add_close() {
 
     var close_btn = new Button.from_icon_name( "window-close-symbolic" );
     close_btn.clicked.connect(() => {
       close_requested();
     });
 
-    box.append( close_btn );
+    attach( close_btn, 3, 0 );
 
   }
 
@@ -246,21 +249,22 @@ public class Reviewer : Box {
 
     _search_entry = new SearchEntry() {
       halign  = Align.FILL,
-      hexpand = true
+      hexpand = true,
+      placeholder_text = _( "Search entry title and text" )
     };
     _search_entry.search_changed.connect(() => {
       do_search();
     });
 
-    append( _search_entry );
+    attach( _search_entry, 0, 1, 3 );
 
   }
 
   /* Adds the given label as a checkbutton to the list */
-  private void add_item_to_list( ListBox lb, string label ) {
+  private void add_item_to_list( ListBox lb, string label, bool active ) {
 
     var btn = new CheckButton.with_label( label ) {
-      active        = true,
+      active        = active,
       margin_start  = 5,
       margin_end    = 5,
       margin_top    = 5,
@@ -284,7 +288,12 @@ public class Reviewer : Box {
     var row = lb.get_row_at_index( i++ );
 
     while( row != null ) {
-      var cb = (CheckButton)row.child;
+      CheckButton? cb = null;
+      if( (row.child as CheckButton) == null ) {
+        cb = (CheckButton)row.child.get_last_child();
+      } else {
+        cb = (CheckButton)row.child;
+      }
       if( cb.active ) {
         items.append( cb.label );
       }
@@ -346,7 +355,7 @@ public class Reviewer : Box {
     journals.sort( strcmp );
 
     foreach( var journal_name in journals ) {
-      add_item_to_list( _journal_lb, journal_name );
+      add_item_to_list( _journal_lb, journal_name, true );
     }
 
     _num_journals = (int)journals.length();
@@ -375,9 +384,9 @@ public class Reviewer : Box {
     all_tags.sort( strcmp );
 
     /* Populate the listbox */
-    add_item_to_list( _tag_lb, _( "Untagged" ) );
+    add_item_to_list( _tag_lb, _( "Untagged" ), true );
     foreach( var tag in all_tags ) {
-      add_item_to_list( _tag_lb, tag );
+      add_item_to_list( _tag_lb, tag, true );
     }
 
     _num_tags = (int)all_tags.length();
@@ -465,8 +474,12 @@ public class Reviewer : Box {
     var tags     = new List<string>();
 
     /* Get the selected journals and tags */
-    get_activated_items_from_list( _journal_lb, ref journals );
-    get_activated_items_from_list( _tag_lb,     ref tags );
+    if( _trash_cb.active ) {
+      journals.append( _journals.trash.name );
+    } else {
+      get_activated_items_from_list( _journal_lb, ref journals );
+    }
+    get_activated_items_from_list( _tag_lb, ref tags );
 
     var start_date = get_date( _start_date );
     var end_date   = get_date( _end_date );
@@ -480,15 +493,15 @@ public class Reviewer : Box {
 
     /* Add the matching entries to the list */
     foreach( var journal_name in journals ) {
-      var journal = _journals.get_journal_by_name( journal_name );
-      journal.db.query_entries( journal_name, tags, start_date, end_date, _search_entry.text, _match_entries );
+      var journal = (journal_name == _journals.trash.name) ? _journals.trash : _journals.get_journal_by_name( journal_name );
+      journal.db.query_entries( (journal_name == _journals.trash.name), tags, start_date, end_date, _search_entry.text, _match_entries );
     }
 
     /* Sort the entries */
     _match_entries.sort((a, b) => {
-      var date_match = strcmp( b.entry.date, a.entry.date );
+      var date_match = strcmp( b.date, a.date );
       if( date_match == 0 ) {
-        return( strcmp( a.journal_name, b.journal_name ) );
+        return( strcmp( a.journal, b.journal ) );
       }
       return( date_match );
     });
@@ -499,27 +512,54 @@ public class Reviewer : Box {
       return( true );
     });
 
+    /* Set the sensitivity of the action buttons */
+    _trash_btn.sensitive   = false;
+    _restore_btn.sensitive = false;
+
+    /* Display the first entry */
+    _match_lb.row_selected( (_match_entries.size == 0) ? null : _match_lb.get_row_at_index( 0 ) );
+
   }
 
   // --------------------------------------------------------------
+
+  /* Displays the given entry in the textarea */
+  private void show_entry( ListBoxRow? row ) {
+
+    if( row == null ) {
+      return;
+    } else {
+      var index    = row.get_index();
+      var entry    = _match_entries.get( index );
+      var selected = _match_lb.get_selected_rows().length();
+      if( selected == 1 ) {
+        show_matched_entry( entry );
+        _match_lb.grab_focus();
+        _trash_btn.sensitive   = false;
+        _restore_btn.sensitive = false;
+      }
+      if( entry.trash ) {
+        _restore_btn.sensitive = true;
+      } else {
+        _trash_btn.sensitive = true;
+      }
+    }
+
+  }
 
   /* Creates the sidebar where matched entries will be displayed */
   public Box create_reviewer_match_sidebar() {
 
     _match_lb = new ListBox() {
       show_separators = true,
-      activate_on_single_click = true
+      activate_on_single_click = false,
+      selection_mode  = SelectionMode.MULTIPLE,
+      can_focus       = true
     };
 
     _match_lb.row_selected.connect((row) => {
       _win.reset_timer();
-      if( row == null ) {
-        return;
-      }
-      var index   = row.get_index();
-      var jentry  = _match_entries.get( index );
-      var journal = _journals.get_journal_by_name( jentry.journal_name );
-      show_matched_entry( journal, jentry.entry );
+      show_entry( row );
     });
 
     var lb_scroll = new ScrolledWindow() {
@@ -536,34 +576,78 @@ public class Reviewer : Box {
       return( true );
     });
 
-    var box = new Box( Orientation.VERTICAL, 0 ) {
+    _restore_btn = new Button.with_label( _( "Restore" ) );
+    _restore_btn.clicked.connect( restore_from_trash );
+
+    _trash_btn = new Button.with_label( _( "Move To Trash" ) );
+    _trash_btn.clicked.connect( move_to_trash );
+
+    var bbox = new Box( Orientation.HORIZONTAL, 5 ) {
+      homogeneous = true,
+      halign      = Align.FILL,
+      hexpand     = true,
+      valign      = Align.END
+    };
+    bbox.append( _trash_btn );
+    bbox.append( _restore_btn );
+
+    var box = new Box( Orientation.VERTICAL, 5 ) {
       margin_start  = 5,
       margin_end    = 5,
       margin_top    = 5,
       margin_bottom = 5
     };
     box.append( lb_scroll );
+    box.append( bbox );
 
     return( box );
 
   }
 
+  /* Moves all entries to the trash */
+  private void move_to_trash() {
+    _win.reset_timer();
+    foreach( var row in _match_lb.get_selected_rows() ) {
+      var index   = row.get_index();
+      var entry   = _match_entries.get( index );
+      var journal = _journals.get_journal_by_name( entry.journal );
+      if( !entry.trash ) {
+        journal.move_entry( entry, _journals.trash );
+      }
+    }
+    do_search();
+  }
+
+  /* Restores the entries from the trash */
+  private void restore_from_trash() {
+    _win.reset_timer();
+    foreach( var row in _match_lb.get_selected_rows() ) {
+      var index   = row.get_index();
+      var entry   = _match_entries.get( index );
+      var journal = _journals.get_journal_by_name( entry.journal );
+      if( entry.trash ) {
+        _journals.trash.move_entry( entry, journal );
+      }
+    }
+    do_search();
+  }
+
   /* Adds the given match entry to the list of matching entries */
-  private void add_match_entry( JournalEntry jentry ) {
+  private void add_match_entry( DBEntry entry ) {
 
     /* Populate the listbox */
-    var label = new Label( "<b>" + jentry.entry.gen_title() + "</b>" ) {
+    var label = new Label( "<b>" + entry.gen_title() + "</b>" ) {
       halign     = Align.START,
       hexpand    = true,
       use_markup = true,
       ellipsize  = Pango.EllipsizeMode.END
     };
     label.add_css_class( "listbox-head" );
-    var journal = new Label( jentry.journal_name ) {
+    var journal = new Label( entry.trash ? _journals.trash.name : entry.journal ) {
       halign  = Align.START,
       hexpand = true
     };
-    var date = new Label( jentry.entry.date ) {
+    var date = new Label( entry.date ) {
       halign  = Align.END,
       hexpand = true
     };

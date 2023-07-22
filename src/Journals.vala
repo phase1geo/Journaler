@@ -1,6 +1,7 @@
 public class Journals {
 
   private Array<Journal> _journals;
+  private Journal        _trash;
   private Journal        _current;
 
   public Journal current {
@@ -15,6 +16,11 @@ public class Journals {
       }
     }
   }
+  public Journal trash {
+    get {
+      return( _trash );
+    }
+  }
 
   public signal void current_changed( bool refresh );
   public signal void list_changed();
@@ -23,6 +29,7 @@ public class Journals {
   public Journals( Templates templates ) {
 
     _journals = new Array<Journal>();
+    _trash    = new Journal.trash();
 
     templates.changed.connect((name, added) => {
       if( !added ) {
@@ -44,6 +51,12 @@ public class Journals {
     }
   }
 
+  /* Adds a default journal called "Journal" where there are no journals */
+  private void add_default_journal() {
+    var journal = new Journal( _( "Journal" ), "", "" );
+    add_journal( journal );
+  }
+
   /* Removes the current journal entry */
   public void remove_journal( Journal journal ) {
     for( int i=0; i<_journals.length; i++ ) {
@@ -51,8 +64,7 @@ public class Journals {
         _journals.index( i ).remove_db();
         _journals.remove_index( i );
         if( _journals.length == 0 ) {
-          var new_journal = new Journal( _( "Journal" ), "", "" );
-          add_journal( new_journal );
+          add_default_journal();
         } else {
           if( _current == journal ) {
             current = get_journal( (i == _journals.length) ? (i - 1) : i );
@@ -64,6 +76,16 @@ public class Journals {
         break;
       }
     }
+  }
+
+  /* Empties the trash */
+  public bool empty_trash() {
+    if( _trash.remove_db() ) {
+      _trash = new Journal.trash();
+      current_changed( true );
+      return( true );
+    }
+    return( false );
   }
 
   /* Returns the number of stored journals */
@@ -158,6 +180,7 @@ public class Journals {
 
     Xml.Doc* doc = Xml.Parser.read_file( xml_file(), null, (Xml.ParserOption.HUGE | Xml.ParserOption.NOWARNING) );
     if( doc == null ) {
+      add_default_journal();
       return;
     }
 
@@ -188,8 +211,7 @@ public class Journals {
 
     /* Set the current journal */
     if( _journals.length == 0 ) {
-      _current = new Journal( _( "Journal" ), "", "" );
-      add_journal( _current );
+      add_default_journal();
     } else {
       _current = _journals.index( current_index );
     }

@@ -99,22 +99,29 @@ public class Preferences : Gtk.Dialog {
       halign = Align.START
     };
 
-    grid.attach( make_label( _( "Automatically lock application" ) ), 0, 0 );
-    grid.attach( make_menu( "auto-lock", lock_label(), create_lock_menu() ), 1, 0 );
+    var row = 0;
 
-    grid.attach( make_label( "" ), 0, 1 );
+    grid.attach( make_label( _( "Automatically lock application" ) ), 0, row );
+    grid.attach( make_menu( "auto-lock", lock_label(), create_lock_menu() ), 1, row );
+    row++;
 
-    grid.attach( make_label( _( "Default Entry Title" ) ), 0, 2 );
+    grid.attach( make_spacer(), 0, row );
+    row++;
+
+    grid.attach( make_label( _( "Default Entry Title" ) ), 0, row );
     grid.attach( make_entry( "entry-title-prefix", _( "Prefix" ), 30, (entry, text, position) => {
       entry_preview.label = Utils.build_entry_title( text, Journaler.settings.get_string( "entry-title-suffix" ) );
       return( text );
-    }), 1, 2 );
+    }), 1, row );
+    row++;
     grid.attach( make_entry( "entry-title-suffix", _( "Suffix" ), 30, (entry, text, position) => {
       entry_preview.label = Utils.build_entry_title( Journaler.settings.get_string( "entry-title-prefix" ), text );
       return( text );
-    }), 1, 3 );
-    grid.attach( make_label( _( "Preview:" ) ), 0, 4 );
-    grid.attach( entry_preview, 1, 4 );
+    }), 1, row );
+    row++;
+    grid.attach( make_label( _( "Preview:" ) ), 0, row );
+    grid.attach( entry_preview, 1, row );
+    row++;
 
     /* Disable the menubutton if we haven't setup a password yet */
     if( !Security.does_password_exist() ) {
@@ -172,33 +179,49 @@ public class Preferences : Gtk.Dialog {
       halign = Align.CENTER
     };
 
-    grid.attach( make_label( _( "Default Theme" ) ), 0, 0 );
-    grid.attach( make_themes(), 1, 0, 2 );
+    var row = 0;
 
-    grid.attach( make_label( _( "Font Size" ) ), 0, 1 );
-    grid.attach( make_spinner( "editor-font-size", 8, 24, 1 ), 1, 1 );
+    grid.attach( make_label( _( "Default Theme" ) ), 0, row );
+    grid.attach( make_themes(), 1, row, 2 );
+    row++;
 
-    grid.attach( make_label( _( "Margin" ) ), 0, 2 );
-    grid.attach( make_spinner( "editor-margin", 5, 100, 5 ), 1, 2 );
+    grid.attach( make_label( _( "Font Size" ) ), 0, row );
+    grid.attach( make_spinner( "editor-font-size", 8, 24, 1 ), 1, row );
+    row++;
 
-    grid.attach( make_label( _( "Line Spacing" ) ), 0, 3 );
-    grid.attach( make_spinner( "editor-line-spacing", 2, 20, 1 ), 1, 3 );
+    grid.attach( make_label( _( "Margin" ) ), 0, row );
+    grid.attach( make_spinner( "editor-margin", 5, 100, 5 ), 1, row );
+    row++;
 
-    grid.attach( make_spacer(), 0, 4 );
+    grid.attach( make_label( _( "Line Spacing" ) ), 0, row );
+    grid.attach( make_spinner( "editor-line-spacing", 2, 20, 1 ), 1, row );
+    row++;
 
-    grid.attach( make_label( _( "Enable daily quotations" ) ), 0, 5 );
-    grid.attach( make_switch( "enable-quotations" ), 1, 5 );
+    grid.attach( make_label( _( "Enable spell checker" ) ), 0, row );
+    grid.attach( make_switch( "enable-spellchecker" ), 1, row );
+    row++;
 
-    grid.attach( make_label( _( "Dismiss daily quotation when writing" ) ), 0, 6 );
-    grid.attach( make_switch( "dismiss-quotation-on-write" ), 1, 6 );
+    grid.attach( make_spacer(), 0, row );
+    row++;
 
-    grid.attach( make_spacer(), 0, 7 );
+    grid.attach( make_label( _( "Enable daily quotations" ) ), 0, row );
+    grid.attach( make_switch( "enable-quotations" ), 1, row );
+    row++;
 
-    grid.attach( make_label( _( "Character Count Goal" ) ), 0, 8 );
-    grid.attach( make_spinner( "character-goal", 100, 100000, 100 ), 1, 8 );
+    grid.attach( make_label( _( "Dismiss daily quotation when writing" ) ), 0, row );
+    grid.attach( make_switch( "dismiss-quotation-on-write" ), 1, row );
+    row++;
 
-    grid.attach( make_label( _( "Word Count Goal" ) ), 0, 9 );
-    grid.attach( make_spinner( "word-goal", 50, 5000, 50 ), 1, 9 );
+    grid.attach( make_spacer(), 0, row );
+    row++;
+
+    grid.attach( make_label( _( "Character Count Goal" ) ), 0, row );
+    grid.attach( make_spinner( "character-goal", 100, 100000, 100 ), 1, row );
+    row++;
+
+    grid.attach( make_label( _( "Word Count Goal" ) ), 0, row );
+    grid.attach( make_spinner( "word-goal", 50, 5000, 50 ), 1, row );
+    row++;
 
     return( grid );
 
