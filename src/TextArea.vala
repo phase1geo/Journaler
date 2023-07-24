@@ -237,6 +237,7 @@ public class TextArea : Box {
       cursor_visible     = true,
       enable_snippets    = true
     };
+    _text.add_controller( create_image_drop() );
     _text.add_css_class( "journal-text" );
     _buffer.changed.connect(() => {
       _win.reset_timer();
@@ -283,6 +284,7 @@ public class TextArea : Box {
       vscrollbar_policy = AUTOMATIC,
       hscrollbar_policy = AUTOMATIC
     };
+    _iscroll.add_controller( create_image_drop() );
     _iscroll.scroll_child.connect((t,h) => {
       _win.reset_timer();
       return( false );
@@ -300,6 +302,42 @@ public class TextArea : Box {
     append( _stats );
 
     initialize_spell_checker();
+
+  }
+
+  private DropTarget create_image_drop() {
+
+    var drop = new Gtk.DropTarget( Type.STRING, DragAction.COPY );
+
+    drop.enter.connect((x, y) => {
+      drop.widget.add_css_class( "droppable" );
+      return( DragAction.COPY );
+    });
+
+    drop.leave.connect(() => {
+      drop.widget.remove_css_class( "droppable" );
+    });
+
+    drop.drop.connect((val, x, y) => {
+      if( Uri.peek_scheme( val.get_string().strip() ) != null ) {
+        var from_file = File.new_for_uri( val.get_string().strip() );
+        try {
+          GLib.FileIOStream stream;
+          var to_file = File.new_tmp( "imgXXXXXX-%s".printf( from_file.get_basename() ), out stream );
+          from_file.copy( to_file, FileCopyFlags.OVERWRITE );
+          _pixbuf = new Pixbuf.from_file( to_file.get_path() );
+          _pixbuf_changed = true;
+          display_pixbuf( 200, 0.0, 0.0 );
+          save();
+          return( true );
+        } catch( Error e ) {
+          stdout.printf( "ERROR:  Unable to convert image file to pixbuf: %s\n", e.message );
+        }
+      }
+      return( false );
+    });
+
+    return( drop );
 
   }
 
