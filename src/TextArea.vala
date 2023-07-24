@@ -47,6 +47,7 @@ public class TextArea : Box {
   private Revealer         _quote_revealer;
   private Quotes           _quotes;
   private SpellChecker     _spell;
+  private Gee.HashMap<string,bool> _image_extensions;
 
   private const GLib.ActionEntry action_entries[] = {
     { "action_add_entry_image",    action_add_entry_image },
@@ -105,6 +106,9 @@ public class TextArea : Box {
     var actions = new SimpleActionGroup();
     actions.add_action_entries( action_entries, this );
     insert_action_group( "textarea", actions );
+
+    /* Gather the list of available image extensions */
+    get_image_extensions();
 
   }
 
@@ -237,6 +241,7 @@ public class TextArea : Box {
       cursor_visible     = true,
       enable_snippets    = true
     };
+    _text.add_controller( create_image_drop() );
     _text.add_css_class( "journal-text" );
     _buffer.changed.connect(() => {
       _win.reset_timer();
@@ -283,6 +288,7 @@ public class TextArea : Box {
       vscrollbar_policy = AUTOMATIC,
       hscrollbar_policy = AUTOMATIC
     };
+    _iscroll.add_controller( create_image_drop() );
     _iscroll.scroll_child.connect((t,h) => {
       _win.reset_timer();
       return( false );
@@ -300,6 +306,59 @@ public class TextArea : Box {
     append( _stats );
 
     initialize_spell_checker();
+
+  }
+
+  /* Gathers the supported image extensions that we can support */
+  private void get_image_extensions() {
+
+    _image_extensions = new Gee.HashMap<string,bool>();
+
+    var formats = Pixbuf.get_formats();
+    foreach( var format in formats ) {
+      foreach( var ext in format.get_extensions() ) {
+        _image_extensions.set( ext, true );
+      }
+    }
+
+  }
+
+  /* Returns true if the given URI is a supported image based on its extension */
+  private bool is_uri_supported_image( string uri ) {
+    string[] parts = uri.split( "." );
+    return( _image_extensions.has_key( parts[parts.length - 1] ) );
+  }
+
+  private DropTarget create_image_drop() {
+
+    var drop = new Gtk.DropTarget( Type.STRING, DragAction.COPY );
+
+    drop.motion.connect((x, y) => {
+      return( _title.editable ? DragAction.COPY : 0 );
+    });
+
+    drop.drop.connect((val, x, y) => {
+      var uri = val.get_string().strip();
+      if( (Uri.peek_scheme( uri ) != null) && is_uri_supported_image( uri ) ) {
+        var from_file = File.new_for_uri( uri );
+        try {
+          GLib.FileIOStream stream;
+          var to_file = File.new_tmp( "imgXXXXXX-%s".printf( from_file.get_basename() ), out stream );
+          from_file.copy( to_file, FileCopyFlags.OVERWRITE );
+          _pixbuf = new Pixbuf.from_file( to_file.get_path() );
+          _pixbuf_changed = true;
+          display_pixbuf( 200, 0.0, 0.0 );
+          save();
+          to_file.delete();
+          return( true );
+        } catch( Error e ) {
+          stdout.printf( "ERROR:  Unable to convert image file to pixbuf: %s\n", e.message );
+        }
+      }
+      return( false );
+    });
+
+    return( drop );
 
   }
 

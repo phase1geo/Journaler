@@ -549,7 +549,7 @@ public class Preferences : Gtk.Dialog {
     stdout.printf( "Adding 100 test entries to journal %s\n", journal.name );
 
     /* Find the oldest date and work backwards from there */
-    journal.db.get_all_entries( entries );
+    journal.db.get_all_entries( false, entries );
     if( entries.length > 0 ) {
       var entry = entries.index( entries.length - 1 );
       date = entry.datetime();
@@ -565,7 +565,7 @@ public class Preferences : Gtk.Dialog {
 
       stdout.printf( "Adding date %s\n", DBEntry.datetime_date( date ) );
 
-      var entry = new DBEntry.with_date( "", string.joinv( " ", text ), null, 0, 0.0, 0.0, false, "", DBEntry.datetime_date( date ), DBEntry.datetime_time( date ) );
+      var entry = new DBEntry.with_date( journal.name, "", string.joinv( " ", text ), null, false, "", DBEntry.datetime_date( date ), DBEntry.datetime_time( date ) );
       if( journal.db.create_entry( entry ) && journal.db.save_entry( entry ) ) {
         stdout.printf( "  Saved entry %d\n", (i + 1) );
       }
