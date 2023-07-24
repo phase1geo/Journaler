@@ -309,17 +309,12 @@ public class TextArea : Box {
 
     var drop = new Gtk.DropTarget( Type.STRING, DragAction.COPY );
 
-    drop.enter.connect((x, y) => {
-      drop.widget.add_css_class( "droppable" );
-      return( DragAction.COPY );
-    });
-
-    drop.leave.connect(() => {
-      drop.widget.remove_css_class( "droppable" );
+    drop.motion.connect((x, y) => {
+      return( _title.editable ? DragAction.COPY : 0 );
     });
 
     drop.drop.connect((val, x, y) => {
-      if( Uri.peek_scheme( val.get_string().strip() ) != null ) {
+      if( _title.editable && (Uri.peek_scheme( val.get_string().strip() ) != null) ) {
         var from_file = File.new_for_uri( val.get_string().strip() );
         try {
           GLib.FileIOStream stream;
@@ -329,6 +324,7 @@ public class TextArea : Box {
           _pixbuf_changed = true;
           display_pixbuf( 200, 0.0, 0.0 );
           save();
+          to_file.delete();
           return( true );
         } catch( Error e ) {
           stdout.printf( "ERROR:  Unable to convert image file to pixbuf: %s\n", e.message );
