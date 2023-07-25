@@ -9,6 +9,11 @@ public class Quote {
     _author = author;
   }
 
+  /* Constructor from XML */
+  public Quote.from_xml( Xml.Node* node ) {
+    load( node );
+  }
+
   /* Returns the given quote */
   public string make_quote() {
     if( _author == "" ) {
@@ -18,11 +23,33 @@ public class Quote {
     }
   }
 
+  /* Saves the quote information in XML format */
+  public Xml.Node* save() {
+    Xml.Node* node = new Xml.Node( null, "quote" );
+    node->set_prop( "author", _author );
+    node->set_content( _quote );
+    return( node );
+  }
+
+  /* Loads the quotation from the given node */
+  public void load( Xml.Node* node ) {
+    var a = node->get_prop( "author" );
+    if( (a != null) && (a != "") ) {
+      _author = a;
+    } else {
+      _author = _( "Anonymous" );
+    }
+    _quote = node->get_content();
+  }
+
 }
 
 public class Quotes {
 
   private Array<Quote> _quotes;
+  private int          _built_in_length;
+  private int          _quote_index = -1;
+  private string       _date        = "";
 
   /* Default constructor */
   public Quotes() {
@@ -57,6 +84,11 @@ public class Quotes {
     add_quote( new Quote( _( "Turning your journal time into a mini-ritual gives it importance." ), "Julie Hage" ) );
     add_quote( new Quote( _( "Your journal is your private sanctuary, your safe haven." ), "Julie Hage" ) );
 
+    _built_in_length = (int)_quotes.length;
+
+    /* Load the values from the XML file */
+    load();
+
   }
 
   /* Adds the given quote to the list */
@@ -66,8 +98,94 @@ public class Quotes {
 
   /* Returns a randomly selected quote */
   public string get_quote() {
-    var index = Random.int_range( 0, (int)_quotes.length );
-    return( _quotes.index( index ).make_quote() );
+    var today = DBEntry.todays_date();
+    if( today != _date ) {
+      _quote_index = Random.int_range( 0, (int)_quotes.length );
+      _date = today;
+      save();
+    }
+    return( _quotes.index( _quote_index ).make_quote() );
+  }
+
+  /* Returns the pathname of the XML file */
+  private string xml_file() {
+    return( GLib.Path.build_filename( Environment.get_user_data_dir(), "journaler", "quotes.xml" ) );
+  }
+
+  /* Saves the current quotation and user-supplied list */
+  private void save() {
+
+    Xml.Doc*  doc  = new Xml.Doc( "1.0" );
+    Xml.Node* root = new Xml.Node( null, "quotes" );
+
+    root->set_prop( "version", Journaler.version );
+    root->set_prop( "current", ((_quote_index < _built_in_length) ? "b:%d".printf( _quote_index ) : "u:%d".printf( _quote_index - _built_in_length )) );
+    root->set_prop( "date",    _date );
+
+    if( (int)_quotes.length == _built_in_length ) {
+      var comment = doc->new_comment( _( "Add one or more <quote author=\"author-name\">quotation</quote> here to add quotes to the system" ) );
+      root->add_child( comment );
+    } else {
+      for( int i=_built_in_length; i<_quotes.length; i++ ) {
+        root->add_child( _quotes.index( i ).save() );
+      }
+    }
+
+    doc->set_root_element( root );
+    doc->save_format_file( xml_file(), 1 );
+
+    delete doc;
+
+  }
+
+  /* Loads the current quotation and the user-supplied list */
+  private void load() {
+
+    Xml.Doc* doc = Xml.Parser.read_file( xml_file(), null, (Xml.ParserOption.HUGE | Xml.ParserOption.NOWARNING) );
+    if( doc == null ) {
+      return;
+    }
+
+    Xml.Node* root = doc->get_root_element();
+
+    var v = root->get_prop( "version" );
+    if( v != null ) {
+      check_version( v );
+    }
+
+    var c = root->get_prop( "current" );
+    if( c != null ) {
+      string[] parts = c.split( ":" );
+      if( (parts.length == 2) && ((parts[0] == "b") || (parts[0] == "u")) ) {
+        _quote_index = int.parse( parts[1] ) + ((parts[0] == "u") ? _built_in_length : 0);
+      }
+    }
+
+    var d = root->get_prop( "date" );
+    if( d != null ) {
+      _date = d;
+    }
+
+    for( Xml.Node* it = doc->get_root_element()->children; it != null; it = it->next ) {
+      if( (it->type == Xml.ElementType.ELEMENT_NODE) && (it->name == "quote") ) {
+        add_quote( new Quote.from_xml( it ) ); 
+      }
+    }
+
+    /* If the quote index exceeds the number of available quotes, clear the date so that we generate a random one */
+    if( _quote_index >= (int)_quotes.length ) {
+      _date = "";
+    }
+
+    delete doc;
+
+  }
+
+  /* Handles any changes between versions */
+  private void check_version( string version ) {
+
+    // TBD
+
   }
 
 }
