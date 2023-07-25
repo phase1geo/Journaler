@@ -13,13 +13,15 @@ public class DBImage {
   public int    pos    { get; set; default = 200; }
   public double vadj   { get; set; default = 0.0; }
   public double hadj   { get; set; default = 0.0; }
+  public double scale  { get; set; default = 1.0; }
 
   /* Default constructor */
-  public DBImage( Pixbuf pixbuf, int pos, double vadj, double hadj ) {
+  public DBImage( Pixbuf pixbuf, int pos, double vadj, double hadj, double scale ) {
     this.pixbuf = pixbuf;
     this.pos    = pos;
     this.vadj   = vadj;
     this.hadj   = hadj;
+    this.scale  = scale;
   }
 
 }
@@ -262,6 +264,7 @@ public class Database {
     IMAGE_POS,
     IMAGE_VADJ,
     IMAGE_HADJ,
+    IMAGE_SCALE,
     JOURNAL_ID,
     JOURNAL,
     TAG
@@ -326,16 +329,17 @@ public class Database {
     // Create the table if it doesn't already exist
     var entry_query = """
       CREATE TABLE IF NOT EXISTS Entry (
-        id         INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
-        title      TEXT                              NOT NULL,
-        txt        TEXT                              NOT NULL,
-        date       TEXT                              NOT NULL,
-        time       TEXT                              NOT NULL,
-        image      BLOB,
-        image_pos  INTEGER,
-        image_vadj REAL,
-        image_hadj REAL,
-        journal_id INTEGER                           NOT NULL
+        id          INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
+        title       TEXT                              NOT NULL,
+        txt         TEXT                              NOT NULL,
+        date        TEXT                              NOT NULL,
+        time        TEXT                              NOT NULL,
+        image       BLOB,
+        image_pos   INTEGER,
+        image_vadj  REAL,
+        image_hadj  REAL,
+        image_scale REAL,
+        journal_id  INTEGER                           NOT NULL
       );
       """;
 
@@ -428,8 +432,8 @@ public class Database {
 
     /* Insert the entry */
     var entry_query = """
-        INSERT INTO Entry (title, txt, date, time, image, image_pos, image_vadj, image_hadj, journal_id)
-        VALUES ('', '%s', '%s', '%s', NULL, NULL, NULL, NULL, %d);
+        INSERT INTO Entry (title, txt, date, time, image, image_pos, image_vadj, image_hadj, image_scale, journal_id)
+        VALUES ('', '%s', '%s', '%s', NULL, NULL, NULL, NULL, NULL, %d);
         """.printf( sql_string( entry.text ), entry.date, entry.time, journal_id );
 
     if( !exec_query( entry_query ) ) {
@@ -531,8 +535,13 @@ public class Database {
           var pixload = new PixbufLoader.with_type( "png" );
           pixload.write( (uint8[])Base64.decode( vals[EntryPos.IMAGE] ) );
           pixload.close();
-          entry.image = new DBImage( pixload.get_pixbuf(), int.parse( vals[EntryPos.IMAGE_POS] ),
-                                     double.parse( vals[EntryPos.IMAGE_VADJ] ), double.parse( vals[EntryPos.IMAGE_HADJ] ) );
+          entry.image = new DBImage(
+            pixload.get_pixbuf(),
+            int.parse( vals[EntryPos.IMAGE_POS] ),
+            double.parse( vals[EntryPos.IMAGE_VADJ] ),
+            double.parse( vals[EntryPos.IMAGE_HADJ] ),
+            double.parse( vals[EntryPos.IMAGE_SCALE] )
+          );
         } catch( Error e ) {
           stderr.printf( "ERROR: %s\n", e.message );
         }
@@ -625,7 +634,9 @@ public class Database {
           stderr.printf( "ERROR: %s\n", e.message );
         }
       }
-      image_query += ", image_pos = %d, image_vadj = %g, image_hadj = %g".printf( entry.image.pos, entry.image.vadj, entry.image.hadj );
+      image_query += ", image_pos = %d, image_vadj = %g, image_hadj = %g, image_scale = %g".printf(
+        entry.image.pos, entry.image.vadj, entry.image.hadj, entry.image.scale
+      );
     }
 
     var entry_query = """ 

@@ -38,6 +38,7 @@ public class TextArea : Box {
   private string           _theme;
   private Paned            _pane;
   private ScrolledWindow   _iscroll;
+  private Overlay          _image_overlay;
   private Pixbuf?          _pixbuf = null;
   private bool             _pixbuf_changed = false;
   private GLib.Menu        _image_menu;
@@ -48,6 +49,8 @@ public class TextArea : Box {
   private Quotes           _quotes;
   private SpellChecker     _spell;
   private Gee.HashMap<string,bool> _image_extensions;
+  private double                   _image_scale = 1.0;
+  private double                   _image_zoom_increment = 0.1;
 
   private const GLib.ActionEntry action_entries[] = {
     { "action_add_entry_image",    action_add_entry_image },
@@ -294,6 +297,52 @@ public class TextArea : Box {
       return( false );
     });
 
+    var img_zoom_in = new Button.from_icon_name( "list-add-symbolic" ) {
+      has_frame = true
+    };
+    img_zoom_in.add_css_class( Granite.STYLE_CLASS_BACKGROUND );
+    img_zoom_in.clicked.connect(() => {
+      display_pixbuf( null, null, null, (_image_scale + _image_zoom_increment) );
+    });
+
+    var img_zoom_out = new Button.from_icon_name( "list-remove-symbolic" );
+    img_zoom_out.add_css_class( Granite.STYLE_CLASS_BACKGROUND );
+    img_zoom_out.clicked.connect(() => {
+      display_pixbuf( null, null, null, (_image_scale - _image_zoom_increment) );
+    });
+
+    var ibbox = new Box( Orientation.HORIZONTAL, 5 ) {
+      halign = Align.END,
+      valign = Align.END,
+      margin_end = 5,
+      margin_bottom = 5
+    };
+    ibbox.append( img_zoom_in );
+    ibbox.append( img_zoom_out );
+
+    var img_btn_revealer = new Revealer() {
+      reveal_child = false,
+      child = ibbox
+    };
+
+    var overlay_motion = new EventControllerMotion();
+    _image_overlay = new Overlay() {
+      child = _iscroll
+    };
+    _image_overlay.add_controller( overlay_motion );
+    _image_overlay.add_overlay( img_btn_revealer );
+
+    overlay_motion.enter.connect((x, y) => {
+      _win.reset_timer();
+      stdout.printf( "Entering iscroll\n" );
+      img_btn_revealer.reveal_child = true;
+    });
+    overlay_motion.leave.connect(() => {
+      _win.reset_timer();
+      stdout.printf( "Leaving iscroll\n" );
+      img_btn_revealer.reveal_child = false;
+    });
+
     _stats = new Statistics( _text.buffer );
 
     append( tbox );
@@ -347,7 +396,7 @@ public class TextArea : Box {
           from_file.copy( to_file, FileCopyFlags.OVERWRITE );
           _pixbuf = new Pixbuf.from_file( to_file.get_path() );
           _pixbuf_changed = true;
-          display_pixbuf( 200, 0.0, 0.0 );
+          display_pixbuf( 200, 0.0, 0.0, 1.0 );
           save();
           to_file.delete();
           return( true );
@@ -449,7 +498,7 @@ public class TextArea : Box {
           try {
             _pixbuf = new Pixbuf.from_file( file.get_path() );
             _pixbuf_changed = true;
-            display_pixbuf( 200, 0.0, 0.0 );
+            display_pixbuf( 200, 0.0, 0.0, 1.0 );
             save();
           } catch( Error e ) {
             stdout.printf( "ERROR:  Unable to convert image file to pixbuf: %s\n", e.message );
@@ -464,12 +513,20 @@ public class TextArea : Box {
   }
 
   /* Handles the proper display of the current pixbuf */
-  private void display_pixbuf( int pane_pos, double vadj, double hadj ) {
+  private void display_pixbuf( int? pane_pos, double? vadj, double? hadj, double? scale ) {
     if( _pixbuf == null ) {
       _pane.start_child = null;
       image_removed();
     } else {
-      var img = new Picture.for_pixbuf( _pixbuf ) {
+      if( scale != null ) {
+        _image_scale = scale;
+      }
+      var buf = _pixbuf.scale_simple(
+                  (int)(_pixbuf.get_width() * _image_scale),
+                  (int)(_pixbuf.get_height() * _image_scale),
+                  InterpType.BILINEAR
+                );
+      var img = new Picture.for_pixbuf( buf ) {
         halign = Align.FILL,
         hexpand = true,
         can_shrink = false
@@ -478,10 +535,16 @@ public class TextArea : Box {
       _iscroll.child = img;
       _iscroll.vadjustment.upper = (double)img.paintable.get_intrinsic_height();
       _iscroll.hadjustment.upper = (double)img.paintable.get_intrinsic_width();
-      _iscroll.vadjustment.value = vadj;
-      _iscroll.hadjustment.value = hadj;
-      _pane.start_child = _iscroll;
-      _pane.position = pane_pos;
+      if( vadj != null ) {
+        _iscroll.vadjustment.value = vadj;
+      }
+      if( hadj != null ) {
+        _iscroll.hadjustment.value = hadj;
+      }
+      _pane.start_child = _image_overlay;
+      if( pane_pos != null ) {
+        _pane.position = pane_pos;
+      }
       image_added();
     }
   }
@@ -491,7 +554,7 @@ public class TextArea : Box {
     _win.reset_timer();
     _pixbuf = null;
     _pixbuf_changed = true;
-    display_pixbuf( 200, 0.0, 0.0 );
+    display_pixbuf( 200, 0.0, 0.0, 1.0 );
     save();
   }
 
@@ -660,7 +723,8 @@ public class TextArea : Box {
             ((_pixbuf != null) &&
              ((_pane.position != _entry.image.pos) ||
               (_iscroll.vadjustment.value != _entry.image.vadj) ||
-              (_iscroll.hadjustment.value != _entry.image.hadj))) );
+              (_iscroll.hadjustment.value != _entry.image.hadj) ||
+              (_image_scale != _entry.image.scale))) );
   }
 
   /* Returns true if the text of the entry has changed since it was loaded */
@@ -678,7 +742,7 @@ public class TextArea : Box {
 
     DBImage? image = null;
     if( _pixbuf != null ) {
-      image = new DBImage( _pixbuf, _pane.position, _iscroll.vadjustment.value, _iscroll.hadjustment.value );
+      image = new DBImage( _pixbuf, _pane.position, _iscroll.vadjustment.value, _iscroll.hadjustment.value, _image_scale );
     }
     var entry = new DBEntry.with_date( 
       _entry.journal, _title.text, _text.buffer.text, image, _pixbuf_changed, _tags.entry.get_tag_list(), _entry.date, _entry.time
@@ -739,7 +803,7 @@ public class TextArea : Box {
       _pixbuf = null;
     } else {
       _pixbuf = entry.image.pixbuf;
-      display_pixbuf( entry.image.pos, entry.image.vadj, entry.image.hadj );
+      display_pixbuf( entry.image.pos, entry.image.vadj, entry.image.hadj, entry.image.scale );
     }
     _pixbuf_changed = false;
 
