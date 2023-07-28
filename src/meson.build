@@ -7,6 +7,7 @@ sources += files(
     'Exports.vala',
     'Goal.vala',
     'Goals.vala',
+    'ImageArea.vala',
     'Journal.vala',
     'Journals.vala',
     'Locker.vala',
