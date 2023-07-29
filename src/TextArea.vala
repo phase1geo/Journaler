@@ -29,6 +29,7 @@ public class TextArea : Box {
   private Templates        _templates;
   private Journal?         _journal = null;
   private DBEntry?         _entry = null;
+  private ImageArea        _image_area;
   private Entry            _title;
   private MenuButton       _burger;
   private Label            _date;
@@ -37,9 +38,6 @@ public class TextArea : Box {
   private GtkSource.Buffer _buffer;
   private string           _theme;
   private Paned            _pane;
-  private ScrolledWindow   _iscroll;
-  private Pixbuf?          _pixbuf = null;
-  private bool             _pixbuf_changed = false;
   private GLib.Menu        _image_menu;
   private GLib.Menu        _templates_menu;
   private Statistics       _stats;
@@ -47,7 +45,6 @@ public class TextArea : Box {
   private Revealer         _quote_revealer;
   private Quotes           _quotes;
   private SpellChecker     _spell;
-  private Gee.HashMap<string,bool> _image_extensions;
 
   private const GLib.ActionEntry action_entries[] = {
     { "action_add_entry_image",    action_add_entry_image },
@@ -106,9 +103,6 @@ public class TextArea : Box {
     var actions = new SimpleActionGroup();
     actions.add_action_entries( action_entries, this );
     insert_action_group( "textarea", actions );
-
-    /* Gather the list of available image extensions */
-    get_image_extensions();
 
   }
 
@@ -228,6 +222,14 @@ public class TextArea : Box {
       child        = _quote
     };
 
+    _pane = new Paned( Orientation.VERTICAL );
+
+    /* Create image area */
+    _image_area = new ImageArea( _win, _pane );
+    _image_area.image_added.connect(() => {
+      image_added();
+    });
+
     /* Now let's setup some stuff related to the text field */
     var lang_mgr = GtkSource.LanguageManager.get_default();
     var lang     = lang_mgr.get_language( "markdown" );
@@ -241,7 +243,7 @@ public class TextArea : Box {
       cursor_visible     = true,
       enable_snippets    = true
     };
-    _text.add_controller( create_image_drop() );
+    _text.add_controller( _image_area.create_image_drop() );
     _text.add_css_class( "journal-text" );
     _buffer.changed.connect(() => {
       _win.reset_timer();
@@ -280,20 +282,9 @@ public class TextArea : Box {
       return( false );
     });
 
-    _pane = new Paned( Orientation.VERTICAL ) {
-      end_child = tscroll
-    };
+    _pane.end_child = tscroll;
 
-    _iscroll = new ScrolledWindow() {
-      vscrollbar_policy = AUTOMATIC,
-      hscrollbar_policy = AUTOMATIC
-    };
-    _iscroll.add_controller( create_image_drop() );
-    _iscroll.scroll_child.connect((t,h) => {
-      _win.reset_timer();
-      return( false );
-    });
-
+    /* Create statistics bar */
     _stats = new Statistics( _text.buffer );
 
     append( tbox );
@@ -306,59 +297,6 @@ public class TextArea : Box {
     append( _stats );
 
     initialize_spell_checker();
-
-  }
-
-  /* Gathers the supported image extensions that we can support */
-  private void get_image_extensions() {
-
-    _image_extensions = new Gee.HashMap<string,bool>();
-
-    var formats = Pixbuf.get_formats();
-    foreach( var format in formats ) {
-      foreach( var ext in format.get_extensions() ) {
-        _image_extensions.set( ext, true );
-      }
-    }
-
-  }
-
-  /* Returns true if the given URI is a supported image based on its extension */
-  private bool is_uri_supported_image( string uri ) {
-    string[] parts = uri.split( "." );
-    return( _image_extensions.has_key( parts[parts.length - 1] ) );
-  }
-
-  private DropTarget create_image_drop() {
-
-    var drop = new Gtk.DropTarget( Type.STRING, DragAction.COPY );
-
-    drop.motion.connect((x, y) => {
-      return( _title.editable ? DragAction.COPY : 0 );
-    });
-
-    drop.drop.connect((val, x, y) => {
-      var uri = val.get_string().strip();
-      if( (Uri.peek_scheme( uri ) != null) && is_uri_supported_image( uri ) ) {
-        var from_file = File.new_for_uri( uri );
-        try {
-          GLib.FileIOStream stream;
-          var to_file = File.new_tmp( "imgXXXXXX-%s".printf( from_file.get_basename() ), out stream );
-          from_file.copy( to_file, FileCopyFlags.OVERWRITE );
-          _pixbuf = new Pixbuf.from_file( to_file.get_path() );
-          _pixbuf_changed = true;
-          display_pixbuf( 200, 0.0, 0.0 );
-          save();
-          to_file.delete();
-          return( true );
-        } catch( Error e ) {
-          stdout.printf( "ERROR:  Unable to convert image file to pixbuf: %s\n", e.message );
-        }
-      }
-      return( false );
-    });
-
-    return( drop );
 
   }
 
@@ -429,70 +367,15 @@ public class TextArea : Box {
 
   /* Adds or changes the image associated with the current entry */
   private void action_add_entry_image() {
-
     _win.reset_timer();
-
-    var dialog = Utils.make_file_chooser( _( "Select an image" ), _win, FileChooserAction.OPEN, _( "Add Image" ) );
-
-    /* Add filters */
-    var filter = new FileFilter() {
-      name = _( "PNG Images" )
-    };
-    filter.add_suffix( "png" );
-    dialog.add_filter( filter );
-
-    dialog.response.connect((id) => {
-      _win.reset_timer();
-      if( id == ResponseType.ACCEPT ) {
-        var file = dialog.get_file();
-        if( file != null ) {
-          try {
-            _pixbuf = new Pixbuf.from_file( file.get_path() );
-            _pixbuf_changed = true;
-            display_pixbuf( 200, 0.0, 0.0 );
-            save();
-          } catch( Error e ) {
-            stdout.printf( "ERROR:  Unable to convert image file to pixbuf: %s\n", e.message );
-          }
-        }
-      }
-      dialog.close();
-    });
-
-    dialog.show();
-
-  }
-
-  /* Handles the proper display of the current pixbuf */
-  private void display_pixbuf( int pane_pos, double vadj, double hadj ) {
-    if( _pixbuf == null ) {
-      _pane.start_child = null;
-      image_removed();
-    } else {
-      var img = new Picture.for_pixbuf( _pixbuf ) {
-        halign = Align.FILL,
-        hexpand = true,
-        can_shrink = false
-      };
-      img.add_css_class( "text-background" );
-      _iscroll.child = img;
-      _iscroll.vadjustment.upper = (double)img.paintable.get_intrinsic_height();
-      _iscroll.hadjustment.upper = (double)img.paintable.get_intrinsic_width();
-      _iscroll.vadjustment.value = vadj;
-      _iscroll.hadjustment.value = hadj;
-      _pane.start_child = _iscroll;
-      _pane.position = pane_pos;
-      image_added();
-    }
+    _image_area.add_image();
   }
 
   /* Removes the image associated with the current entry */
   private void action_remove_entry_image() {
     _win.reset_timer();
-    _pixbuf = null;
-    _pixbuf_changed = true;
-    display_pixbuf( 200, 0.0, 0.0 );
-    save();
+    _image_area.remove_image();
+    image_removed();
   }
 
   /* Inserts the given template text at the current insertion cursor location */
@@ -643,6 +526,10 @@ public class TextArea : Box {
       .text-padding {
         padding: 0px %dpx;
       }
+      .zoom-padding {
+        padding: 5px;
+        opacity: 0.5;
+      }
     """.printf( font_size, font_size, margin, margin, style.get_style( "background-pattern" ).background, (margin - 4) );
     provider.load_from_data( css_data.data );
     StyleContext.add_provider_for_display( get_display(), provider, STYLE_PROVIDER_PRIORITY_APPLICATION );
@@ -654,34 +541,22 @@ public class TextArea : Box {
     return( _title.editable && (_title.text != _entry.title) );
   }
 
-  /* Returns true if the image of the entry or its positioning information had changed since it was loaded */
-  private bool image_changed() {
-    return( _pixbuf_changed ||
-            ((_pixbuf != null) &&
-             ((_pane.position != _entry.image.pos) ||
-              (_iscroll.vadjustment.value != _entry.image.vadj) ||
-              (_iscroll.hadjustment.value != _entry.image.hadj))) );
-  }
-
   /* Returns true if the text of the entry has changed since it was loaded */
   private bool text_changed() {
     return( _text.editable && _text.buffer.get_modified() );
   }
 
   /* Saves the contents of the text area as an entry in the current database */
-  public void save() {
+  public void save( bool image_changed = false ) {
 
     /* If the text area is not editable or has not changed, there's no need to save */
-    if( (_journal == null) || (_entry == null) || (!title_changed() && !image_changed() && !text_changed()) ) {
+    if( (_journal == null) || (_entry == null) || (!title_changed() && !_image_area.changed() && !text_changed()) ) {
       return;
     }
 
-    DBImage? image = null;
-    if( _pixbuf != null ) {
-      image = new DBImage( _pixbuf, _pane.position, _iscroll.vadjustment.value, _iscroll.hadjustment.value );
-    }
+    var image = _image_area.get_image();
     var entry = new DBEntry.with_date( 
-      _entry.journal, _title.text, _text.buffer.text, image, _pixbuf_changed, _tags.entry.get_tag_list(), _entry.date, _entry.time
+      _entry.journal, _title.text, _text.buffer.text, image, _image_area.pixbuf_changed, _tags.entry.get_tag_list(), _entry.date, _entry.time
     );
 
     if( _journal.db.save_entry( entry ) ) {
@@ -690,7 +565,6 @@ public class TextArea : Box {
       }
 
       _entry = entry;
-      _pixbuf_changed = false;
 
       /* Update the goals */
       _win.goals.mark_achievement( entry.date, false );
@@ -735,13 +609,8 @@ public class TextArea : Box {
     }
 
     /* Set the image */
-    if( entry.image == null ) {
-      _pixbuf = null;
-    } else {
-      _pixbuf = entry.image.pixbuf;
-      display_pixbuf( entry.image.pos, entry.image.vadj, entry.image.hadj );
-    }
-    _pixbuf_changed = false;
+    _image_area.set_image( entry.image );
+    _image_area.editable = enable_ui;
 
     /* Set the tags */
     _tags.journal = _journal;

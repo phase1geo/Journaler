@@ -62,6 +62,10 @@ public class Journaler : Gtk.Application {
     weak IconTheme default_theme = IconTheme.get_for_display( Display.get_default() );
     default_theme.add_resource_path( "/com/github/phase1geo/journaler" );
 
+    /* Make sure that the user data directory exists */
+    var dir = GLib.Path.build_filename( Environment.get_user_data_dir(), "journaler", "db" );
+    DirUtils.create_with_parents( dir, 0755 );
+
     /* Create the main window */
     appwin = new MainWindow( this, settings );
 

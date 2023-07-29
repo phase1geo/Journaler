@@ -112,9 +112,10 @@ public class ExportXML : Export {
           image->set_prop( "path", path );
 
           if( for_import ) {
-            image->set_prop( "pos",  img.pos.to_string() );
-            image->set_prop( "vadj", img.vadj.to_string() );
-            image->set_prop( "hadj", img.hadj.to_string() );
+            image->set_prop( "pos",   img.pos.to_string() );
+            image->set_prop( "vadj",  img.vadj.to_string() );
+            image->set_prop( "hadj",  img.hadj.to_string() );
+            image->set_prop( "scale", img.scale.to_string() );
           }
 
           node->add_child( image );
@@ -271,18 +272,19 @@ public class ExportXML : Export {
   /* Imports the specified image XML node */
   private void import_image( Xml.Node* node, DBEntry entry ) {
 
-    var path = node->get_prop( "path" );
-    var pos  = node->get_prop( "pos" );
-    var vadj = node->get_prop( "vadj" );
-    var hadj = node->get_prop( "hadj" );
+    var path  = node->get_prop( "path" );
+    var pos   = node->get_prop( "pos" );
+    var vadj  = node->get_prop( "vadj" );
+    var hadj  = node->get_prop( "hadj" );
+    var scale = node->get_prop( "scale" );
 
-    if( (path != null) && (pos != null) && (vadj != null) && (hadj != null) ) {
+    if( (path != null) && (pos != null) && (vadj != null) && (hadj != null) && (scale != null) ) {
       try {
         if( !Path.is_absolute( path ) ) {
           path = Path.build_filename( _directory, path );
         }
         var pixbuf  = new Pixbuf.from_file( path );
-        entry.image = new DBImage( pixbuf, int.parse( pos ), double.parse( vadj ), double.parse( hadj ) );
+        entry.image = new DBImage( pixbuf, int.parse( pos ), double.parse( vadj ), double.parse( hadj ), double.parse( scale ) );
         entry.image_changed = true;
       } catch( Error e ) {
         stderr.printf( "ERROR: %s\n", e.message );
