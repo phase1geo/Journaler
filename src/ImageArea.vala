@@ -146,7 +146,8 @@ public class ImageArea : Box {
   }
 
   /* Retrieves an image object used for saving to database */
-  public DBImage? get_image() {
+  public void get_images( DBEntry entry ) {
+    /*
     _pixbuf_changed = false;
     if( _pixbuf == null ) {
       return( null );
@@ -154,10 +155,12 @@ public class ImageArea : Box {
       var image = new DBImage( _pixbuf, _pane.position, _scroll.vadjustment.value, _scroll.hadjustment.value, _scale );
       return( image );
     }
+    */
   }
 
   /* Sets the image to the given object */
-  public void set_image( DBImage? image ) {
+  public void set_images( DBEntry? entry ) {
+    /*
     _image = image;
     if( _image == null ) {
       _pixbuf = null;
@@ -165,6 +168,7 @@ public class ImageArea : Box {
       _pixbuf = _image.pixbuf;
       display_pixbuf( _image.pos, _image.vadj, _image.hadj, _image.scale );
     }
+    */
   }
 
   /* Create the image drop handler */
@@ -233,12 +237,7 @@ public class ImageArea : Box {
 
   /* Returns true if the image of the entry or its positioning information had changed since it was loaded */
   public bool changed() {
-    return( _pixbuf_changed ||
-            ((_pixbuf != null) &&
-             ((_pane.position != _image.pos) ||
-              (_scroll.vadjustment.value != _image.vadj) ||
-              (_scroll.hadjustment.value != _image.hadj) ||
-              (_scale != _image.scale))) );
+    return( _pixbuf_changed || (_pixbuf != null) );
   }
 
   /* Sets the internal pixbuf to the specified value and updates the display */

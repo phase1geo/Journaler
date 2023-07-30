@@ -118,12 +118,25 @@ public class ExportJSON : Export {
 
         builder.end_array();
 
-        if( (load_entry.image != null) && include_images ) {
-          var path = create_image( load_entry.image.pixbuf );
-          if( path != null ) {
-            builder.set_member_name( "image" );
-            builder.add_string_value( path );
-          }
+        if( (load_entry.images.length() > 0) && include_images ) {
+
+          builder.set_member_name( "images" );
+          builder.begin_array();
+
+            foreach( var image in load_entry.images ) {
+              var path = create_image( journal, image );
+              if( path != null ) {
+                builder.begin_object();
+                  builder.set_member_name( "path" );
+                  builder.add_string_value( path );
+                  builder.set_member_name( "description" );
+                  builder.add_string_value( image.description );
+                builder.end_object();
+              }
+            }
+
+          builder.end_array();
+
         }
 
         builder.set_member_name( "text" );

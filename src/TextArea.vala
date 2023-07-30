@@ -554,9 +554,8 @@ public class TextArea : Box {
       return;
     }
 
-    var image = _image_area.get_image();
     var entry = new DBEntry.with_date( 
-      _entry.journal, _title.text, _text.buffer.text, image, _image_area.pixbuf_changed, _tags.entry.get_tag_list(), _entry.date, _entry.time
+      _entry.journal, _title.text, _text.buffer.text, _tags.entry.get_tag_list(), _entry.date, _entry.time
     );
 
     if( _journal.db.save_entry( entry ) ) {
@@ -609,7 +608,7 @@ public class TextArea : Box {
     }
 
     /* Set the image */
-    _image_area.set_image( entry.image );
+    _image_area.set_images( entry );
     _image_area.editable = enable_ui;
 
     /* Set the tags */

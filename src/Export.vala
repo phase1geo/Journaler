@@ -125,15 +125,14 @@ public class Export {
   }
 
   /* Creates an image file from the given pixbuf and returns the pathname */
-  protected string? create_image( Pixbuf pixbuf ) {
+  protected string? create_image( Journal journal, DBImage image ) {
+
+    var ofile = File.new_for_path( image.image_path( journal ) );
+    var nfile = File.new_for_path( Path.build_filename( "images", "image-%06d.png".printf( _image_id++ ) ) );
 
     try {
-      string fname = Path.build_filename( "images", "image-%06d.png".printf( _image_id++ ) );
-      stdout.printf( "image fname: %s\n", fname );
-      if( pixbuf.save( Path.build_filename( _directory, fname ), "png", "compression", "7" ) ) {
-        return( fname );
-      } else {
-        stdout.printf( "Unable to save pixbuf to %s\n", Path.build_filename( _directory, fname ) );
+      if( ofile.copy( nfile, FileCopyFlags.OVERWRITE ) ) {
+        return( nfile.get_path() );
       }
     } catch( Error e ) {
       stderr.printf( "ERROR: %s\n", e.message );

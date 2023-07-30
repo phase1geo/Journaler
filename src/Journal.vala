@@ -1,5 +1,7 @@
 public class Journal {
 
+  private static int _next_id = 1;
+
   private string    _name        = "";
   private string    _template    = "";
   private string    _description = "";
@@ -49,16 +51,30 @@ public class Journal {
 
   /* Default constructor */
   public Journal( string name, string template, string description ) {
-    _name        = name;
+
+    _name = name;
+    make_directories();
+
     _template    = template;
     _description = description;
     _db          = new Database( db_path(), false );
+
   }
 
   /* Constructor for trash */
   public Journal.trash() {
+
     _name = _( "Trash" );
-    _db   = new Database( db_path(), true );
+    make_directories();
+
+    _db = new Database( db_path(), true );
+
+  }
+
+  /* Make the database and image directories */
+  private void make_directories() {
+    DirUtils.create_with_parents( journal_path(), 0755 );
+    DirUtils.create_with_parents( image_path(),   0755 );
   }
 
   /* Constructor */
@@ -66,10 +82,25 @@ public class Journal {
     loaded = load( node );
   }
 
-  /* Gets the pathname of the associated database */
-  private string db_path( string? n = null ) {
+  /* Returns the pathname of the journal database and images directory */
+  private string journal_path( string? n = null ) {
     var name = (n ?? _name).down().replace( " ", "-" );
-    return( GLib.Path.build_filename( Environment.get_user_data_dir(), "journaler", "db", name + ".db" ) );
+    return( GLib.Path.build_filename( Environment.get_user_data_dir(), "journaler", "journals", name ) );
+  }
+
+  /* Gets the pathname of the associated database */
+  private string db_path( string? name = null ) {
+    return( GLib.Path.build_filename( journal_path( name ), "entries.db" ) );
+  }
+
+  /* Returns the pathname for the image directory */
+  public string image_path( string? name = null ) {
+    return( GLib.Path.build_filename( journal_path( name ), "images" ) );
+  }
+
+  /* Returns a new image file pathname */
+  public int new_image_id() {
+    return( _next_id++ );
   }
 
   /* Renames the database */
@@ -97,6 +128,7 @@ public class Journal {
     node->set_prop( "name", _name );
     node->set_prop( "template", _template );
     node->set_prop( "description", _description );
+    node->set_prop( "next-id", _next_id.to_string() );
 
     return( node );
 
@@ -118,6 +150,11 @@ public class Journal {
     var d = node->get_prop( "description" );
     if( d != null ) {
       _description = d;
+    }
+
+    var i = node->get_prop( "next-id" );
+    if( i != null ) {
+      _next_id = int.parse( i );
     }
 
     /* If the name was set and the database file exists, create the database */
