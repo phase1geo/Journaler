@@ -37,7 +37,6 @@ public class TextArea : Box {
   private GtkSource.View   _text;
   private GtkSource.Buffer _buffer;
   private string           _theme;
-  private Paned            _pane;
   private GLib.Menu        _image_menu;
   private GLib.Menu        _templates_menu;
   private Statistics       _stats;
@@ -222,13 +221,13 @@ public class TextArea : Box {
       child        = _quote
     };
 
-    _pane = new Paned( Orientation.VERTICAL );
-
     /* Create image area */
-    _image_area = new ImageArea( _win, _pane );
+    _image_area = new ImageArea( _win );
+    /*
     _image_area.image_added.connect(() => {
       image_added();
     });
+    */
 
     /* Now let's setup some stuff related to the text field */
     var lang_mgr = GtkSource.LanguageManager.get_default();
@@ -282,8 +281,6 @@ public class TextArea : Box {
       return( false );
     });
 
-    _pane.end_child = tscroll;
-
     /* Create statistics bar */
     _stats = new Statistics( _text.buffer );
 
@@ -292,7 +289,8 @@ public class TextArea : Box {
     append( _tags );
     append( sep1 );
     append( _quote_revealer );
-    append( _pane );
+    append( tscroll );
+    append( _image_area );
     append( sep2 );
     append( _stats );
 
@@ -368,7 +366,7 @@ public class TextArea : Box {
   /* Adds or changes the image associated with the current entry */
   private void action_add_entry_image() {
     _win.reset_timer();
-    _image_area.add_image();
+    _image_area.add_new_image();
   }
 
   /* Removes the image associated with the current entry */
@@ -526,9 +524,8 @@ public class TextArea : Box {
       .text-padding {
         padding: 0px %dpx;
       }
-      .zoom-padding {
+      .image-padding {
         padding: 5px;
-        opacity: 0.5;
       }
     """.printf( font_size, font_size, margin, margin, style.get_style( "background-pattern" ).background, (margin - 4) );
     provider.load_from_data( css_data.data );
@@ -557,6 +554,8 @@ public class TextArea : Box {
     var entry = new DBEntry.with_date( 
       _entry.journal, _title.text, _text.buffer.text, _tags.entry.get_tag_list(), _entry.date, _entry.time
     );
+
+    _image_area.get_images( entry );
 
     if( _journal.db.save_entry( entry ) ) {
       if( (_journals.current == _journal) && (_title.text != _entry.text) ) {
@@ -608,7 +607,7 @@ public class TextArea : Box {
     }
 
     /* Set the image */
-    _image_area.set_images( entry );
+    _image_area.set_images( _journal, entry );
     _image_area.editable = enable_ui;
 
     /* Set the tags */

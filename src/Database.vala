@@ -10,33 +10,39 @@ public enum DBLoadResult {
 public class DBImage {
 
   public int    id          { get; private set; default = -1; }
+  public string extension   { get; private set; default = ""; }
   public string description { get; set; default = ""; }
 
   /* Default constructor */
   public DBImage() {}
 
   /* Constructor */
-  public DBImage.from_database( int id, string description ) {
-    _id = id;
+  public DBImage.from_database( int id, string extension, string description ) {
+    this.id          = id;
+    this.extension   = extension;
     this.description = description;
   }
 
   /* Returns the image path */
   public string image_path( Journal journal ) {
-    return( Path.build_filename( journal.image_path(), "image-%06d".printf( _id ) ) );
+    return( Path.build_filename( journal.image_path(), "image-%06d.%s".printf( id, extension ) ) );
   }
 
   /* Copies the file from the given URI to the local images directory */
   public bool store_file( Journal journal, string uri ) {
 
-    if( _id == -1 ) {
-      _id = journal.new_image_id();
+    if( id == -1 ) {
+      id = journal.new_image_id();
     }
+
+    var parts = uri.split( "." );
+    extension = parts[parts.length - 1];
 
     var ofile = File.new_for_uri( uri );
     var nfile = File.new_for_path( image_path( journal ) );
 
     try {
+      stdout.printf( "Copying %s to %s\n", uri, image_path( journal ) );
       return( ofile.copy( nfile, FileCopyFlags.OVERWRITE ) );
     } catch( Error e ) {
       stderr.printf( "ERROR: %s\n", e.message );
@@ -407,6 +413,7 @@ public class Database {
       CREATE TABLE IF NOT EXISTS Image (
         id          INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
         file_id     INTEGER                           NOT NULL,
+        extension   TEXT                              NOT NULL,
         description TEXT,
         entry_id    INTEGER                           NOT NULL
       );
@@ -479,7 +486,7 @@ public class Database {
     var query = "SELECT * FROM Image;";
 
     var retval = exec_query( query, (ncols, vals, names) => {
-      var image = new DBImage.from_database( int.parse( vals[1] ), vals[2] );
+      var image = new DBImage.from_database( int.parse( vals[1] ), vals[2], vals[3] );
       images.append_val( image );
       return( 0 );
     });
@@ -623,7 +630,7 @@ public class Database {
       /* Load images */
       var image_query = "SELECT * FROM Image WHERE entry_id = %d;".printf( entry_id );
       exec_query( image_query, (ncols, vals, names) => {
-        var image = new DBImage.from_database( int.parse( vals[1] ), vals[2] );
+        var image = new DBImage.from_database( int.parse( vals[1] ), vals[2], vals[3] );
         entry.add_image( image );
         return( 0 );
       });
@@ -758,7 +765,7 @@ public class Database {
     /* Store images */
     if( entry.images_changed ) {
       foreach( var image in entry.images ) {
-        var image_query = "INSERT INTO Image (file_id, description, entry_id) VALUES(%d, '%s', %d);".printf( image.id, sql_string( image.description ), entry_id );
+        var image_query = "INSERT INTO Image (file_id, extension, description, entry_id) VALUES(%d, '%s', '%s', %d);".printf( image.id, image.extension, sql_string( image.description ), entry_id );
         exec_query( image_query );
       }
     }

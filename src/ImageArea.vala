@@ -24,104 +24,52 @@ using Gdk;
 
 public class ImageArea : Box {
 
+  private int thumbnail_height = 100;
+
   private MainWindow               _win;
-  private Paned                    _pane;
-  private ScrolledWindow           _scroll;
-  private Overlay                  _overlay;
-  private DBImage?                 _image;
-  private Pixbuf?                  _pixbuf;
-  private bool                     _pixbuf_changed;
-  private Button                   _zoom_in;
-  private Button                   _zoom_out;
+  private Journal                  _journal;
+  private Box                      _image_box;
   private Gee.HashMap<string,bool> _extensions;
-  private double                   _scale = 1.0;
-  private double                   _zoom_increment = 0.1;
+  private Array<DBImage>           _images = new Array<DBImage>();
 
   public bool editable { get; set; default = true; }
-  public bool pixbuf_changed {
-    get {
-      return( _pixbuf_changed );
-    }
-  }
-
-  public signal void image_added();
 
   /* Create the main window UI */
-  public ImageArea( MainWindow win, Paned pane ) {
+  public ImageArea( MainWindow win ) {
 
     Object( orientation: Orientation.VERTICAL, spacing: 0 );
 
-    _win  = win;
-    _pane = pane;
+    _win = win;
 
     add_image_area();
 
     /* Gather the list of available image extensions */
     get_image_extensions();
 
+    /* Set the size of this widget */
+    set_size_request( -1, thumbnail_height );
+
   }
 
   /* Creates the image area */
   private void add_image_area() {
 
-    _scroll = new ScrolledWindow() {
-      vscrollbar_policy = ALWAYS,
-      hscrollbar_policy = ALWAYS
+    _image_box = new Box( Orientation.HORIZONTAL, 5 );
+    _image_box.add_css_class( "image-padding" );
+    _image_box.add_css_class( "text-background" );
+    _image_box.set_size_request( -1, thumbnail_height );
+
+    var scroll = new ScrolledWindow() {
+      hscrollbar_policy = AUTOMATIC,
+      child             = _image_box
     };
-    _scroll.scroll_child.connect((t,h) => {
+    scroll.set_size_request( -1, (thumbnail_height + 10) );
+    scroll.scroll_child.connect((t,h) => {
       _win.reset_timer();
       return( false );
     });
 
-    _zoom_in = new Button.from_icon_name( "list-add-symbolic" );
-    _zoom_in.clicked.connect(() => {
-      display_pixbuf( null, null, null, (_scale + _zoom_increment) );
-    });
-
-    _zoom_out = new Button.from_icon_name( "list-remove-symbolic" );
-    _zoom_out.clicked.connect(() => {
-      display_pixbuf( null, null, null, (_scale - _zoom_increment) );
-    });
-
-    var zbox = new Box( Orientation.HORIZONTAL, 5 ) {
-      halign        = Align.CENTER,
-      valign        = Align.END,
-      margin_start  = 5,
-      margin_end    = 5,
-      margin_top    = 5,
-      margin_bottom = 5
-    };
-    zbox.add_css_class( "zoom-padding" );
-    zbox.add_css_class( Granite.STYLE_CLASS_BACKGROUND );
-    zbox.append( _zoom_in );
-    zbox.append( _zoom_out );
-
-    var btn_revealer = new Revealer() {
-      reveal_child    = false,
-      transition_type = RevealerTransitionType.CROSSFADE,
-      child           = zbox
-    };
-
-    var overlay_motion = new EventControllerMotion();
-    _overlay = new Overlay() {
-      child = _scroll
-    };
-    _overlay.add_controller( create_image_drop() );
-    _overlay.add_controller( overlay_motion );
-    _overlay.add_overlay( btn_revealer );
-
-    overlay_motion.enter.connect((x, y) => {
-      _win.reset_timer();
-      btn_revealer.reveal_child = true;
-      // _scroll.set_policy( PolicyType.ALWAYS, PolicyType.ALWAYS );
-    });
-    overlay_motion.leave.connect(() => {
-      _win.reset_timer();
-      btn_revealer.reveal_child = false;
-      // _scroll.set_policy( PolicyType.NEVER, PolicyType.NEVER );
-    });
-
-    append( _overlay );
+    append( scroll );
 
   }
 
@@ -147,28 +95,61 @@ public class ImageArea : Box {
 
   /* Retrieves an image object used for saving to database */
   public void get_images( DBEntry entry ) {
-    /*
-    _pixbuf_changed = false;
-    if( _pixbuf == null ) {
-      return( null );
-    } else {
-      var image = new DBImage( _pixbuf, _pane.position, _scroll.vadjustment.value, _scroll.hadjustment.value, _scale );
-      return( image );
+    for( int i=0; i<_images.length; i++ ) {
+      entry.add_image( _images.index( i ) );
     }
-    */
   }
 
   /* Sets the image to the given object */
-  public void set_images( DBEntry? entry ) {
-    /*
-    _image = image;
-    if( _image == null ) {
-      _pixbuf = null;
-    } else {
-      _pixbuf = _image.pixbuf;
-      display_pixbuf( _image.pos, _image.vadj, _image.hadj, _image.scale );
+  public void set_images( Journal journal, DBEntry? entry ) {
+
+    _journal = journal;
+
+    hide();
+
+    _images.remove_range( 0, _images.length );
+
+    foreach( var image in entry.images ) {
+      add_image( image );
     }
-    */
+
+  }
+
+  /* Adds the given image to the scrollable image box */
+  private void add_image( DBImage image ) {
+
+    var pixbuf = image.make_pixbuf( _journal, thumbnail_height );
+
+    if( pixbuf != null ) {
+
+      var gesture = new GestureClick();
+      var img = new Picture.for_pixbuf( pixbuf ) {
+        can_shrink = false,
+        halign = Align.START,
+        valign = Align.START,
+        tooltip_text = image.description
+      };
+      img.add_controller( gesture );
+      img.add_css_class( "text-background" );
+      img.set_size_request( -1, thumbnail_height );
+
+      gesture.pressed.connect((n_press, x, y) => {
+        if( n_press == 2 ) {
+          stdout.printf( "Display image\n" );
+        }
+      });
+
+      /* Add the image picture to the scrollable box */
+      _image_box.append( img );
+
+      /* Add the image to the list */
+      _images.append_val( image );
+
+      /* Make sure that this widget is seen */
+      show();
+
+    }
+
   }
 
   /* Create the image drop handler */
@@ -183,18 +164,9 @@ public class ImageArea : Box {
     drop.drop.connect((val, x, y) => {
       var uri = val.get_string().strip();
       if( (Uri.peek_scheme( uri ) != null) && is_uri_supported_image( uri ) ) {
-        var from_file = File.new_for_uri( uri );
-        try {
-          GLib.FileIOStream stream;
-          var to_file = File.new_tmp( "imgXXXXXX-%s".printf( from_file.get_basename() ), out stream );
-          from_file.copy( to_file, FileCopyFlags.OVERWRITE );
-          _pixbuf = new Pixbuf.from_file( to_file.get_path() );
-          display_pixbuf( 200, 0.0, 0.0, 1.0 );
-          to_file.delete();
-          return( true );
-        } catch( Error e ) {
-          stdout.printf( "ERROR:  Unable to convert image file to pixbuf: %s\n", e.message );
-        }
+        var image = new DBImage();
+        image.store_file( _journal, uri );
+        add_image( image );
       }
       return( false );
     });
@@ -204,7 +176,7 @@ public class ImageArea : Box {
   }
 
   /* Adds or changes the image associated with the current entry */
-  public void add_image() {
+  public void add_new_image() {
 
     var dialog = Utils.make_file_chooser( _( "Select an image" ), _win, FileChooserAction.OPEN, _( "Add Image" ) );
 
@@ -220,12 +192,10 @@ public class ImageArea : Box {
       if( id == ResponseType.ACCEPT ) {
         var file = dialog.get_file();
         if( file != null ) {
-          try {
-            set_pixbuf( new Pixbuf.from_file( file.get_path() ) );
-            image_added();
-          } catch( Error e ) {
-            stdout.printf( "ERROR:  Unable to convert image file to pixbuf: %s\n", e.message );
-          }
+          var image  = new DBImage();
+          var stored = image.store_file( _journal, file.get_uri() );
+          stdout.printf( "stored: %s\n", stored.to_string() );
+          add_image( image );
         }
       }
       dialog.close();
@@ -237,54 +207,13 @@ public class ImageArea : Box {
 
   /* Returns true if the image of the entry or its positioning information had changed since it was loaded */
   public bool changed() {
-    return( _pixbuf_changed || (_pixbuf != null) );
-  }
-
-  /* Sets the internal pixbuf to the specified value and updates the display */
-  private void set_pixbuf( Pixbuf? pixbuf ) {
-    _pixbuf = pixbuf;
-    _pixbuf_changed = true;
-    display_pixbuf( 200, 0.0, 0.0, 1.0 );
+    // TBD
+    return( false );
   }
 
   /* Removes the image associated with the current entry */
   public void remove_image() {
-    set_pixbuf( null );
-  }
-
-  /* Handles the proper display of the current pixbuf */
-  private void display_pixbuf( int? pane_pos, double? vadj, double? hadj, double? scale ) {
-    if( _pixbuf == null ) {
-      _pane.start_child = null;
-    } else {
-      if( (scale != null) && (scale > 0.0) && (scale <= 2.0) ) {
-        _scale = scale;
-      }
-      var buf = _pixbuf.scale_simple(
-                  (int)(_pixbuf.get_width() * _scale),
-                  (int)(_pixbuf.get_height() * _scale),
-                  InterpType.BILINEAR
-                );
-      var img = new Picture.for_pixbuf( buf ) {
-        halign     = Align.FILL,
-        hexpand    = true,
-        can_shrink = false
-      };
-      img.add_css_class( "text-background" );
-      _scroll.child = img;
-      _scroll.vadjustment.upper = (double)img.paintable.get_intrinsic_height();
-      _scroll.hadjustment.upper = (double)img.paintable.get_intrinsic_width();
-      if( vadj != null ) {
-        _scroll.vadjustment.value = vadj;
-      }
-      if( hadj != null ) {
-        _scroll.hadjustment.value = hadj;
-      }
-      _pane.start_child = this;
-      if( pane_pos != null ) {
-        _pane.position = pane_pos;
-      }
-    }
+    // TBD
   }
 
 }
