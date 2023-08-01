@@ -7,11 +7,20 @@ public enum DBLoadResult {
   CREATED
 }
 
+public enum ChangeState {
+  NONE,
+  NEW,
+  CHANGED,
+  DELETED,
+  NUM
+}
+
 public class DBImage {
 
-  public int    id          { get; private set; default = -1; }
-  public string extension   { get; private set; default = ""; }
-  public string description { get; set; default = ""; }
+  public int         id          { get; private set; default = -1; }
+  public string      extension   { get; private set; default = ""; }
+  public string      description { get; set; default = ""; }
+  public ChangeState state       { get; set; default = ChangeState.NONE; }
 
   /* Default constructor */
   public DBImage() {}
@@ -31,8 +40,11 @@ public class DBImage {
   /* Copies the file from the given URI to the local images directory */
   public bool store_file( Journal journal, string uri ) {
 
+    var pre_state = ChangeState.CHANGED;
+
     if( id == -1 ) {
       id = journal.new_image_id();
+      pre_state = ChangeState.NEW;
     }
 
     var parts = uri.split( "." );
@@ -43,7 +55,10 @@ public class DBImage {
 
     try {
       stdout.printf( "Copying %s to %s\n", uri, image_path( journal ) );
-      return( ofile.copy( nfile, FileCopyFlags.OVERWRITE ) );
+      if( ofile.copy( nfile, FileCopyFlags.OVERWRITE ) ) {
+        state = pre_state;
+        return( true );
+      }
     } catch( Error e ) {
       stderr.printf( "ERROR: %s\n", e.message );
     }
@@ -54,8 +69,9 @@ public class DBImage {
 
   /* Removes the stored file from the file system */
   public bool remove_file( Journal journal ) {
-    if( _id != -1 ) {
-      return( FileUtils.unlink( image_path( journal ) ) == 0 );
+    if( (id != -1) && (FileUtils.unlink( image_path( journal ) ) == 0) ) {
+      state = ChangeState.DELETED;
+      return( true );
     }
     return( false );
   }
@@ -72,6 +88,11 @@ public class DBImage {
       stderr.printf( "ERROR: %s\n", e.message );
     }
     return( null );
+  }
+
+  /* Returns true if the given image matches this one */
+  public bool matches( DBImage image ) {
+    return( id == image.id );
   }
 
 }
@@ -715,7 +736,7 @@ public class Database {
   }
 
   /* Saves the entry to the database */
-  public bool save_entry( DBEntry entry ) {
+  public bool save_entry( Journal journal, DBEntry entry ) {
 
     var entry_query = """ 
       UPDATE Entry
@@ -762,11 +783,37 @@ public class Database {
 
     }
 
-    /* Store images */
-    if( entry.images_changed ) {
-      foreach( var image in entry.images ) {
-        var image_query = "INSERT INTO Image (file_id, extension, description, entry_id) VALUES(%d, '%s', '%s', %d);".printf( image.id, image.extension, sql_string( image.description ), entry_id );
-        exec_query( image_query );
+    /* Handle associated images */
+    foreach( var image in entry.images ) {
+      var image_query = "";
+      switch( image.state ) {
+        case ChangeState.NEW :
+          image_query = """
+            INSERT INTO Image (file_id, extension, description, entry_id)
+            VALUES(%d, '%s', '%s', %d);
+          """.printf( image.id, image.extension, sql_string( image.description ), entry_id );
+          break;
+        case ChangeState.CHANGED :
+          image_query = """
+            UPDATE Image
+            SET extension = '%s', description = '%s'
+            WHERE file_id = %d;
+          """.printf( image.extension, sql_string( image.description ), image.id );
+          break;
+        case ChangeState.DELETED :
+          image_query = """
+            DELETE FROM Image
+            WHERE file_id = %d";
+          """.printf( image.id );
+          break;
+        default :  break;
+      }
+      if( (image_query != "") && exec_query( image_query ) ) {
+        if( image.state == ChangeState.DELETED ) {
+          entry.remove_image( journal, image );
+        } else {
+          image.state = ChangeState.NONE;
+        }
       }
     }
 

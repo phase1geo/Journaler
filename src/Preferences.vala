@@ -566,7 +566,7 @@ public class Preferences : Gtk.Dialog {
       stdout.printf( "Adding date %s\n", DBEntry.datetime_date( date ) );
 
       var entry = new DBEntry.with_date( journal.name, "", string.joinv( " ", text ), "", DBEntry.datetime_date( date ), DBEntry.datetime_time( date ) );
-      if( journal.db.create_entry( entry ) && journal.db.save_entry( entry ) ) {
+      if( journal.db.create_entry( entry ) && journal.db.save_entry( journal, entry ) ) {
         stdout.printf( "  Saved entry %d\n", (i + 1) );
       }
 

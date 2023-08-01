@@ -54,6 +54,12 @@ public class TextArea : Box {
     { "action_trash_entry",        action_trash_entry }
   };
 
+  public ImageArea image_area {
+    get {
+      return( _image_area );
+    }
+  }
+
   public signal void entry_moved( DBEntry entry );
 
   /* Create the main window UI */
@@ -223,11 +229,6 @@ public class TextArea : Box {
 
     /* Create image area */
     _image_area = new ImageArea( _win );
-    /*
-    _image_area.image_added.connect(() => {
-      image_added();
-    });
-    */
 
     /* Now let's setup some stuff related to the text field */
     var lang_mgr = GtkSource.LanguageManager.get_default();
@@ -372,8 +373,6 @@ public class TextArea : Box {
   /* Removes the image associated with the current entry */
   private void action_remove_entry_image() {
     _win.reset_timer();
-    _image_area.remove_image();
-    image_removed();
   }
 
   /* Inserts the given template text at the current insertion cursor location */
@@ -457,19 +456,6 @@ public class TextArea : Box {
     return( false );
   }
 
-  /* Updates the UI when an image is added to the current entry */
-  private void image_added() {
-    _image_menu.remove_all();
-    _image_menu.append( _( "Change Image" ), "textarea.action_add_entry_image" );
-    _image_menu.append( _( "Remove Image" ), "textarea.action_remove_entry_image" );
-  }
-
-  /* Updates the UI when an image is removed from the current entry */
-  private void image_removed() {
-    _image_menu.remove_all();
-    _image_menu.append( _( "Add Image" ), "textarea.action_add_entry_image" );
-  }
-
   /* Sets the theme and CSS classes */
   private void update_theme() {
 
@@ -527,6 +513,9 @@ public class TextArea : Box {
       .image-padding {
         padding: 5px;
       }
+      .image-button {
+        opacity: 0.7;
+      }
     """.printf( font_size, font_size, margin, margin, style.get_style( "background-pattern" ).background, (margin - 4) );
     provider.load_from_data( css_data.data );
     StyleContext.add_provider_for_display( get_display(), provider, STYLE_PROVIDER_PRIORITY_APPLICATION );
@@ -557,7 +546,7 @@ public class TextArea : Box {
 
     _image_area.get_images( entry );
 
-    if( _journal.db.save_entry( entry ) ) {
+    if( _journal.db.save_entry( _journal, entry ) ) {
       if( (_journals.current == _journal) && (_title.text != _entry.text) ) {
         _journals.current_changed( true );
       }

@@ -32,6 +32,12 @@ public class ImageArea : Box {
   private Gee.HashMap<string,bool> _extensions;
   private Array<DBImage>           _images = new Array<DBImage>();
 
+  private Button  _viewer_prev_btn;
+  private Button  _viewer_next_btn;
+  private Picture _viewer_preview;
+  private Entry   _viewer_description;
+  private DBImage _viewer_image;
+
   public bool editable { get; set; default = true; }
 
   /* Create the main window UI */
@@ -107,8 +113,15 @@ public class ImageArea : Box {
 
     hide();
 
+    /* Clear the images array */
     _images.remove_range( 0, _images.length );
 
+    /* Clear the image box */
+    while( _image_box.get_first_child() != null ) {
+      _image_box.remove( _image_box.get_first_child() );
+    }
+
+    /* Add in the images */
     foreach( var image in entry.images ) {
       add_image( image );
     }
@@ -133,14 +146,58 @@ public class ImageArea : Box {
       img.add_css_class( "text-background" );
       img.set_size_request( -1, thumbnail_height );
 
+      var motion  = new EventControllerMotion();
+      var overlay = new Overlay() {
+        child = img
+      };
+      overlay.add_controller( motion );
+
+      var del_btn = new Button.from_icon_name( "edit-delete-symbolic" );
+      del_btn.clicked.connect(() => {
+        _image_box.remove( overlay );
+        if( image.state == ChangeState.NEW ) {
+          for( int i=0; i<_images.length; i++ ) {
+            if( _images.index( i ) == image ) {
+              _images.remove_index( i );
+              break;
+            }
+          }
+        } else {
+          image.state = ChangeState.DELETED;
+        }
+      });
+
+      var dbox = new Box( Orientation.HORIZONTAL, 0 ) {
+        halign = Align.END,
+        valign = Align.START,
+        margin_start  = 5,
+        margin_end    = 5,
+        margin_top    = 5,
+        margin_bottom = 5
+      };
+      dbox.add_css_class( Granite.STYLE_CLASS_BACKGROUND );
+      dbox.add_css_class( "image-button" );
+      dbox.append( del_btn );
+      dbox.hide();
+
+      motion.enter.connect((x, y) => {
+        dbox.show();
+      });
+      motion.leave.connect(() => {
+        dbox.hide();
+      });
+
+      overlay.add_overlay( dbox );
+
       gesture.pressed.connect((n_press, x, y) => {
         if( n_press == 2 ) {
-          stdout.printf( "Display image\n" );
+          show_full_image( image );
+          _win.show_pane( "image-view" );
         }
       });
 
       /* Add the image picture to the scrollable box */
-      _image_box.append( img );
+      _image_box.append( overlay );
 
       /* Add the image to the list */
       _images.append_val( image );
@@ -207,13 +264,136 @@ public class ImageArea : Box {
 
   /* Returns true if the image of the entry or its positioning information had changed since it was loaded */
   public bool changed() {
-    // TBD
+    for( int i=0; i<_images.length; i++ ) {
+      if( _images.index( i ).state != ChangeState.NONE ) {
+        return( true );
+      }
+    }
     return( false );
   }
 
-  /* Removes the image associated with the current entry */
-  public void remove_image() {
-    // TBD
+  /* Returns the index of the image to display */
+  private int get_image_index( DBImage image ) {
+    for( int i=0; i<_images.length; i++ ) {
+      if( _images.index( i ).matches( image ) ) {
+        return( i );
+      }
+    }
+    return( -1 );
+  }
+
+  /* Updates the state of the current image */
+  private void update_current_state() {
+    if( _viewer_image.description != _viewer_description.text ) {
+      _viewer_image.description = _viewer_description.text;
+      if( _viewer_image.state == ChangeState.NONE ) {
+        _viewer_image.state = ChangeState.CHANGED;
+      }
+    }
+  }
+
+  /* Create the full image viewer window */
+  public Box create_full_image_viewer() {
+
+    /* Create image carousel */
+    _viewer_prev_btn = new Button.from_icon_name( "go-previous-symbolic" ) {
+      valign    = Align.FILL,
+      vexpand   = true,
+      sensitive = false
+    };
+    _viewer_prev_btn.clicked.connect(() => {
+      var index = get_image_index( _viewer_image );
+      update_current_state();
+      show_full_image( _images.index( index - 1 ) );
+    });
+
+    _viewer_preview = new Picture() {
+      halign = Align.START,
+      valign = Align.START
+    };
+
+    _viewer_next_btn = new Button.from_icon_name( "go-next-symbolic" ) {
+      valign   = Align.FILL,
+      vexpand  = true,
+      sensitive = false
+    };
+    _viewer_next_btn.clicked.connect(() => {
+      var index = get_image_index( _viewer_image );
+      update_current_state();
+      show_full_image( _images.index( index + 1 ) );
+    });
+
+    var ibox = new Box( Orientation.HORIZONTAL, 5 ) {
+      halign  = Align.FILL,
+      hexpand = true
+    };
+    ibox.append( _viewer_prev_btn );
+    ibox.append( _viewer_preview );
+    ibox.append( _viewer_next_btn );
+
+    _viewer_description = new Entry() {
+      placeholder_text = _( "Enter Description (Optional)" )
+    };
+
+    var close_btn = new Button.with_label( _( "Close" ) ) {
+      halign = Align.END,
+      hexpand = true
+    };
+    close_btn.clicked.connect(() => {
+      update_current_state();
+      _win.show_pane( "entry-view" );
+    });
+
+    var bbox = new Box( Orientation.HORIZONTAL, 5 ) {
+      halign = Align.FILL,
+      hexpand = true
+    };
+    bbox.append( close_btn );
+
+    var box = new Box( Orientation.VERTICAL, 5 ) {
+      halign  = Align.FILL,
+      valign  = Align.FILL,
+      hexpand = true,
+      vexpand = true,
+      margin_start  = 5,
+      margin_end    = 5,
+      margin_top    = 5,
+      margin_bottom = 5
+    };
+    box.append( ibox );
+    box.append( _viewer_description );
+    box.append( bbox );
+
+    return( box );
+
+  }
+
+  /* Displays the image and description */
+  public void show_full_image( DBImage image ) {
+
+    stdout.printf( "image.id: %d\n", image.id );
+
+    /* Get the index of the image to display */
+    var index = get_image_index( image );
+
+    /* Handle the button sensitivity */
+    _viewer_prev_btn.sensitive = (index > 0);
+    _viewer_next_btn.sensitive = (index > 0) && (index < (_images.length - 1));
+
+    /* Display the button */
+    _viewer_preview.set_pixbuf( image.make_pixbuf( _journal, 600 ) );
+
+    /* Set the description field */
+    _viewer_description.text = image.description;
+
+    /* Save the current viewer image */
+    _viewer_image = image;
+
+  }
+
+  /* Returns the widget will which receive input focus */
+  public Widget get_focus_widget() {
+    return( _viewer_description );
   }
 
 }

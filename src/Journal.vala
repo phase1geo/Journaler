@@ -116,7 +116,7 @@ public class Journal {
   /* Moves the given entry from this journal to the given to_journal */
   public bool move_entry( DBEntry entry, Journal to_journal ) {
     return( to_journal.db.create_entry( entry ) &&
-            to_journal.db.save_entry( entry ) &&
+            to_journal.db.save_entry( this, entry ) &&
             db.remove_entry( entry ) );
   }
 
