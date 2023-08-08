@@ -85,7 +85,12 @@ public class Templates {
     search_path += xml_dir();
     mgr.search_path = search_path;
 
-    return( mgr.get_snippet( "journaler-templates", null, Template.get_snippet_trigger( name ) ) );
+    var snippet = mgr.get_snippet( "journaler-templates", null, Template.get_snippet_trigger( name ) );
+    if( snippet != null ) {
+      _template_vars.set_variables( snippet );
+    }
+
+    return( snippet );
 
   }
 

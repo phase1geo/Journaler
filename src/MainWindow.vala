@@ -795,7 +795,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     });
 
     _entries.show_journal_entry.connect((entry, editable) => {
-      _text_area.set_buffer( entry, editable, "add_current_sidebar" );
+      _text_area.set_buffer( entry, editable );
     });
 
     return( _entries );
