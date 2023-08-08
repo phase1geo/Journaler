@@ -22,6 +22,27 @@
 using Gtk;
 using Gdk;
 
+public class InsertSnippetParam : CallbackParam {
+
+  public GtkSource.Snippet snippet { get; private set; }
+  public GtkSource.View    text    { get; private set; }
+  public GtkSource.Buffer  buffer  { get; private set; }
+  public TemplateVars      vars    { get; private set; }
+
+  /* Constructor */
+  public InsertSnippetParam( GtkSource.Snippet snippet, GtkSource.View text, GtkSource.Buffer buffer, TemplateVars vars ) {
+    this.snippet = snippet;
+    this.text    = text;
+    this.buffer  = buffer;
+    this.vars    = vars;
+  }
+
+  public override string to_string() {
+    return( "InsertSnippetParam" );
+  }
+
+}
+
 public class TextArea : Box {
 
   private MainWindow       _win;
@@ -237,11 +258,12 @@ public class TextArea : Box {
     /* Create the text entry view */
     _buffer = new GtkSource.Buffer.with_language( lang );
     _text = new GtkSource.View.with_buffer( _buffer ) {
-      valign             = Align.FILL,
-      vexpand            = true,
-      wrap_mode          = WrapMode.WORD,
-      cursor_visible     = true,
-      enable_snippets    = true
+      valign          = Align.FILL,
+      vexpand         = true,
+      wrap_mode       = WrapMode.WORD,
+      cursor_visible  = true,
+      monospace       = true,
+      enable_snippets = true
     };
     _text.add_controller( _image_area.create_image_drop() );
     _text.add_css_class( "journal-text" );
@@ -447,10 +469,15 @@ public class TextArea : Box {
   private bool insert_template( string name ) {
     var snippet = _templates.get_snippet( name );
     if( snippet != null ) {
-      TextIter iter;
-      _buffer.get_iter_at_offset( out iter, _buffer.cursor_position );
-      _text.push_snippet( snippet, ref iter );
-      _text.grab_focus();
+      var param = new InsertSnippetParam( snippet, _text, _buffer, _templates.template_vars );
+      _templates.template_vars.wait_for_variables((p) => {
+        var parm = (InsertSnippetParam)p;
+        TextIter iter;
+        parm.vars.set_variables( parm.snippet );
+        parm.buffer.get_iter_at_offset( out iter, parm.buffer.cursor_position );
+        parm.text.push_snippet( parm.snippet, ref iter );
+        parm.text.grab_focus();
+      }, param);
       return( true );
     }
     return( false );
@@ -472,7 +499,6 @@ public class TextArea : Box {
     var css_data = """
       .journal-text {
         font-size: %dpt;
-        font-family: monospace;
       }
       .title {
         font-size: %dpt;
@@ -565,7 +591,16 @@ public class TextArea : Box {
   }
 
   /* Sets the entry contents to the given entry, saving the previous contents, if necessary */
-  public void set_buffer( DBEntry entry, bool editable ) {
+  public void set_buffer( DBEntry entry, bool editable, string? msg = null ) {
+
+    if( msg != null ) {
+      stdout.printf( "In set_buffer, msg: %s\n", msg );
+    }
+
+    /* If we are just re-showing the same information, don't update ourselves */
+    if( (_journal == _journals.current) && (_entry.date == entry.date) ) {
+      return;
+    }
 
     if( _text.buffer.get_modified() ) {
       save();
@@ -618,6 +653,7 @@ public class TextArea : Box {
     /* Set the buffer text to the entry text or insert the snippet */
     _text.buffer.begin_irreversible_action();
     _text.buffer.text = "";
+    stdout.printf( "In set_buffer, date: %s\n", DBEntry.datetime_date( entry.datetime() ) );
     if( (entry.text != "") || !insert_template( _journals.current.template ) ) {
       _text.buffer.text = entry.text;
     }
@@ -656,7 +692,7 @@ public class TextArea : Box {
 
   /* Sets the reviewer mode */
   public void set_reviewer_mode( bool review_mode ) {
-    set_buffer( _entry, !review_mode );
+    set_buffer( _entry, !review_mode, "set_reviewer_mode" );
   }
 
 }
