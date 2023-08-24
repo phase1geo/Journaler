@@ -1,4 +1,4 @@
- /*
+/*
 * Copyright (c) 2018 (https://github.com/phase1geo/Minder)
 *
 * This program is free software; you can redistribute it and/or
@@ -68,13 +68,13 @@ public class SidebarEntries : Box {
           action_set_enabled( "entries.action_empty_trash", (_listbox_entries.length > 0) );
           if( _listbox_entries.length > 0 ) {
             var listbox_entry = _listbox_entries.index( 0 );
-            show_entry_for_date( listbox_entry.journal, listbox_entry.date, false, true );
+            show_entry_for_date( listbox_entry.journal, listbox_entry.date, false, true, "constructor A" );
           } else {
-            show_entry_for_date( _journals.current.name, "", false, false );
+            show_entry_for_date( _journals.current.name, "", false, false, "constructor B" );
           }
         } else {
           _burger_mb.menu_model = _journal_burger_menu;
-          show_entry_for_date( _journals.current.name, DBEntry.todays_date(), true, true );
+          show_entry_for_date( _journals.current.name, DBEntry.todays_date(), true, true, "constructor C" );
         }
       }
     });
@@ -82,9 +82,9 @@ public class SidebarEntries : Box {
       populate_journal_menu();
       if( _journals.current.is_trash ) {
         var listbox_entry = _listbox_entries.index( 0 );
-        show_entry_for_date( listbox_entry.journal, listbox_entry.date, true, true );
+        show_entry_for_date( listbox_entry.journal, listbox_entry.date, true, true, "constructor D" );
       } else {
-        show_entry_for_date( _journals.current.name, DBEntry.todays_date(), true, true );
+        show_entry_for_date( _journals.current.name, DBEntry.todays_date(), true, true, "constructor E" );
       }
     });
 
@@ -98,9 +98,9 @@ public class SidebarEntries : Box {
       }
       if( _listbox_entries.length > 0 ) {
         var listbox_entry = _listbox_entries.index( 0 );
-        show_entry_for_date( listbox_entry.journal, listbox_entry.date, false, true );
+        show_entry_for_date( listbox_entry.journal, listbox_entry.date, false, true, "constructor F" );
       } else {
-        show_entry_for_date( _journals.current.name, "", false, false );
+        show_entry_for_date( _journals.current.name, "", false, false, "constructor G" );
       }
     });
 
@@ -227,7 +227,7 @@ public class SidebarEntries : Box {
       var index   = row.get_index();
       var journal = _listbox_entries.index( index ).journal;
       var date    = _listbox_entries.index( index ).date;
-      show_entry_for_date( journal, date, false, true );
+      show_entry_for_date( journal, date, false, true, "add_current_list" );
     });
 
     _lb_scroll = new ScrolledWindow() {
@@ -271,7 +271,7 @@ public class SidebarEntries : Box {
         _listbox.select_row( _listbox.get_row_at_index( index ) );
       } else {
         _listbox.select_row( null );
-        show_entry_for_date( _journals.current.name, date, false, true );
+        show_entry_for_date( _journals.current.name, date, false, true, "add_calendar" );
       }
     });
 
@@ -448,7 +448,9 @@ public class SidebarEntries : Box {
   }
 
   /* Displays the entry for the given date */
-  public void show_entry_for_date( string journal_name, string date, bool create_if_needed, bool editable ) {
+  public void show_entry_for_date( string journal_name, string date, bool create_if_needed, bool editable, string msg ) {
+
+    stdout.printf( "In show_entry_for_date, msg: %s\n", msg );
 
     var is_trash = _journals.current.is_trash;
 

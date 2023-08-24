@@ -565,7 +565,9 @@ public class TextArea : Box {
   }
 
   /* Sets the entry contents to the given entry, saving the previous contents, if necessary */
-  public void set_buffer( DBEntry entry, bool editable ) {
+  public void set_buffer( DBEntry entry, bool editable, string msg ) {
+
+    stdout.printf( "In set_buffer, msg: %s\n", msg );
 
     if( _text.buffer.get_modified() ) {
       save();
@@ -656,7 +658,7 @@ public class TextArea : Box {
 
   /* Sets the reviewer mode */
   public void set_reviewer_mode( bool review_mode ) {
-    set_buffer( _entry, !review_mode );
+    set_buffer( _entry, !review_mode, "set_reviewer_mode" );
   }
 
 }
