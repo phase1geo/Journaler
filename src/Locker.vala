@@ -175,7 +175,7 @@ public class Locker {
     }
 
     var provider = new CssProvider();
-    provider.load_from_data( css.data );
+    provider.load_from_data( css, css.length );
     StyleContext.add_provider_for_display( _win.get_display(), provider, STYLE_PROVIDER_PRIORITY_APPLICATION );
 
   }

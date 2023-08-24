@@ -517,7 +517,7 @@ public class TextArea : Box {
         opacity: 0.7;
       }
     """.printf( font_size, font_size, margin, margin, style.get_style( "background-pattern" ).background, (margin - 4) );
-    provider.load_from_data( css_data.data );
+    provider.load_from_data( css_data, css_data.length );
     StyleContext.add_provider_for_display( get_display(), provider, STYLE_PROVIDER_PRIORITY_APPLICATION );
 
   }
