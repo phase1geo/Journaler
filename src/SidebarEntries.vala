@@ -39,6 +39,7 @@ public class SidebarEntries : Box {
   private MenuButton     _burger_mb;
   private GLib.Menu      _journal_burger_menu;
   private GLib.Menu      _trash_burger_menu;
+  private string         _selected_date = "";
 
   private const GLib.ActionEntry action_entries[] = {
     { "action_select_trash",         action_select_trash },
@@ -450,11 +451,16 @@ public class SidebarEntries : Box {
   /* Displays the entry for the given date */
   public void show_entry_for_date( string journal_name, string date, bool create_if_needed, bool editable, string msg ) {
 
+    if( _selected_date == date ) {
+      return;
+    }
+
     stdout.printf( "In show_entry_for_date, msg: %s\n", msg );
 
-    var is_trash = _journals.current.is_trash;
+    _selected_date = date;
 
-    var entry = new DBEntry();
+    var is_trash  = _journals.current.is_trash;
+    var entry     = new DBEntry();
     entry.journal = journal_name;
     entry.date    = date;
 
