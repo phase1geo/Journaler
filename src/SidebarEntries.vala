@@ -455,8 +455,6 @@ public class SidebarEntries : Box {
       return;
     }
 
-    stdout.printf( "In show_entry_for_date, msg: %s\n", msg );
-
     _selected_date = date;
 
     var is_trash  = _journals.current.is_trash;

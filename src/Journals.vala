@@ -82,7 +82,6 @@ public class Journals {
   public bool empty_trash() {
     if( _trash.remove_db() ) {
       _trash = new Journal.trash();
-      stdout.printf( "Calling current_changed, empty_trash\n" );
       current_changed( true );
       return( true );
     }
@@ -139,7 +138,6 @@ public class Journals {
     }
 
     if( res ) {
-      stdout.printf( "Calling current_changed, purge_empty_entries\n" );
       current_changed( true );
     }
 
@@ -218,7 +216,6 @@ public class Journals {
       _current = _journals.index( current_index );
     }
 
-    stdout.printf( "Calling current_changed, load\n" );
     current_changed( false );
     list_changed();
 
