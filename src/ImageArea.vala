@@ -180,17 +180,23 @@ public class ImageArea : Box {
       dbox.append( del_btn );
       dbox.hide();
 
+      var area = this;
+
       motion.enter.connect((x, y) => {
-        dbox.show();
+        if( area.editable ) {
+          dbox.show();
+        }
       });
       motion.leave.connect(() => {
-        dbox.hide();
+        if( area.editable ) {
+          dbox.hide();
+        }
       });
 
       overlay.add_overlay( dbox );
 
       gesture.pressed.connect((n_press, x, y) => {
-        if( n_press == 2 ) {
+        if( (n_press == 2) && area.editable ) {
           show_full_image( image );
           _win.show_pane( "image-view" );
         }
@@ -251,7 +257,6 @@ public class ImageArea : Box {
         if( file != null ) {
           var image  = new DBImage();
           var stored = image.store_file( _journal, file.get_uri() );
-          stdout.printf( "stored: %s\n", stored.to_string() );
           add_image( image );
         }
       }
@@ -371,14 +376,12 @@ public class ImageArea : Box {
   /* Displays the image and description */
   public void show_full_image( DBImage image ) {
 
-    stdout.printf( "image.id: %d\n", image.id );
-
     /* Get the index of the image to display */
     var index = get_image_index( image );
 
     /* Handle the button sensitivity */
     _viewer_prev_btn.sensitive = (index > 0);
-    _viewer_next_btn.sensitive = (index > 0) && (index < (_images.length - 1));
+    _viewer_next_btn.sensitive = (index < (_images.length - 1));
 
     /* Display the button */
     _viewer_preview.set_pixbuf( image.make_pixbuf( _journal, 600 ) );
