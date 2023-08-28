@@ -56,6 +56,7 @@ public class DBImage {
     try {
       stdout.printf( "Copying %s to %s\n", uri, image_path( journal ) );
       if( ofile.copy( nfile, FileCopyFlags.OVERWRITE ) ) {
+        stdout.printf( "Setting state to %s\n", pre_state.to_string() );
         state = pre_state;
         return( true );
       }

@@ -567,9 +567,8 @@ public class TextArea : Box {
   /* Sets the entry contents to the given entry, saving the previous contents, if necessary */
   public void set_buffer( DBEntry entry, bool editable ) {
 
-    if( _text.buffer.get_modified() ) {
-      save();
-    }
+    /* Save the current buffer before loading a new one */
+    save();
 
     /* Update the burger menu, if necessary */
     if( (_journal == null) || (_journal.is_trash != _journals.current.is_trash) ) {

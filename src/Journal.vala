@@ -1,11 +1,10 @@
 public class Journal {
 
-  private static int _next_id = 1;
-
   private string    _name        = "";
   private string    _template    = "";
   private string    _description = "";
   private Database? _db          = null;
+  private int       _next_id     = 1;
 
   public string name {
     get {

@@ -55,6 +55,12 @@ public class ImageArea : Box {
     /* Set the size of this widget */
     set_size_request( -1, thumbnail_height );
 
+    /* Make sure our background matches the color used by the text area */
+    Idle.add(() => {
+      add_css_class( "text-background" );
+      return( false );
+    });
+
   }
 
   /* Creates the image area */
@@ -228,8 +234,9 @@ public class ImageArea : Box {
       var uri = val.get_string().strip();
       if( (Uri.peek_scheme( uri ) != null) && is_uri_supported_image( uri ) ) {
         var image = new DBImage();
-        image.store_file( _journal, uri );
-        add_image( image );
+        if( image.store_file( _journal, uri ) ) {
+          add_image( image );
+        }
       }
       return( false );
     });
@@ -256,8 +263,9 @@ public class ImageArea : Box {
         var file = dialog.get_file();
         if( file != null ) {
           var image  = new DBImage();
-          var stored = image.store_file( _journal, file.get_uri() );
-          add_image( image );
+          if(  image.store_file( _journal, file.get_uri() ) ) {
+            add_image( image );
+          }
         }
       }
       dialog.close();
@@ -313,13 +321,14 @@ public class ImageArea : Box {
     });
 
     _viewer_preview = new Picture() {
-      halign = Align.START,
-      valign = Align.START
+      halign  = Align.CENTER,
+      hexpand = true,
+      valign  = Align.START
     };
 
     _viewer_next_btn = new Button.from_icon_name( "go-next-symbolic" ) {
-      valign   = Align.FILL,
-      vexpand  = true,
+      valign    = Align.FILL,
+      vexpand   = true,
       sensitive = false
     };
     _viewer_next_btn.clicked.connect(() => {
@@ -328,17 +337,22 @@ public class ImageArea : Box {
       show_full_image( _images.index( index + 1 ) );
     });
 
-    var ibox = new Box( Orientation.HORIZONTAL, 5 ) {
+    _viewer_description = new Entry() {
+      placeholder_text = _( "Enter Description (Optional)" ),
+      margin_start     = 5,
+      margin_end       = 5,
+      margin_bottom    = 20
+    };
+
+    var grid = new Grid() {
       halign  = Align.FILL,
       hexpand = true
     };
-    ibox.append( _viewer_prev_btn );
-    ibox.append( _viewer_preview );
-    ibox.append( _viewer_next_btn );
 
-    _viewer_description = new Entry() {
-      placeholder_text = _( "Enter Description (Optional)" )
-    };
+    grid.attach( _viewer_prev_btn, 0, 0 );
+    grid.attach( _viewer_preview,  1, 0 );
+    grid.attach( _viewer_next_btn, 2, 0 );
+    grid.attach( _viewer_description, 1, 1 );
 
     var close_btn = new Button.with_label( _( "Close" ) ) {
       halign = Align.END,
@@ -365,8 +379,7 @@ public class ImageArea : Box {
       margin_top    = 5,
       margin_bottom = 5
     };
-    box.append( ibox );
-    box.append( _viewer_description );
+    box.append( grid );
     box.append( bbox );
 
     return( box );
