@@ -7,42 +7,119 @@ public enum DBLoadResult {
   CREATED
 }
 
+public enum ChangeState {
+  NONE,
+  NEW,
+  CHANGED,
+  DELETED,
+  NUM
+}
+
 public class DBImage {
 
-  public Pixbuf pixbuf { get; set; }
-  public int    pos    { get; set; default = 200; }
-  public double vadj   { get; set; default = 0.0; }
-  public double hadj   { get; set; default = 0.0; }
-  public double scale  { get; set; default = 1.0; }
+  public int         id          { get; private set; default = -1; }
+  public string      extension   { get; private set; default = ""; }
+  public string      description { get; set; default = ""; }
+  public ChangeState state       { get; set; default = ChangeState.NONE; }
 
   /* Default constructor */
-  public DBImage( Pixbuf pixbuf, int pos, double vadj, double hadj, double scale ) {
-    this.pixbuf = pixbuf;
-    this.pos    = pos;
-    this.vadj   = vadj;
-    this.hadj   = hadj;
-    this.scale  = scale;
+  public DBImage() {}
+
+  /* Constructor */
+  public DBImage.from_database( int id, string extension, string description ) {
+    this.id          = id;
+    this.extension   = extension;
+    this.description = description;
+  }
+
+  /* Returns the image path */
+  public string image_path( Journal journal ) {
+    return( Path.build_filename( journal.image_path(), "image-%06d.%s".printf( id, extension ) ) );
+  }
+
+  /* Copies the file from the given URI to the local images directory */
+  public bool store_file( Journal journal, string uri ) {
+
+    var pre_state = ChangeState.CHANGED;
+
+    if( id == -1 ) {
+      id = journal.new_image_id();
+      pre_state = ChangeState.NEW;
+    }
+
+    var parts = uri.split( "." );
+    extension = parts[parts.length - 1];
+
+    var ofile = File.new_for_uri( uri );
+    var nfile = File.new_for_path( image_path( journal ) );
+
+    try {
+      stdout.printf( "Copying %s to %s\n", uri, image_path( journal ) );
+      if( ofile.copy( nfile, FileCopyFlags.OVERWRITE ) ) {
+        stdout.printf( "Setting state to %s\n", pre_state.to_string() );
+        state = pre_state;
+        return( true );
+      }
+    } catch( Error e ) {
+      stderr.printf( "ERROR: %s\n", e.message );
+    }
+
+    return( false );
+
+  }
+
+  /* Removes the stored file from the file system */
+  public bool remove_file( Journal journal ) {
+    if( (id != -1) && (FileUtils.unlink( image_path( journal ) ) == 0) ) {
+      state = ChangeState.DELETED;
+      return( true );
+    }
+    return( false );
+  }
+
+  /*
+   Generates a pixbuf from the stored image file such that the height of the image matches the specified height while
+   retaining the original image proportions.
+  */
+  public Pixbuf? make_pixbuf( Journal journal, int height ) {
+    try {
+      var pixbuf = new Pixbuf.from_file_at_scale( image_path( journal ), -1, height, true );
+      return( pixbuf );
+    } catch( Error e ) {
+      stderr.printf( "ERROR: %s\n", e.message );
+    }
+    return( null );
+  }
+
+  /* Returns true if the given image matches this one */
+  public bool matches( DBImage image ) {
+    return( id == image.id );
   }
 
 }
 
 public class DBEntry {
 
-  private List<string> _tags   = new List<string>();
+  private List<string>  _tags   = new List<string>();
+  private List<DBImage> _images = new List<DBImage>();
 
-  public string   journal       { get; set; default = ""; }
-  public bool     trash         { get; set; default = false; }
-  public string   title         { get; set; default = ""; }
-  public string   text          { get; set; default = ""; }
-  public string   date          { get; set; default = ""; }
-  public string   time          { get; set; default = ""; }
-  public DBImage? image         { get; set; default = null; }
-  public bool     image_changed { get; set; default = false; }
-  public bool     loaded        { get; set; default = false; }
+  public string        journal        { get; set; default = ""; }
+  public bool          trash          { get; set; default = false; }
+  public string        title          { get; set; default = ""; }
+  public string        text           { get; set; default = ""; }
+  public string        date           { get; set; default = ""; }
+  public string        time           { get; set; default = ""; }
+  public bool          images_changed { get; set; default = false; }
+  public bool          loaded         { get; set; default = false; }
 
   public List<string> tags  {
     get {
       return( _tags );
+    }
+  }
+  public List<DBImage> images {
+    get {
+      return( _images );
     }
   }
 
@@ -70,14 +147,12 @@ public class DBEntry {
   }
 
   /* Constructor */
-  public DBEntry.with_date( string journal, string title, string text, DBImage? image, bool image_changed, string tag_list, string date, string time ) {
-    this.journal       = journal;
-    this.title         = title;
-    this.text          = text;
-    this.date          = date;
-    this.time          = time;
-    this.image         = image;
-    this.image_changed = image_changed;
+  public DBEntry.with_date( string journal, string title, string text, string tag_list, string date, string time ) {
+    this.journal = journal;
+    this.title   = title;
+    this.text    = text;
+    this.date    = date;
+    this.time    = time;
     store_tag_list( tag_list );
   }
 
@@ -94,9 +169,9 @@ public class DBEntry {
     }
 
     /* If this entry doesn't contain an image but the other one does, use the other entry's image data */
-    if( (image == null) && (entry.image != null) ) {
-      image = entry.image;
-      image_changed = true;
+    foreach( var image in entry.images ) {
+      _images.append( image );
+      images_changed = true;
     }
 
     /* Let's merge the tags */
@@ -106,6 +181,29 @@ public class DBEntry {
       }
     }
 
+  }
+
+  /*
+   Adds the given image.  If the image add works properly, we will return the new pathname of the file;
+   otherwise, we will return null.
+  */
+  public void add_new_image( Journal journal, string uri ) {
+    var image = new DBImage();
+    if( image.store_file( journal, uri ) ) {
+      _images.append( image );
+    }
+  }
+
+  /* Adds the given existing image to the entry list */
+  public void add_image( DBImage image ) {
+    _images.append( image );
+  }
+
+  /* Removes the given image */
+  public void remove_image( Journal journal, DBImage image ) {
+    if( image.remove_file( journal ) ) {
+      _images.remove( image );
+    }
   }
 
   /* Returns true if the given tag currently exists */
@@ -260,11 +358,6 @@ public class Database {
     TEXT,
     DATE,
     TIME,
-    IMAGE,
-    IMAGE_POS,
-    IMAGE_VADJ,
-    IMAGE_HADJ,
-    IMAGE_SCALE,
     JOURNAL_ID,
     JOURNAL,
     TAG
@@ -329,17 +422,22 @@ public class Database {
     // Create the table if it doesn't already exist
     var entry_query = """
       CREATE TABLE IF NOT EXISTS Entry (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
+        title      TEXT                              NOT NULL,
+        txt        TEXT                              NOT NULL,
+        date       TEXT                              NOT NULL,
+        time       TEXT                              NOT NULL,
+        journal_id INTEGER                           NOT NULL
+      );
+      """;
+
+    var image_query = """
+      CREATE TABLE IF NOT EXISTS Image (
         id          INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
-        title       TEXT                              NOT NULL,
-        txt         TEXT                              NOT NULL,
-        date        TEXT                              NOT NULL,
-        time        TEXT                              NOT NULL,
-        image       BLOB,
-        image_pos   INTEGER,
-        image_vadj  REAL,
-        image_hadj  REAL,
-        image_scale REAL,
-        journal_id  INTEGER                           NOT NULL
+        file_id     INTEGER                           NOT NULL,
+        extension   TEXT                              NOT NULL,
+        description TEXT,
+        entry_id    INTEGER                           NOT NULL
       );
       """;
 
@@ -361,6 +459,7 @@ public class Database {
 
     return( exec_query( journal_query ) &&
             exec_query( entry_query ) &&
+            exec_query( image_query ) &&
             exec_query( tag_query ) &&
             exec_query( tag_map_query ) );
 
@@ -403,6 +502,21 @@ public class Database {
 
   }
 
+  /* Returns the list of all stored images that currently exist */
+  public bool get_all_images( Array<DBImage> images ) {
+
+    var query = "SELECT * FROM Image;";
+
+    var retval = exec_query( query, (ncols, vals, names) => {
+      var image = new DBImage.from_database( int.parse( vals[1] ), vals[2], vals[3] );
+      images.append_val( image );
+      return( 0 );
+    });
+
+    return( retval );
+
+  }
+
   /* Creates a new entry with the given date if one could not be found */
   public bool create_entry( DBEntry entry ) {
 
@@ -432,8 +546,8 @@ public class Database {
 
     /* Insert the entry */
     var entry_query = """
-        INSERT INTO Entry (title, txt, date, time, image, image_pos, image_vadj, image_hadj, image_scale, journal_id)
-        VALUES ('', '%s', '%s', '%s', NULL, NULL, NULL, NULL, NULL, %d);
+        INSERT INTO Entry (title, txt, date, time, journal_id)
+        VALUES ('', '%s', '%s', '%s', %d);
         """.printf( sql_string( entry.text ), entry.date, entry.time, journal_id );
 
     if( !exec_query( entry_query ) ) {
@@ -511,47 +625,56 @@ public class Database {
   /* Retrieves the text for the entry at the specified date */
   public DBLoadResult load_entry( DBEntry entry, bool create_if_not_found ) {
 
-    var query = """
+    var entry_id = -1;
+
+    var entry_query = """
       SELECT
-        Entry.*,
-        Tag.name
+        Entry.*
       FROM
         Entry
         LEFT JOIN Journal ON Journal.id = Entry.journal_id
-        LEFT JOIN TagMap  ON TagMap.entry_id = Entry.id
-        LEFT JOIN Tag     ON TagMap.tag_id = Tag.id
       WHERE
         Entry.date = '%s' AND Journal.name = '%s'
       ORDER BY Entry.date;
     """.printf( entry.date, sql_string( entry.journal ) );
 
-    exec_query( query, (ncols, vals, names) => {
+    exec_query( entry_query, (ncols, vals, names) => {
       entry.loaded = true;
+      entry_id     = int.parse( vals[EntryPos.ID] );
       entry.title  = vals[EntryPos.TITLE];
       entry.text   = vals[EntryPos.TEXT];
       entry.time   = vals[EntryPos.TIME];
-      if( vals[EntryPos.IMAGE] != null ) {
-        try {
-          var pixload = new PixbufLoader.with_type( "png" );
-          pixload.write( (uint8[])Base64.decode( vals[EntryPos.IMAGE] ) );
-          pixload.close();
-          entry.image = new DBImage(
-            pixload.get_pixbuf(),
-            int.parse( vals[EntryPos.IMAGE_POS] ),
-            double.parse( vals[EntryPos.IMAGE_VADJ] ),
-            double.parse( vals[EntryPos.IMAGE_HADJ] ),
-            double.parse( vals[EntryPos.IMAGE_SCALE] )
-          );
-        } catch( Error e ) {
-          stderr.printf( "ERROR: %s\n", e.message );
-        }
-      }
-      var tag = vals[EntryPos.TAG];
-      if( tag != null ) {
-        entry.add_tag( tag );
-      }
       return( 0 );
     });
+
+    if( entry_id != -1 ) {
+
+      /* Load images */
+      var image_query = "SELECT * FROM Image WHERE entry_id = %d;".printf( entry_id );
+      exec_query( image_query, (ncols, vals, names) => {
+        var image = new DBImage.from_database( int.parse( vals[1] ), vals[2], vals[3] );
+        entry.add_image( image );
+        return( 0 );
+      });
+
+      /* Load tags */
+      var tag_query = """
+        SELECT
+          Tag.name
+        FROM
+          Entry
+        LEFT JOIN TagMap ON TagMap.entry_id = Entry.id
+        LEFT JOIN Tag    ON TagMap.tag_id = Tag.id
+        WHERE Entry.id = %d;
+        """.printf( entry_id );
+      exec_query( tag_query, (ncols, vals, names) => {
+        if( vals[0] != null ) {
+          entry.add_tag( vals[0] );
+        }
+        return( 0 );
+      });
+
+    }
 
     if( entry.loaded ) {
       return( DBLoadResult.LOADED );
@@ -614,37 +737,14 @@ public class Database {
   }
 
   /* Saves the entry to the database */
-  public bool save_entry( DBEntry entry ) {
-
-    var image_query = "";
-
-    if( entry.image == null ) {
-      image_query = ", image = NULL";
-    } else {
-      if( entry.image_changed ) {
-        try {
-          uint8[]  buffer  = {};
-          string[] options = {};
-          string[] values  = {};
-          DBImage  image   = entry.image;
-          options += "compression";  values += "7";  // TODO - Make this value configurable?
-          image.pixbuf.save_to_bufferv( out buffer, "png", options, values );
-          image_query = ", image = '%s'".printf( Base64.encode( (uchar[])buffer ) );
-        } catch( Error e ) {
-          stderr.printf( "ERROR: %s\n", e.message );
-        }
-      }
-      image_query += ", image_pos = %d, image_vadj = %g, image_hadj = %g, image_scale = %g".printf(
-        entry.image.pos, entry.image.vadj, entry.image.hadj, entry.image.scale
-      );
-    }
+  public bool save_entry( Journal journal, DBEntry entry ) {
 
     var entry_query = """ 
       UPDATE Entry
-      SET title = '%s', txt = '%s' %s
+      SET title = '%s', txt = '%s'
       WHERE date = '%s'
       RETURNING id;
-      """.printf( sql_string( entry.title ), sql_string( entry.text ), image_query, entry.date );
+      """.printf( sql_string( entry.title ), sql_string( entry.text ), entry.date );
 
     var entry_id = -1;
     var res = exec_query( entry_query, (ncols, vals, names) => {
@@ -684,6 +784,40 @@ public class Database {
 
     }
 
+    /* Handle associated images */
+    foreach( var image in entry.images ) {
+      var image_query = "";
+      switch( image.state ) {
+        case ChangeState.NEW :
+          image_query = """
+            INSERT INTO Image (file_id, extension, description, entry_id)
+            VALUES(%d, '%s', '%s', %d);
+          """.printf( image.id, image.extension, sql_string( image.description ), entry_id );
+          break;
+        case ChangeState.CHANGED :
+          image_query = """
+            UPDATE Image
+            SET extension = '%s', description = '%s'
+            WHERE file_id = %d;
+          """.printf( image.extension, sql_string( image.description ), image.id );
+          break;
+        case ChangeState.DELETED :
+          image_query = """
+            DELETE FROM Image
+            WHERE file_id = %d";
+          """.printf( image.id );
+          break;
+        default :  break;
+      }
+      if( (image_query != "") && exec_query( image_query ) ) {
+        if( image.state == ChangeState.DELETED ) {
+          entry.remove_image( journal, image );
+        } else {
+          image.state = ChangeState.NONE;
+        }
+      }
+    }
+
     show_all_tables( "After save" );
 
     return( true );
@@ -701,9 +835,14 @@ public class Database {
       return( 0 );
     });
 
-    if( res && (entry_id != -1) ) {
+    if( entry_id != -1 ) {
+
       var map_query = "DELETE FROM TagMap WHERE entry_id = %d;".printf( entry_id );
-      res = exec_query( map_query );
+      exec_query( map_query );
+
+      var image_query = "DELETE FROM Image WHERE entry_id = %d;".printf( entry_id );
+      exec_query( image_query );
+
     }
 
     show_all_tables( "After entry removed" );
@@ -723,11 +862,14 @@ public class Database {
       return( 0 );
     });
 
-    if( res && (entry_ids.length > 0) ) {
-      foreach( var entry_id in entry_ids ) {
-        var map_query = "DELETE FROM TagMap WHERE entry_id = %d;".printf( entry_id );
-        exec_query( map_query );
-      }
+    foreach( var entry_id in entry_ids ) {
+
+      var map_query = "DELETE FROM TagMap WHERE entry_id = %d;".printf( entry_id );
+      exec_query( map_query );
+
+      var image_query = "DELETE FROM Image WHERE entry_id = %d;".printf( entry_id );
+      exec_query( image_query );
+
     }
 
     show_all_tables( "After entry purging" );
@@ -790,6 +932,7 @@ public class Database {
     show_table( "Entry" );
     show_table( "Tag" );
     show_table( "TagMap" );
+    show_table( "Image" );
   }
 
 }

@@ -37,7 +37,6 @@ public class TextArea : Box {
   private GtkSource.View   _text;
   private GtkSource.Buffer _buffer;
   private string           _theme;
-  private Paned            _pane;
   private GLib.Menu        _image_menu;
   private GLib.Menu        _templates_menu;
   private Statistics       _stats;
@@ -54,6 +53,12 @@ public class TextArea : Box {
     { "action_delete_entry",       action_delete_entry },
     { "action_trash_entry",        action_trash_entry }
   };
+
+  public ImageArea image_area {
+    get {
+      return( _image_area );
+    }
+  }
 
   public signal void entry_moved( DBEntry entry );
 
@@ -222,13 +227,8 @@ public class TextArea : Box {
       child        = _quote
     };
 
-    _pane = new Paned( Orientation.VERTICAL );
-
     /* Create image area */
-    _image_area = new ImageArea( _win, _pane );
-    _image_area.image_added.connect(() => {
-      image_added();
-    });
+    _image_area = new ImageArea( _win );
 
     /* Now let's setup some stuff related to the text field */
     var lang_mgr = GtkSource.LanguageManager.get_default();
@@ -282,8 +282,6 @@ public class TextArea : Box {
       return( false );
     });
 
-    _pane.end_child = tscroll;
-
     /* Create statistics bar */
     _stats = new Statistics( _text.buffer );
 
@@ -292,7 +290,8 @@ public class TextArea : Box {
     append( _tags );
     append( sep1 );
     append( _quote_revealer );
-    append( _pane );
+    append( tscroll );
+    append( _image_area );
     append( sep2 );
     append( _stats );
 
@@ -368,14 +367,12 @@ public class TextArea : Box {
   /* Adds or changes the image associated with the current entry */
   private void action_add_entry_image() {
     _win.reset_timer();
-    _image_area.add_image();
+    _image_area.add_new_image();
   }
 
   /* Removes the image associated with the current entry */
   private void action_remove_entry_image() {
     _win.reset_timer();
-    _image_area.remove_image();
-    image_removed();
   }
 
   /* Inserts the given template text at the current insertion cursor location */
@@ -459,19 +456,6 @@ public class TextArea : Box {
     return( false );
   }
 
-  /* Updates the UI when an image is added to the current entry */
-  private void image_added() {
-    _image_menu.remove_all();
-    _image_menu.append( _( "Change Image" ), "textarea.action_add_entry_image" );
-    _image_menu.append( _( "Remove Image" ), "textarea.action_remove_entry_image" );
-  }
-
-  /* Updates the UI when an image is removed from the current entry */
-  private void image_removed() {
-    _image_menu.remove_all();
-    _image_menu.append( _( "Add Image" ), "textarea.action_add_entry_image" );
-  }
-
   /* Sets the theme and CSS classes */
   private void update_theme() {
 
@@ -526,12 +510,14 @@ public class TextArea : Box {
       .text-padding {
         padding: 0px %dpx;
       }
-      .zoom-padding {
+      .image-padding {
         padding: 5px;
-        opacity: 0.5;
+      }
+      .image-button {
+        opacity: 0.7;
       }
     """.printf( font_size, font_size, margin, margin, style.get_style( "background-pattern" ).background, (margin - 4) );
-    provider.load_from_data( css_data.data );
+    provider.load_from_data( css_data, css_data.length );
     StyleContext.add_provider_for_display( get_display(), provider, STYLE_PROVIDER_PRIORITY_APPLICATION );
 
   }
@@ -554,12 +540,13 @@ public class TextArea : Box {
       return;
     }
 
-    var image = _image_area.get_image();
     var entry = new DBEntry.with_date( 
-      _entry.journal, _title.text, _text.buffer.text, image, _image_area.pixbuf_changed, _tags.entry.get_tag_list(), _entry.date, _entry.time
+      _entry.journal, _title.text, _text.buffer.text, _tags.entry.get_tag_list(), _entry.date, _entry.time
     );
 
-    if( _journal.db.save_entry( entry ) ) {
+    _image_area.get_images( entry );
+
+    if( _journal.db.save_entry( _journal, entry ) ) {
       if( (_journals.current == _journal) && (_title.text != _entry.text) ) {
         _journals.current_changed( true );
       }
@@ -580,9 +567,8 @@ public class TextArea : Box {
   /* Sets the entry contents to the given entry, saving the previous contents, if necessary */
   public void set_buffer( DBEntry entry, bool editable ) {
 
-    if( _text.buffer.get_modified() ) {
-      save();
-    }
+    /* Save the current buffer before loading a new one */
+    save();
 
     /* Update the burger menu, if necessary */
     if( (_journal == null) || (_journal.is_trash != _journals.current.is_trash) ) {
@@ -609,7 +595,7 @@ public class TextArea : Box {
     }
 
     /* Set the image */
-    _image_area.set_image( entry.image );
+    _image_area.set_images( _journal, entry );
     _image_area.editable = enable_ui;
 
     /* Set the tags */

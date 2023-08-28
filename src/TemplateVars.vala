@@ -26,10 +26,14 @@ public class TemplateVars {
     _vars = new Gee.HashMap<string,string>();
     _news_sources = new Array<NewsSource>();
 
+    /*
     Idle.add(() => {
       collect_variables();
       return( false );
     });
+    */
+
+    collect_variables();
 
   }
 

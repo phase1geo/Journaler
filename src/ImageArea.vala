@@ -24,104 +24,65 @@ using Gdk;
 
 public class ImageArea : Box {
 
+  private int thumbnail_height = 100;
+
   private MainWindow               _win;
-  private Paned                    _pane;
-  private ScrolledWindow           _scroll;
-  private Overlay                  _overlay;
-  private DBImage?                 _image;
-  private Pixbuf?                  _pixbuf;
-  private bool                     _pixbuf_changed;
-  private Button                   _zoom_in;
-  private Button                   _zoom_out;
+  private Journal                  _journal;
+  private Box                      _image_box;
   private Gee.HashMap<string,bool> _extensions;
-  private double                   _scale = 1.0;
-  private double                   _zoom_increment = 0.1;
+  private Array<DBImage>           _images = new Array<DBImage>();
+
+  private Button  _viewer_prev_btn;
+  private Button  _viewer_next_btn;
+  private Picture _viewer_preview;
+  private Entry   _viewer_description;
+  private DBImage _viewer_image;
 
   public bool editable { get; set; default = true; }
-  public bool pixbuf_changed {
-    get {
-      return( _pixbuf_changed );
-    }
-  }
-
-  public signal void image_added();
 
   /* Create the main window UI */
-  public ImageArea( MainWindow win, Paned pane ) {
+  public ImageArea( MainWindow win ) {
 
     Object( orientation: Orientation.VERTICAL, spacing: 0 );
 
-    _win  = win;
-    _pane = pane;
+    _win = win;
 
     add_image_area();
 
     /* Gather the list of available image extensions */
     get_image_extensions();
 
+    /* Set the size of this widget */
+    set_size_request( -1, thumbnail_height );
+
+    /* Make sure our background matches the color used by the text area */
+    Idle.add(() => {
+      add_css_class( "text-background" );
+      return( false );
+    });
+
   }
 
   /* Creates the image area */
   private void add_image_area() {
 
-    _scroll = new ScrolledWindow() {
-      vscrollbar_policy = ALWAYS,
-      hscrollbar_policy = ALWAYS
+    _image_box = new Box( Orientation.HORIZONTAL, 5 );
+    _image_box.add_controller( create_image_drop() );
+    _image_box.add_css_class( "image-padding" );
+    _image_box.add_css_class( "text-background" );
+    _image_box.set_size_request( -1, thumbnail_height );
+
+    var scroll = new ScrolledWindow() {
+      hscrollbar_policy = AUTOMATIC,
+      child             = _image_box
     };
-    _scroll.scroll_child.connect((t,h) => {
+    scroll.set_size_request( -1, (thumbnail_height + 10) );
+    scroll.scroll_child.connect((t,h) => {
       _win.reset_timer();
       return( false );
     });
 
-    _zoom_in = new Button.from_icon_name( "list-add-symbolic" );
-    _zoom_in.clicked.connect(() => {
-      display_pixbuf( null, null, null, (_scale + _zoom_increment) );
-    });
-
-    _zoom_out = new Button.from_icon_name( "list-remove-symbolic" );
-    _zoom_out.clicked.connect(() => {
-      display_pixbuf( null, null, null, (_scale - _zoom_increment) );
-    });
-
-    var zbox = new Box( Orientation.HORIZONTAL, 5 ) {
-      halign        = Align.CENTER,
-      valign        = Align.END,
-      margin_start  = 5,
-      margin_end    = 5,
-      margin_top    = 5,
-      margin_bottom = 5
-    };
-    zbox.add_css_class( "zoom-padding" );
-    zbox.add_css_class( Granite.STYLE_CLASS_BACKGROUND );
-    zbox.append( _zoom_in );
-    zbox.append( _zoom_out );
-
-    var btn_revealer = new Revealer() {
-      reveal_child    = false,
-      transition_type = RevealerTransitionType.CROSSFADE,
-      child           = zbox
-    };
-
-    var overlay_motion = new EventControllerMotion();
-    _overlay = new Overlay() {
-      child = _scroll
-    };
-    _overlay.add_controller( create_image_drop() );
-    _overlay.add_controller( overlay_motion );
-    _overlay.add_overlay( btn_revealer );
-
-    overlay_motion.enter.connect((x, y) => {
-      _win.reset_timer();
-      btn_revealer.reveal_child = true;
-      // _scroll.set_policy( PolicyType.ALWAYS, PolicyType.ALWAYS );
-    });
-    overlay_motion.leave.connect(() => {
-      _win.reset_timer();
-      btn_revealer.reveal_child = false;
-      // _scroll.set_policy( PolicyType.NEVER, PolicyType.NEVER );
-    });
-
-    append( _overlay );
+    append( scroll );
 
   }
 
@@ -146,25 +107,119 @@ public class ImageArea : Box {
   }
 
   /* Retrieves an image object used for saving to database */
-  public DBImage? get_image() {
-    _pixbuf_changed = false;
-    if( _pixbuf == null ) {
-      return( null );
-    } else {
-      var image = new DBImage( _pixbuf, _pane.position, _scroll.vadjustment.value, _scroll.hadjustment.value, _scale );
-      return( image );
+  public void get_images( DBEntry entry ) {
+    for( int i=0; i<_images.length; i++ ) {
+      entry.add_image( _images.index( i ) );
     }
   }
 
   /* Sets the image to the given object */
-  public void set_image( DBImage? image ) {
-    _image = image;
-    if( _image == null ) {
-      _pixbuf = null;
-    } else {
-      _pixbuf = _image.pixbuf;
-      display_pixbuf( _image.pos, _image.vadj, _image.hadj, _image.scale );
+  public void set_images( Journal journal, DBEntry? entry ) {
+
+    _journal = journal;
+
+    hide();
+
+    /* Clear the images array */
+    _images.remove_range( 0, _images.length );
+
+    /* Clear the image box */
+    while( _image_box.get_first_child() != null ) {
+      _image_box.remove( _image_box.get_first_child() );
     }
+
+    /* Add in the images */
+    foreach( var image in entry.images ) {
+      add_image( image );
+    }
+
+  }
+
+  /* Adds the given image to the scrollable image box */
+  private void add_image( DBImage image ) {
+
+    var pixbuf = image.make_pixbuf( _journal, thumbnail_height );
+
+    if( pixbuf != null ) {
+
+      var gesture = new GestureClick();
+      var img = new Picture.for_pixbuf( pixbuf ) {
+        can_shrink = false,
+        halign = Align.START,
+        valign = Align.START,
+        tooltip_text = image.description
+      };
+      img.add_controller( gesture );
+      img.add_css_class( "text-background" );
+      img.set_size_request( -1, thumbnail_height );
+
+      var motion  = new EventControllerMotion();
+      var overlay = new Overlay() {
+        child = img
+      };
+      overlay.add_controller( motion );
+
+      var del_btn = new Button.from_icon_name( "edit-delete-symbolic" );
+      del_btn.clicked.connect(() => {
+        _image_box.remove( overlay );
+        if( image.state == ChangeState.NEW ) {
+          for( int i=0; i<_images.length; i++ ) {
+            if( _images.index( i ) == image ) {
+              _images.remove_index( i );
+              break;
+            }
+          }
+        } else {
+          image.state = ChangeState.DELETED;
+        }
+      });
+
+      var dbox = new Box( Orientation.HORIZONTAL, 0 ) {
+        halign = Align.END,
+        valign = Align.START,
+        margin_start  = 5,
+        margin_end    = 5,
+        margin_top    = 5,
+        margin_bottom = 5
+      };
+      dbox.add_css_class( Granite.STYLE_CLASS_BACKGROUND );
+      dbox.add_css_class( "image-button" );
+      dbox.append( del_btn );
+      dbox.hide();
+
+      var area = this;
+
+      motion.enter.connect((x, y) => {
+        if( area.editable ) {
+          dbox.show();
+        }
+      });
+      motion.leave.connect(() => {
+        if( area.editable ) {
+          dbox.hide();
+        }
+      });
+
+      overlay.add_overlay( dbox );
+
+      gesture.pressed.connect((n_press, x, y) => {
+        if( (n_press == 2) && area.editable ) {
+          show_full_image( image );
+          _win.show_pane( "image-view" );
+        }
+      });
+
+      /* Add the image picture to the scrollable box */
+      _image_box.append( overlay );
+
+      /* Add the image to the list */
+      _images.append_val( image );
+
+      /* Make sure that this widget is seen */
+      show();
+
+    }
+
   }
 
   /* Create the image drop handler */
@@ -179,17 +234,9 @@ public class ImageArea : Box {
     drop.drop.connect((val, x, y) => {
       var uri = val.get_string().strip();
       if( (Uri.peek_scheme( uri ) != null) && is_uri_supported_image( uri ) ) {
-        var from_file = File.new_for_uri( uri );
-        try {
-          GLib.FileIOStream stream;
-          var to_file = File.new_tmp( "imgXXXXXX-%s".printf( from_file.get_basename() ), out stream );
-          from_file.copy( to_file, FileCopyFlags.OVERWRITE );
-          _pixbuf = new Pixbuf.from_file( to_file.get_path() );
-          display_pixbuf( 200, 0.0, 0.0, 1.0 );
-          to_file.delete();
-          return( true );
-        } catch( Error e ) {
-          stdout.printf( "ERROR:  Unable to convert image file to pixbuf: %s\n", e.message );
+        var image = new DBImage();
+        if( image.store_file( _journal, uri ) ) {
+          add_image( image );
         }
       }
       return( false );
@@ -200,7 +247,7 @@ public class ImageArea : Box {
   }
 
   /* Adds or changes the image associated with the current entry */
-  public void add_image() {
+  public void add_new_image() {
 
     var dialog = Utils.make_file_chooser( _( "Select an image" ), _win, FileChooserAction.OPEN, _( "Add Image" ) );
 
@@ -216,11 +263,9 @@ public class ImageArea : Box {
       if( id == ResponseType.ACCEPT ) {
         var file = dialog.get_file();
         if( file != null ) {
-          try {
-            set_pixbuf( new Pixbuf.from_file( file.get_path() ) );
-            image_added();
-          } catch( Error e ) {
-            stdout.printf( "ERROR:  Unable to convert image file to pixbuf: %s\n", e.message );
+          var image  = new DBImage();
+          if(  image.store_file( _journal, file.get_uri() ) ) {
+            add_image( image );
           }
         }
       }
@@ -233,59 +278,139 @@ public class ImageArea : Box {
 
   /* Returns true if the image of the entry or its positioning information had changed since it was loaded */
   public bool changed() {
-    return( _pixbuf_changed ||
-            ((_pixbuf != null) &&
-             ((_pane.position != _image.pos) ||
-              (_scroll.vadjustment.value != _image.vadj) ||
-              (_scroll.hadjustment.value != _image.hadj) ||
-              (_scale != _image.scale))) );
-  }
-
-  /* Sets the internal pixbuf to the specified value and updates the display */
-  private void set_pixbuf( Pixbuf? pixbuf ) {
-    _pixbuf = pixbuf;
-    _pixbuf_changed = true;
-    display_pixbuf( 200, 0.0, 0.0, 1.0 );
-  }
-
-  /* Removes the image associated with the current entry */
-  public void remove_image() {
-    set_pixbuf( null );
-  }
-
-  /* Handles the proper display of the current pixbuf */
-  private void display_pixbuf( int? pane_pos, double? vadj, double? hadj, double? scale ) {
-    if( _pixbuf == null ) {
-      _pane.start_child = null;
-    } else {
-      if( (scale != null) && (scale > 0.0) && (scale <= 2.0) ) {
-        _scale = scale;
-      }
-      var buf = _pixbuf.scale_simple(
-                  (int)(_pixbuf.get_width() * _scale),
-                  (int)(_pixbuf.get_height() * _scale),
-                  InterpType.BILINEAR
-                );
-      var img = new Picture.for_pixbuf( buf ) {
-        halign     = Align.FILL,
-        hexpand    = true,
-        can_shrink = false
-      };
-      img.add_css_class( "text-background" );
-      _scroll.child = img;
-      _scroll.vadjustment.upper = (double)img.paintable.get_intrinsic_height();
-      _scroll.hadjustment.upper = (double)img.paintable.get_intrinsic_width();
-      if( vadj != null ) {
-        _scroll.vadjustment.value = vadj;
-      }
-      if( hadj != null ) {
-        _scroll.hadjustment.value = hadj;
-      }
-      _pane.start_child = this;
-      if( pane_pos != null ) {
-        _pane.position = pane_pos;
+    for( int i=0; i<_images.length; i++ ) {
+      if( _images.index( i ).state != ChangeState.NONE ) {
+        return( true );
       }
     }
+    return( false );
+  }
+
+  /* Returns the index of the image to display */
+  private int get_image_index( DBImage image ) {
+    for( int i=0; i<_images.length; i++ ) {
+      if( _images.index( i ).matches( image ) ) {
+        return( i );
+      }
+    }
+    return( -1 );
+  }
+
+  /* Updates the state of the current image */
+  private void update_current_state() {
+    if( _viewer_image.description != _viewer_description.text ) {
+      _viewer_image.description = _viewer_description.text;
+      if( _viewer_image.state == ChangeState.NONE ) {
+        _viewer_image.state = ChangeState.CHANGED;
+      }
+    }
+  }
+
+  /* Create the full image viewer window */
+  public Box create_full_image_viewer() {
+
+    /* Create image carousel */
+    _viewer_prev_btn = new Button.from_icon_name( "go-previous-symbolic" ) {
+      valign    = Align.FILL,
+      vexpand   = true,
+      sensitive = false
+    };
+    _viewer_prev_btn.clicked.connect(() => {
+      var index = get_image_index( _viewer_image );
+      update_current_state();
+      show_full_image( _images.index( index - 1 ) );
+    });
+
+    _viewer_preview = new Picture() {
+      halign  = Align.CENTER,
+      hexpand = true,
+      valign  = Align.START
+    };
+
+    _viewer_next_btn = new Button.from_icon_name( "go-next-symbolic" ) {
+      valign    = Align.FILL,
+      vexpand   = true,
+      sensitive = false
+    };
+    _viewer_next_btn.clicked.connect(() => {
+      var index = get_image_index( _viewer_image );
+      update_current_state();
+      show_full_image( _images.index( index + 1 ) );
+    });
+
+    _viewer_description = new Entry() {
+      placeholder_text = _( "Enter Description (Optional)" ),
+      margin_start     = 5,
+      margin_end       = 5,
+      margin_bottom    = 20
+    };
+
+    var grid = new Grid() {
+      halign  = Align.FILL,
+      hexpand = true
+    };
+
+    grid.attach( _viewer_prev_btn, 0, 0 );
+    grid.attach( _viewer_preview,  1, 0 );
+    grid.attach( _viewer_next_btn, 2, 0 );
+    grid.attach( _viewer_description, 1, 1 );
+
+    var close_btn = new Button.with_label( _( "Close" ) ) {
+      halign = Align.END,
+      hexpand = true
+    };
+    close_btn.clicked.connect(() => {
+      update_current_state();
+      _win.show_pane( "entry-view" );
+    });
+
+    var bbox = new Box( Orientation.HORIZONTAL, 5 ) {
+      halign = Align.FILL,
+      hexpand = true
+    };
+    bbox.append( close_btn );
+
+    var box = new Box( Orientation.VERTICAL, 5 ) {
+      halign  = Align.FILL,
+      valign  = Align.FILL,
+      hexpand = true,
+      vexpand = true,
+      margin_start  = 5,
+      margin_end    = 5,
+      margin_top    = 5,
+      margin_bottom = 5
+    };
+    box.append( grid );
+    box.append( bbox );
+
+    return( box );
+
+  }
+
+  /* Displays the image and description */
+  public void show_full_image( DBImage image ) {
+
+    /* Get the index of the image to display */
+    var index = get_image_index( image );
+
+    /* Handle the button sensitivity */
+    _viewer_prev_btn.sensitive = (index > 0);
+    _viewer_next_btn.sensitive = (index < (_images.length - 1));
+
+    /* Display the button */
+    _viewer_preview.set_pixbuf( image.make_pixbuf( _journal, 600 ) );
+
+    /* Set the description field */
+    _viewer_description.text = image.description;
+
+    /* Save the current viewer image */
+    _viewer_image = image;
+
+  }
+
+  /* Returns the widget will which receive input focus */
+  public Widget get_focus_widget() {
+    return( _viewer_description );
   }
 
 }

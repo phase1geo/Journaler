@@ -257,7 +257,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     _reviewer = new Reviewer( this, _journals );
     _reviewer.show_matched_entry.connect((entry) => {
       _journals.current = entry.trash ? _journals.trash : _journals.get_journal_by_name( entry.journal );
-      _entries.show_entry_for_date( entry.journal, entry.date, false, false );
+      _entries.show_entry_for_date( entry.journal, entry.date, false, false, "from show_matched_entry" );
     });
     _reviewer.close_requested.connect( action_review );
 
@@ -332,6 +332,9 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     add_awards_view( abox );
 
+    var ibox = _text_area.image_area.create_full_image_viewer();
+    _stack_focus_widgets.set( "image-view", _text_area.image_area.get_focus_widget() );
+
     /* Create primary stack */
     _lock_stack = new Stack() {
       halign = Align.FILL,
@@ -344,6 +347,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     _lock_stack.add_named( sbox, "setlock-view" );
     _lock_stack.add_named( tbox, "template-view" );
     _lock_stack.add_named( abox, "awards-view" );
+    _lock_stack.add_named( ibox, "image-view" );
 
     child = _lock_stack;
 
@@ -504,6 +508,8 @@ public class MainWindow : Gtk.ApplicationWindow {
           _lock_stack.transition_type = StackTransitionType.SLIDE_LEFT;
         } else if( _lock_stack.visible_child_name == "awards-view" ) {
           _lock_stack.transition_type = StackTransitionType.CROSSFADE;
+        } else if( _lock_stack.visible_child_name == "image-view" ) {
+          _lock_stack.transition_type = StackTransitionType.SLIDE_DOWN;
         } else {
           _lock_stack.transition_type = StackTransitionType.SLIDE_UP;
         }
@@ -515,6 +521,10 @@ public class MainWindow : Gtk.ApplicationWindow {
         break;
       case "awards-view" :
         _lock_stack.transition_type = StackTransitionType.CROSSFADE;
+        set_header_bar_sensitivity( false );
+        break;
+      case "image-view" :
+        _lock_stack.transition_type = StackTransitionType.SLIDE_UP;
         set_header_bar_sensitivity( false );
         break;
       default :
@@ -843,7 +853,7 @@ public class MainWindow : Gtk.ApplicationWindow {
       action_review();
     }
 
-    _entries.show_entry_for_date( _journals.current.name, DBEntry.todays_date(), true, true );
+    _entries.show_entry_for_date( _journals.current.name, DBEntry.todays_date(), true, true, "action_today" );
 
   }
 

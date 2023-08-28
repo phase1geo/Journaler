@@ -63,8 +63,8 @@ public class Journaler : Gtk.Application {
     default_theme.add_resource_path( "/com/github/phase1geo/journaler" );
 
     /* Make sure that the user data directory exists */
-    var dir = GLib.Path.build_filename( Environment.get_user_data_dir(), "journaler", "db" );
-    DirUtils.create_with_parents( dir, 0755 );
+    var app_dir = GLib.Path.build_filename( Environment.get_user_data_dir(), "journaler" );
+    DirUtils.create_with_parents( app_dir, 0755 );
 
     /* Create the main window */
     appwin = new MainWindow( this, settings );

@@ -100,27 +100,21 @@ public class ExportXML : Export {
       text->add_child( doc->new_cdata_block( load_entry.text, load_entry.text.length ) );
       node->add_child( text );
 
-      if( (load_entry.image != null) && include_images ) {
+      if( (load_entry.images.length() > 0) && include_images ) {
 
-        var img  = load_entry.image;
-        var path = create_image( img.pixbuf );
-        stdout.printf( "Attempted to create image with path: %s\n", path );
+        Xml.Node* images = new Xml.Node( null, "images" );
 
-        if( path != null ) {
-
-          Xml.Node* image = new Xml.Node( null, "image" );
-          image->set_prop( "path", path );
-
-          if( for_import ) {
-            image->set_prop( "pos",   img.pos.to_string() );
-            image->set_prop( "vadj",  img.vadj.to_string() );
-            image->set_prop( "hadj",  img.hadj.to_string() );
-            image->set_prop( "scale", img.scale.to_string() );
+        foreach( var image in load_entry.images ) {
+          var path = create_image( journal, image );
+          if( path != null ) {
+            Xml.Node* image_node = new Xml.Node( null, "image" );
+            image_node->set_prop( "path", path );
+            image_node->set_content( image.description );
+            images->add_child( image_node );
           }
-
-          node->add_child( image );
-
         }
+
+        node->add_child( images );
 
       }
 
@@ -238,9 +232,9 @@ public class ExportXML : Export {
     for( Xml.Node* it = node->children; it != null; it = it->next ) {
       if( it->type == Xml.ElementType.ELEMENT_NODE ) {
         switch( it->name ) {
-          case "text"  :  import_text( it, entry );   break;
-          case "image" :  import_image( it, entry );  break;
-          case "tags"  :  import_tags( it, entry );   break;
+          case "text"   :  import_text( it, entry );    break;
+          case "images" :  import_images( it, journal, entry );  break;
+          case "tags"   :  import_tags( it, entry );    break;
         }
       }
     }
@@ -251,9 +245,9 @@ public class ExportXML : Export {
     var load_result = journal.db.load_entry( load_entry, true );
     if( load_result == DBLoadResult.LOADED ) {
       load_entry.merge_with_entry( entry );
-      journal.db.save_entry( load_entry );
+      journal.db.save_entry( journal, load_entry );
     } else if( load_result == DBLoadResult.CREATED ) {
-      journal.db.save_entry( entry );
+      journal.db.save_entry( journal, entry );
     }
 
   }
@@ -270,24 +264,20 @@ public class ExportXML : Export {
   }
 
   /* Imports the specified image XML node */
-  private void import_image( Xml.Node* node, DBEntry entry ) {
+  private void import_images( Xml.Node* node, Journal journal, DBEntry entry ) {
 
-    var path  = node->get_prop( "path" );
-    var pos   = node->get_prop( "pos" );
-    var vadj  = node->get_prop( "vadj" );
-    var hadj  = node->get_prop( "hadj" );
-    var scale = node->get_prop( "scale" );
-
-    if( (path != null) && (pos != null) && (vadj != null) && (hadj != null) && (scale != null) ) {
-      try {
-        if( !Path.is_absolute( path ) ) {
-          path = Path.build_filename( _directory, path );
+    for( Xml.Node* it = node->children; it != null; it = it->next ) {
+      if( (it->type == Xml.ElementType.ELEMENT_NODE) && (it->name == "image") ) {
+        var path = it->get_prop( "path" );
+        if( path != null ) {
+          if( !Path.is_absolute( path ) ) {
+            path = Path.build_filename( _directory, path );
+          }
+          var image = new DBImage();
+          image.store_file( journal, path );
+          image.description = it->get_content();
+          entry.add_image( image );
         }
-        var pixbuf  = new Pixbuf.from_file( path );
-        entry.image = new DBImage( pixbuf, int.parse( pos ), double.parse( vadj ), double.parse( hadj ), double.parse( scale ) );
-        entry.image_changed = true;
-      } catch( Error e ) {
-        stderr.printf( "ERROR: %s\n", e.message );
       }
     }
 

@@ -4,6 +4,7 @@ public class Journal {
   private string    _template    = "";
   private string    _description = "";
   private Database? _db          = null;
+  private int       _next_id     = 1;
 
   public string name {
     get {
@@ -47,18 +48,34 @@ public class Journal {
     }
   }
 
+  public signal void save_needed();
+
   /* Default constructor */
   public Journal( string name, string template, string description ) {
-    _name        = name;
+
+    _name = name;
+    
+
     _template    = template;
     _description = description;
     _db          = new Database( db_path(), false );
+
   }
 
   /* Constructor for trash */
   public Journal.trash() {
+
     _name = _( "Trash" );
-    _db   = new Database( db_path(), true );
+    make_directories();
+
+    _db = new Database( db_path(), true );
+
+  }
+
+  /* Make the database and image directories */
+  private void make_directories() {
+    DirUtils.create_with_parents( journal_path(), 0755 );
+    DirUtils.create_with_parents( image_path(),   0755 );
   }
 
   /* Constructor */
@@ -66,10 +83,27 @@ public class Journal {
     loaded = load( node );
   }
 
-  /* Gets the pathname of the associated database */
-  private string db_path( string? n = null ) {
+  /* Returns the pathname of the journal database and images directory */
+  private string journal_path( string? n = null ) {
     var name = (n ?? _name).down().replace( " ", "-" );
-    return( GLib.Path.build_filename( Environment.get_user_data_dir(), "journaler", "db", name + ".db" ) );
+    return( GLib.Path.build_filename( Environment.get_user_data_dir(), "journaler", "journals", name ) );
+  }
+
+  /* Gets the pathname of the associated database */
+  private string db_path( string? name = null ) {
+    return( GLib.Path.build_filename( journal_path( name ), "entries.db" ) );
+  }
+
+  /* Returns the pathname for the image directory */
+  public string image_path( string? name = null ) {
+    return( GLib.Path.build_filename( journal_path( name ), "images" ) );
+  }
+
+  /* Returns a new image file pathname */
+  public int new_image_id() {
+    var id = _next_id++;
+    save_needed();
+    return( id );
   }
 
   /* Renames the database */
@@ -85,7 +119,7 @@ public class Journal {
   /* Moves the given entry from this journal to the given to_journal */
   public bool move_entry( DBEntry entry, Journal to_journal ) {
     return( to_journal.db.create_entry( entry ) &&
-            to_journal.db.save_entry( entry ) &&
+            to_journal.db.save_entry( this, entry ) &&
             db.remove_entry( entry ) );
   }
 
@@ -97,6 +131,7 @@ public class Journal {
     node->set_prop( "name", _name );
     node->set_prop( "template", _template );
     node->set_prop( "description", _description );
+    node->set_prop( "next-id", _next_id.to_string() );
 
     return( node );
 
@@ -118,6 +153,11 @@ public class Journal {
     var d = node->get_prop( "description" );
     if( d != null ) {
       _description = d;
+    }
+
+    var i = node->get_prop( "next-id" );
+    if( i != null ) {
+      _next_id = int.parse( i );
     }
 
     /* If the name was set and the database file exists, create the database */
