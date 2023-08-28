@@ -48,11 +48,13 @@ public class Journal {
     }
   }
 
+  public signal void save_needed();
+
   /* Default constructor */
   public Journal( string name, string template, string description ) {
 
     _name = name;
-    make_directories();
+    
 
     _template    = template;
     _description = description;
@@ -99,7 +101,9 @@ public class Journal {
 
   /* Returns a new image file pathname */
   public int new_image_id() {
-    return( _next_id++ );
+    var id = _next_id++;
+    save_needed();
+    return( id );
   }
 
   /* Renames the database */

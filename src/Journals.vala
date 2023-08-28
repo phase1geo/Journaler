@@ -41,6 +41,7 @@ public class Journals {
 
   /* Adds the given journal to the list of journals */
   public void add_journal( Journal journal, bool fast = false ) {
+    journal.save_needed.connect( save );
     _journals.append_val( journal );
     if( !fast ) {
       current = journal;
@@ -61,6 +62,7 @@ public class Journals {
   public void remove_journal( Journal journal ) {
     for( int i=0; i<_journals.length; i++ ) {
       if( _journals.index( i ) == journal ) {
+        _journals.index( i ).save_needed.disconnect( save );
         _journals.index( i ).remove_db();
         _journals.remove_index( i );
         if( _journals.length == 0 ) {
@@ -202,6 +204,7 @@ public class Journals {
         bool loaded = false;
         var journal = new Journal.from_xml( it, out loaded );
         if( loaded ) {
+          journal.save_needed.connect( save );
           _journals.append_val( journal );
         }
       }

@@ -67,6 +67,7 @@ public class ImageArea : Box {
   private void add_image_area() {
 
     _image_box = new Box( Orientation.HORIZONTAL, 5 );
+    _image_box.add_controller( create_image_drop() );
     _image_box.add_css_class( "image-padding" );
     _image_box.add_css_class( "text-background" );
     _image_box.set_size_request( -1, thumbnail_height );
