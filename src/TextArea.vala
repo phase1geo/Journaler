@@ -245,6 +245,10 @@ public class TextArea : Box {
     };
     _text.add_controller( _image_area.create_image_drop() );
     _text.add_css_class( "journal-text" );
+    _buffer.apply_tag.connect((tag, start, end) => {
+      var text = _buffer.get_text( start, end, false );
+      _image_area.add_image_from_uri( text );
+    });
     _buffer.changed.connect(() => {
       _win.reset_timer();
       if( _quote_revealer.reveal_child && Journaler.settings.get_boolean( "dismiss-quotation-on-write" ) ) {

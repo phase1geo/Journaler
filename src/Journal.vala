@@ -54,7 +54,7 @@ public class Journal {
   public Journal( string name, string template, string description ) {
 
     _name = name;
-    
+    make_directories();
 
     _template    = template;
     _description = description;
