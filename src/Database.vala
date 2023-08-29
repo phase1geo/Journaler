@@ -18,6 +18,7 @@ public enum ChangeState {
 public class DBImage {
 
   public int         id          { get; private set; default = -1; }
+  public string      uri         { get; private set; default = ""; }
   public string      extension   { get; private set; default = ""; }
   public string      description { get; set; default = ""; }
   public ChangeState state       { get; set; default = ChangeState.NONE; }
@@ -26,8 +27,9 @@ public class DBImage {
   public DBImage() {}
 
   /* Constructor */
-  public DBImage.from_database( int id, string extension, string description ) {
+  public DBImage.from_database( int id, string uri, string extension, string description ) {
     this.id          = id;
+    this.uri         = uri;
     this.extension   = extension;
     this.description = description;
   }
@@ -54,10 +56,9 @@ public class DBImage {
     var nfile = File.new_for_path( image_path( journal ) );
 
     try {
-      stdout.printf( "Copying %s to %s\n", uri, image_path( journal ) );
       if( ofile.copy( nfile, FileCopyFlags.OVERWRITE ) ) {
-        stdout.printf( "Setting state to %s\n", pre_state.to_string() );
-        state = pre_state;
+        this.state = pre_state;
+        this.uri   = uri;
         return( true );
       }
     } catch( Error e ) {
@@ -385,7 +386,7 @@ public class Database {
     // Open the database
     var err = Sqlite.Database.open( db_file, out _db );
     if( err != Sqlite.OK ) {
-      stderr.printf( "ERROR:  Unable to open database: %s\n", _db.errmsg() );
+      stderr.printf( "ERROR:  Unable to open database %s: %s\n", db_file, _db.errmsg() );
       return;
     }
 
@@ -435,6 +436,7 @@ public class Database {
       CREATE TABLE IF NOT EXISTS Image (
         id          INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
         file_id     INTEGER                           NOT NULL,
+        uri         TEXT                              NOT NULL,
         extension   TEXT                              NOT NULL,
         description TEXT,
         entry_id    INTEGER                           NOT NULL
@@ -508,7 +510,7 @@ public class Database {
     var query = "SELECT * FROM Image;";
 
     var retval = exec_query( query, (ncols, vals, names) => {
-      var image = new DBImage.from_database( int.parse( vals[1] ), vals[2], vals[3] );
+      var image = new DBImage.from_database( int.parse( vals[1] ), vals[2], vals[3], vals[4] );
       images.append_val( image );
       return( 0 );
     });
@@ -652,7 +654,7 @@ public class Database {
       /* Load images */
       var image_query = "SELECT * FROM Image WHERE entry_id = %d;".printf( entry_id );
       exec_query( image_query, (ncols, vals, names) => {
-        var image = new DBImage.from_database( int.parse( vals[1] ), vals[2], vals[3] );
+        var image = new DBImage.from_database( int.parse( vals[1] ), vals[2], vals[3], vals[4] );
         entry.add_image( image );
         return( 0 );
       });
@@ -790,16 +792,16 @@ public class Database {
       switch( image.state ) {
         case ChangeState.NEW :
           image_query = """
-            INSERT INTO Image (file_id, extension, description, entry_id)
-            VALUES(%d, '%s', '%s', %d);
-          """.printf( image.id, image.extension, sql_string( image.description ), entry_id );
+            INSERT INTO Image (file_id, uri, extension, description, entry_id)
+            VALUES(%d, '%s', '%s', '%s', %d);
+          """.printf( image.id, image.uri, image.extension, sql_string( image.description ), entry_id );
           break;
         case ChangeState.CHANGED :
           image_query = """
             UPDATE Image
-            SET extension = '%s', description = '%s'
+            SET uri = '%s' extension = '%s', description = '%s'
             WHERE file_id = %d;
-          """.printf( image.extension, sql_string( image.description ), image.id );
+          """.printf( image.uri, image.extension, sql_string( image.description ), image.id );
           break;
         case ChangeState.DELETED :
           image_query = """

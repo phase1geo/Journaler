@@ -101,7 +101,7 @@ public class ImageArea : Box {
   }
 
   /* Returns true if the given URI is a supported image based on its extension */
-  private bool is_uri_supported_image( string uri ) {
+  public bool is_uri_supported_image( string uri ) {
     string[] parts = uri.split( "." );
     return( _extensions.has_key( parts[parts.length - 1] ) );
   }
@@ -232,18 +232,27 @@ public class ImageArea : Box {
     });
 
     drop.drop.connect((val, x, y) => {
-      var uri = val.get_string().strip();
-      if( (Uri.peek_scheme( uri ) != null) && is_uri_supported_image( uri ) ) {
-        var image = new DBImage();
-        if( image.store_file( _journal, uri ) ) {
-          add_image( image );
-        }
-      }
+      add_image_from_uri( val.get_string().strip() );
       return( false );
     });
 
     return( drop );
 
+  }
+
+  /* Adds an image for the given URI if it is unique */
+  public void add_image_from_uri( string uri ) {
+    if( (Uri.peek_scheme( uri ) != null) && is_uri_supported_image( uri ) ) {
+      for( int i=0; i<_images.length; i++ ) {
+        if( _images.index( i ).uri == uri ) {
+          return;
+        }
+      }
+      var image = new DBImage();
+      if( image.store_file( _journal, uri ) ) {
+        add_image( image );
+      }
+    }
   }
 
   /* Adds or changes the image associated with the current entry */
@@ -263,10 +272,7 @@ public class ImageArea : Box {
       if( id == ResponseType.ACCEPT ) {
         var file = dialog.get_file();
         if( file != null ) {
-          var image  = new DBImage();
-          if(  image.store_file( _journal, file.get_uri() ) ) {
-            add_image( image );
-          }
+          add_image_from_uri( file.get_uri() );
         }
       }
       dialog.close();
