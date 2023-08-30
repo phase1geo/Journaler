@@ -34,9 +34,14 @@ public class DBImage {
     this.description = description;
   }
 
+  /* Returns the relative image filename.  Call image_path to get the absolute filepath. */
+  public string image_file() {
+    return( "image-%06d.%s".printf( id, extension ) );
+  }
+
   /* Returns the image path */
   public string image_path( Journal journal ) {
-    return( Path.build_filename( journal.image_path(), "image-%06d.%s".printf( id, extension ) ) );
+    return( Path.build_filename( journal.image_path(), image_file() ) );
   }
 
   /* Copies the file from the given URI to the local images directory */
@@ -799,7 +804,7 @@ public class Database {
         case ChangeState.CHANGED :
           image_query = """
             UPDATE Image
-            SET uri = '%s' extension = '%s', description = '%s'
+            SET uri = '%s', extension = '%s', description = '%s'
             WHERE file_id = %d;
           """.printf( image.uri, image.extension, sql_string( image.description ), image.id );
           break;

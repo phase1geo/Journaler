@@ -231,9 +231,6 @@ public class TextArea : Box {
       child        = _quote
     };
 
-    /* Create image area */
-    _image_area = new ImageArea( _win );
-
     _text_stack = new Stack();
     _text_stack.add_named( create_text_editor(), "editor" );
     _text_stack.add_named( create_text_viewer(), "viewer" );
@@ -264,7 +261,6 @@ public class TextArea : Box {
     append( sep1 );
     append( _quote_revealer );
     append( _text_stack );
-    append( _image_area );
     append( sep2 );
     append( _stats );
 
@@ -274,6 +270,9 @@ public class TextArea : Box {
 
   /* Creates the text viewer when editing an entry */
   private Widget create_text_editor() {
+
+    /* Create image area */
+    _image_area = new ImageArea( _win );
 
     /* Now let's setup some stuff related to the text field */
     var lang_mgr = GtkSource.LanguageManager.get_default();
@@ -314,7 +313,11 @@ public class TextArea : Box {
       return( false );
     });
 
-    return( tscroll );
+    var box = new Box( Orientation.VERTICAL, 0 );
+    box.append( tscroll );
+    box.append( _image_area );
+
+    return( box );
 
   }
 
@@ -323,8 +326,13 @@ public class TextArea : Box {
 
     var ta = this;
 
-    _viewer = new WebView();
-    _viewer.add_css_class( "text-background" );
+    var wk_settings = new WebKit.Settings();
+    wk_settings.set_allow_file_access_from_file_urls( true );
+    wk_settings.set_allow_top_navigation_to_data_urls( true );
+
+    _viewer = new WebView() {
+      settings = wk_settings
+    };
 
     _viewer.decide_policy.connect((decision, type) => {
       if( ta._allow_viewer_update ) {
@@ -567,6 +575,11 @@ public class TextArea : Box {
     provider.load_from_data( css_data, css_data.length );
     StyleContext.add_provider_for_display( get_display(), provider, STYLE_PROVIDER_PRIORITY_APPLICATION );
 
+    /* Handle the background color of the viewer */
+    RGBA c = {(float)1.0, (float)1.0, (float)1.0, (float)1.0};
+    c.parse( style.get_style( "background-pattern" ).background );
+    _viewer.set_background_color( c );
+
   }
 
   /* Returns true if the title of the entry has changed since it was loaded */
@@ -685,11 +698,14 @@ public class TextArea : Box {
 
       var html  = "";
       var flags = 0x47607004;
-      var mkd   = new Markdown.Document.gfm_format( entry.text.data, flags );
+      var md    = condition_markdown( entry.text );
+      var mkd   = new Markdown.Document.gfm_format( md.data, flags );
       mkd.compile( flags );
       mkd.get_document( out html );
+
       _allow_viewer_update = true;
-      _viewer.load_html( html, null );
+      _viewer.load_html( condition_html( html ), "file:///" );
+
       _text_stack.visible_child_name = "viewer";
 
     }
@@ -713,6 +729,118 @@ public class TextArea : Box {
       _burger.show();
     } else {
       _burger.hide();
+    }
+
+  }
+
+  /* Conditions the given Markdown text to improve the display */
+  private string condition_markdown( string text ) {
+    var new_text = text;
+    add_markdown_images( _journal, _entry, ref new_text );
+    return( new_text );
+  }
+
+  /* Conditions the HTML that is going to be displayed in the viewer */
+  private string condition_html( string text ) {
+    var new_text = text;
+    center_html_images( ref new_text );
+    return( new_text );
+  }
+
+  /* Returns the image size to use for the given image */
+  private string get_image_size( string path ) {
+
+    var canvas_width = get_allocated_width() - 20;
+    var img_width    = 400;
+    var img_height   = 300;
+
+    Pixbuf.get_file_info( path, out img_width, out img_height );
+
+    if( img_width > canvas_width ) {
+      var scale  = (double)canvas_width / img_width;
+      img_width  = (int)(img_width * scale);
+      img_height = (int)(img_height * scale);
+      return( " =%dx%d".printf( img_width, img_height ) );
+    }
+
+    return( "" );
+
+  }
+
+  /* Returns the image description for the given image */
+  private string get_description( DBImage image ) {
+
+    if( image.description != "" ) {
+      return( " \"%s\"".printf( image.description ) );
+    }
+
+    return( "" );
+
+  }
+
+  /*
+   Parses the given text to find embedded images, centers those images inline and then
+   adds the remaining images to the end of the document centered as well.
+  */
+  private void add_markdown_images( Journal journal, DBEntry entry, ref string text ) {
+
+    var images = new Gee.HashMap<string,DBImage>();
+    foreach( var image in entry.images ) {
+      images.set( image.uri, image );
+    }
+
+    try {
+      MatchInfo match_info;
+      var re = new Regex( "!\\[.*?\\]\\s*\\((.+?)\\)" );
+      var start_pos = 0;
+      while( re.match_full( text, -1, start_pos, 0, out match_info ) ) {
+        int start, end;
+        match_info.fetch_pos( 1, out start, out end );
+        var uri      = text.slice( start, end );
+        var new_uri  = uri;
+        var text_len = text.char_count();
+        if( images.has_key( uri ) ) {
+          var img = images.get( uri );
+          new_uri = img.image_path( journal );
+          text    = text.splice( start, end, new_uri + get_image_size( new_uri ) + get_description( img ) );
+          images.unset( uri );
+        }
+        match_info.fetch_pos( 0, out start, out end );
+        start_pos = text.index_of_nth_char( text.char_count( end ) + (text.char_count() - text_len) );
+      }
+    } catch( RegexError e ) {
+      stderr.printf( "ERROR:  add_markdown_images: %s\n", e.message );
+    }
+
+    /* Append the remaining images that weren't embedded */
+    if( images.size > 0 ) {
+      text += "\n\n---\n\n";
+      foreach( var image in entry.images ) {
+        if( images.has_key( image.uri ) ) {
+          var new_uri = image.image_path( journal );
+          text += "![](%s)\n\n".printf( new_uri + get_image_size( new_uri ) + get_description( image ) );
+        }
+      }
+    }
+
+  }
+
+  /* Centers all of the HTML images */
+  private void center_html_images( ref string text ) {
+
+    try {
+      MatchInfo match_info;
+      var re = new Regex( "<img .*? />" );
+      var start_pos = 0;
+      while( re.match_full( text, -1, start_pos, 0, out match_info ) ) {
+        int start, end;
+        match_info.fetch_pos( 0, out start, out end );
+        text = text.splice( end, end, "</center>" );
+        text = text.splice( start, start, "<center>" );
+        start_pos = text.index_of_nth_char( text.char_count( end ) + 17 );
+      }
+    } catch( RegexError e ) {
+      stderr.printf( "ERROR:  center_images: %s\n", e.message );
     }
 
   }
