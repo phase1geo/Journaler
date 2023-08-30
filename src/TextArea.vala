@@ -21,6 +21,7 @@
 
 using Gtk;
 using Gdk;
+using WebKit;
 
 public class TextArea : Box {
 
@@ -36,6 +37,9 @@ public class TextArea : Box {
   private TagBox           _tags;
   private GtkSource.View   _text;
   private GtkSource.Buffer _buffer;
+  private WebView          _viewer;
+  private bool             _allow_viewer_update = false;
+  private Stack            _text_stack;
   private string           _theme;
   private GLib.Menu        _image_menu;
   private GLib.Menu        _templates_menu;
@@ -230,6 +234,47 @@ public class TextArea : Box {
     /* Create image area */
     _image_area = new ImageArea( _win );
 
+    _text_stack = new Stack();
+    _text_stack.add_named( create_text_editor(), "editor" );
+    _text_stack.add_named( create_text_viewer(), "viewer" );
+
+    _title.activate.connect(() => {
+      _text.grab_focus();
+    });
+    _title.changed.connect(() => {
+      _win.reset_timer();
+      if( _title.text == "" ) {
+        _title.remove_css_class( "title-bold" );
+      } else {
+        _title.add_css_class( "title-bold" );
+      }
+    });
+
+    title_focus.leave.connect(() => {
+      _title.select_region( 0, 0 );
+      save();
+    });
+
+    /* Create statistics bar */
+    _stats = new Statistics( _text.buffer );
+
+    append( tbox );
+    append( _date );
+    append( _tags );
+    append( sep1 );
+    append( _quote_revealer );
+    append( _text_stack );
+    append( _image_area );
+    append( sep2 );
+    append( _stats );
+
+    initialize_spell_checker();
+
+  }
+
+  /* Creates the text viewer when editing an entry */
+  private Widget create_text_editor() {
+
     /* Now let's setup some stuff related to the text field */
     var lang_mgr = GtkSource.LanguageManager.get_default();
     var lang     = lang_mgr.get_language( "markdown" );
@@ -260,23 +305,6 @@ public class TextArea : Box {
     set_line_spacing();
     set_margin( true );
 
-    _title.activate.connect(() => {
-      _text.grab_focus();
-    });
-    _title.changed.connect(() => {
-      _win.reset_timer();
-      if( _title.text == "" ) {
-        _title.remove_css_class( "title-bold" );
-      } else {
-        _title.add_css_class( "title-bold" );
-      }
-    });
-
-    title_focus.leave.connect(() => {
-      _title.select_region( 0, 0 );
-      save();
-    });
-
     var tscroll = new ScrolledWindow() {
       vscrollbar_policy = PolicyType.AUTOMATIC,
       child = _text
@@ -286,20 +314,35 @@ public class TextArea : Box {
       return( false );
     });
 
-    /* Create statistics bar */
-    _stats = new Statistics( _text.buffer );
+    return( tscroll );
 
-    append( tbox );
-    append( _date );
-    append( _tags );
-    append( sep1 );
-    append( _quote_revealer );
-    append( tscroll );
-    append( _image_area );
-    append( sep2 );
-    append( _stats );
+  }
 
-    initialize_spell_checker();
+  /* Creates the text viewer when displaying read-only entries */
+  private Widget create_text_viewer() {
+
+    var ta = this;
+
+    _viewer = new WebView();
+    _viewer.add_css_class( "text-background" );
+
+    _viewer.decide_policy.connect((decision, type) => {
+      if( ta._allow_viewer_update ) {
+        ta._allow_viewer_update = false;
+      } else {
+        if( type == PolicyDecisionType.NAVIGATION_ACTION ) {
+          var nav     = (NavigationPolicyDecision)decision;
+          var action  = nav.get_navigation_action();
+          var request = action.get_request();
+          var uri     = request.uri;
+          Utils.open_url( uri );
+        }
+        decision.ignore();
+      }
+      return( false );
+    });
+
+    return( _viewer );
 
   }
 
@@ -619,20 +662,37 @@ public class TextArea : Box {
     }
 
     /* Set the buffer text to the entry text or insert the snippet */
-    _text.buffer.begin_irreversible_action();
-    _text.buffer.text = "";
-    if( (entry.text != "") || !insert_template( _journals.current.template ) ) {
-      _text.buffer.text = entry.text;
+    if( enable_ui ) {
+
+      _text.buffer.begin_irreversible_action();
+      _text.buffer.text = "";
+      if( (entry.text != "") || !insert_template( _journals.current.template ) ) {
+        _text.buffer.text = entry.text;
+      }
+      _text.buffer.end_irreversible_action();
+
+      /* Set the editable bit */
+      _text.editable  = enable_ui;
+      _text.can_focus = enable_ui;
+      _text.focusable = enable_ui;
+
+      /* Clear the modified bits */
+      _text.buffer.set_modified( false );
+
+      _text_stack.visible_child_name = "editor";
+
+    } else {
+
+      var html  = "";
+      var flags = 0x47607004;
+      var mkd   = new Markdown.Document.gfm_format( entry.text.data, flags );
+      mkd.compile( flags );
+      mkd.get_document( out html );
+      _allow_viewer_update = true;
+      _viewer.load_html( html, null );
+      _text_stack.visible_child_name = "viewer";
+
     }
-    _text.buffer.end_irreversible_action();
-
-    /* Set the editable bit */
-    _text.editable  = enable_ui;
-    _text.can_focus = enable_ui;
-    _text.focusable = enable_ui;
-
-    /* Clear the modified bits */
-    _text.buffer.set_modified( false );
 
     /* Set the grab */
     if( enable_ui ) {
