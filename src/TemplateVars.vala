@@ -33,7 +33,7 @@ public class TemplateVars {
     });
     */
 
-    // collect_variables();
+    collect_variables();
 
   }
 
