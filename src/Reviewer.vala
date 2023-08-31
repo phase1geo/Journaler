@@ -24,11 +24,17 @@ public class Reviewer : Grid {
   private DateSelector _end_date;
 
   private SearchEntry _search_entry;
+  private MenuButton  _search_save;
+  private GLib.Menu   _saved_search_menu;
 
   private ListBox                _match_lb;
   private Gee.ArrayList<DBEntry> _match_entries;
   private Button                 _trash_btn;
   private Button                 _restore_btn;
+
+  private const GLib.ActionEntry action_entries[] = {
+    { "action_save", action_save, "s" },
+  };
 
   public signal void show_matched_entry( DBEntry entry );
   public signal void close_requested();
@@ -48,6 +54,12 @@ public class Reviewer : Grid {
     add_date_selector();
     add_close();
     add_search();
+    add_search_save();
+
+    /* Add the menu actions */
+    var actions = new SimpleActionGroup();
+    actions.add_action_entries( action_entries, this );
+    insert_action_group( "review", actions );
 
   }
 
@@ -257,6 +269,41 @@ public class Reviewer : Grid {
     });
 
     attach( _search_entry, 0, 1, 3 );
+
+  }
+
+  /* Add the saved search UI */
+  private void add_search_save() {
+
+    _saved_search_menu = new GLib.Menu();
+
+    var new_submenu = new GLib.Menu();
+    new_submenu.append( _( "Save exact dates" ),                  "review.action_save(\"exact\")" );
+    new_submenu.append( _( "Save relative to exact start date" ), "review.action_save(\"rel_exact\")" );
+    new_submenu.append( _( "Save relative to current date" ),     "review.action_save(\"rel_current\")" );
+
+    var new_entry = new GLib.Menu();
+    new_entry.append_submenu( _( "Save search" ), new_submenu );
+
+    var menu = new GLib.Menu();
+    menu.append_section( null, _saved_search_menu );
+    menu.append_section( null, new_entry );
+
+    _search_save = new MenuButton() {
+      icon_name  = "folder-symbolic",
+      menu_model = menu
+    };
+
+    attach( _search_save, 3, 1 );
+
+  }
+
+  /* Handles search saves */
+  private void action_save( SimpleAction action, Variant? variant ) {
+
+    var search_type = variant.get_string();
+
+    // FOOBAR - Handle the saves
 
   }
 
