@@ -28,7 +28,7 @@ public class TemplateVars {
 
     /*
     Idle.add(() => {
-      collect_variables();
+      //collect_variables();
       return( false );
     });
     */
