@@ -1,13 +1,48 @@
 using Gtk;
 
+public enum GoalType {
+  NONE,
+  CHARACTER,
+  WORD,
+  NUM;
+
+  public string to_string() {
+    switch( this ) {
+      case NONE      :  return( "none" );
+      case CHARACTER :  return( "chars" );
+      case WORD      :  return( "words" );
+      default        :  assert_not_reached();
+    }
+  }
+
+  public string label() {
+    switch( this ) {
+      case NONE      :  return( _( "None" ) );
+      case CHARACTER :  return( _( "Characters" ) );
+      case WORD      :  return( _( "Words" ) );
+      default        :  assert_not_reached();
+    }
+  }
+
+  public static GoalType parse( string val ) {
+    switch( val ) {
+      case "none"  :  return( NONE );
+      case "chars" :  return( CHARACTER );
+      case "words" :  return( WORD );
+      default      :  return( NONE );
+    }
+  }
+
+}
+
 public class Statistics : Box {
 
   private Gtk.TextBuffer _buffer;
   private Label          _label;
   private int            _chars      = 0;
   private int            _words      = 0;
-  private int            _chars_goal = 1000;
-  private int            _words_goal = 500; 
+  private GoalType       _goal_type  = GoalType.WORD;
+  private int            _goal_count = 500;
 
   /* Default constructor */
   public Statistics( Gtk.TextBuffer buffer ) {
@@ -21,16 +56,16 @@ public class Statistics : Box {
     });
 
     /* Initialize the goals */
-    _chars_goal = Journaler.settings.get_int( "character-goal" );
-    _words_goal = Journaler.settings.get_int( "word-goal" );
+    _goal_type  = GoalType.parse( Journaler.settings.get_string( "goal-type" ) );
+    _goal_count = Journaler.settings.get_int( "goal-count" );
 
     /* Handle any changes to the goals */
-    Journaler.settings.changed["character-goal"].connect(() => {
-      _chars_goal = Journaler.settings.get_int( "character-goal" );
+    Journaler.settings.changed["goal-type"].connect(() => {
+      _goal_type = GoalType.parse( Journaler.settings.get_string( "goal-type" ) );
       update_stats_string();
     });
-    Journaler.settings.changed["word-goal"].connect(() => {
-      _words_goal = Journaler.settings.get_int( "word-goal" );
+    Journaler.settings.changed["goal-count"].connect(() => {
+      _goal_count = Journaler.settings.get_int( "goal-count" );
       update_stats_string();
     });
 
@@ -51,13 +86,13 @@ public class Statistics : Box {
   }
 
   /* Returns true if the character goal was reached */
-  public bool character_goal_reached() {
-    return( _chars >= _chars_goal );
-  }
-
-  /* Returns true if the word goal was reached */
-  public bool word_goal_reached() {
-    return( _words >= _words_goal );
+  public bool goal_reached() {
+    switch( _goal_type ) {
+      case GoalType.NONE      :  return( false );
+      case GoalType.CHARACTER :  return( _chars >= _goal_count );
+      case GoalType.WORD      :  return( _words >= _goal_count );
+      default                 :  return( false );
+    }
   }
 
   /* Calculate the statistics (should be called whenver the text buffer changes) */
@@ -74,8 +109,8 @@ public class Statistics : Box {
     var goal_str = _( "Goal" );
     var met_str  = _( "Achieved" );
 
-    var char_goal_str = (_chars_goal == 0) ? "" : "  <b>( %s:  %s )</b>".printf( goal_str, ((_chars >= _chars_goal) ? met_str : _chars_goal.to_string()) );
-    var word_goal_str = (_words_goal == 0) ? "" : "  <b>( %s:  %s )</b>".printf( goal_str, ((_words >= _words_goal) ? met_str : _words_goal.to_string()) );
+    var char_goal_str = (_goal_type == GoalType.CHARACTER) ? "  <b>( %s:  %s )</b>".printf( goal_str, ((_chars >= _goal_count) ? met_str : _goal_count.to_string()) ) : "";
+    var word_goal_str = (_goal_type == GoalType.WORD)      ? "  <b>( %s:  %s )</b>".printf( goal_str, ((_words >= _goal_count) ? met_str : _goal_count.to_string()) ) : "";
 
     _label.label = "<b>%s:</b>  %d%s   <b>%s:</b>  %d%s".printf( char_str, _chars, char_goal_str, word_str, _words, word_goal_str );
 

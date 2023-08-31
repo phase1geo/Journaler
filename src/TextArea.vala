@@ -572,7 +572,7 @@ public class TextArea : Box {
         opacity: 0.7;
       }
     """.printf( font_size, font_size, margin, margin, style.get_style( "background-pattern" ).background, (margin - 4) );
-    provider.load_from_data( css_data, css_data.length );
+    provider.load_from_data( css_data.data );
     StyleContext.add_provider_for_display( get_display(), provider, STYLE_PROVIDER_PRIORITY_APPLICATION );
 
     /* Handle the background color of the viewer */
@@ -615,7 +615,7 @@ public class TextArea : Box {
 
       /* Update the goals */
       _win.goals.mark_achievement( entry.date, false );
-      if( _stats.word_goal_reached() ) {
+      if( _stats.goal_reached() ) {
         _win.goals.mark_achievement( entry.date, true );
       }
 

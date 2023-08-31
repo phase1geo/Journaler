@@ -76,15 +76,15 @@
       <summary>Automatically dismisses the daily quotation when writing starts.</summary>
       <description>Automatically dismisses the daily quotation when writing starts.</description>
     </key>
-    <key name="character-goal" type="i">
-      <default>1000</default>
-      <summary>Specifies the entry character count to reach the daily goal</summary>
-      <description>Specifies the entry character count to reach the daily goal</description>
+    <key name="goal-type" type="s">
+      <default>"words"</default>
+      <summary>Specifies the entry goal type</summary>
+      <description>Specifies the entry goal type.  Valid values are: "words", "chars"</description>
     </key>
-    <key name="word-goal" type="i">
+    <key name="goal-count" type="i">
       <default>500</default>
-      <summary>Specifies the entry word count to reach the daily goal</summary>
-      <description>Specifies the entry word count to reach the daily goal</description>
+      <summary>Specifies the entry goal count to reach the daily goal</summary>
+      <description>Specifies the entry goal count to reach the daily goal</description>
     </key>
     <key name="enable-spellchecker" type="b">
       <default>true</default>

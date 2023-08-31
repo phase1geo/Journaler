@@ -20,6 +20,7 @@ public class Preferences : Gtk.Dialog {
   private const GLib.ActionEntry action_entries[] = {
     { "action_set_current_theme",         action_set_current_theme,         "s" },
     { "action_lock_menu",                 action_lock_menu,                 "i" },
+    { "action_goal_menu",                 action_goal_menu,                 "i" },
     { "action_select_journal_for_export", action_select_journal_for_export, "s" },
     { "action_select_export_format",      action_select_export_format,      "s" },
     { "action_select_import_journal",     action_select_import_journal,     "s" },
@@ -215,16 +216,44 @@ public class Preferences : Gtk.Dialog {
     grid.attach( make_spacer(), 0, row );
     row++;
 
-    grid.attach( make_label( _( "Character Count Goal" ) ), 0, row );
-    grid.attach( make_spinner( "character-goal", 100, 100000, 100 ), 1, row );
+    grid.attach( make_label( _( "Writing Goal" ) ), 0, row );
+    grid.attach( make_menu( "goal-type", goal_label(), create_goal_menu() ), 1, row );
     row++;
 
-    grid.attach( make_label( _( "Word Count Goal" ) ), 0, row );
-    grid.attach( make_spinner( "word-goal", 50, 5000, 50 ), 1, row );
+    grid.attach( make_label( _( "Goal Count" ) ), 0, row );
+    grid.attach( make_spinner( "goal-count", 50, 5000, 50 ), 1, row );
     row++;
 
     return( grid );
 
+  }
+
+  /* Create the application auto-lock menu */
+  private GLib.Menu create_goal_menu() {
+
+    var menu = new GLib.Menu();
+
+    for( int i=0; i<GoalType.NUM; i++ ) {
+      var goal_type = (GoalType)i;
+      menu.append( goal_type.label(), "prefs.action_goal_menu(%d)".printf( i ) );
+    }
+
+    return( menu );
+
+  }
+
+  /* Returns the lock menubutton label */
+  private string goal_label() {
+    var goal_type = GoalType.parse( Journaler.settings.get_string( "goal-type" ) );
+    return( goal_type.label() );
+  }
+
+  /* Sets the lock menu to the given value */
+  private void action_goal_menu( SimpleAction action, Variant? variant ) {
+    _win.reset_timer();
+    var goal_type = (GoalType)variant.get_int32();
+    _menus.get( "goal-type" ).label = goal_type.label();
+    Journaler.settings.set_string( "goal-type", goal_type.to_string() );
   }
 
   /* Adds a feed row at the given position */
