@@ -21,6 +21,7 @@
 
 using Gtk;
 using Gdk;
+using WebKit;
 
 public class TextArea : Box {
 
@@ -36,6 +37,9 @@ public class TextArea : Box {
   private TagBox           _tags;
   private GtkSource.View   _text;
   private GtkSource.Buffer _buffer;
+  private WebView          _viewer;
+  private bool             _allow_viewer_update = false;
+  private Stack            _text_stack;
   private string           _theme;
   private GLib.Menu        _image_menu;
   private GLib.Menu        _templates_menu;
@@ -227,6 +231,46 @@ public class TextArea : Box {
       child        = _quote
     };
 
+    _text_stack = new Stack();
+    _text_stack.add_named( create_text_editor(), "editor" );
+    _text_stack.add_named( create_text_viewer(), "viewer" );
+
+    _title.activate.connect(() => {
+      _text.grab_focus();
+    });
+    _title.changed.connect(() => {
+      _win.reset_timer();
+      if( _title.text == "" ) {
+        _title.remove_css_class( "title-bold" );
+      } else {
+        _title.add_css_class( "title-bold" );
+      }
+    });
+
+    title_focus.leave.connect(() => {
+      _title.select_region( 0, 0 );
+      save();
+    });
+
+    /* Create statistics bar */
+    _stats = new Statistics( _text.buffer );
+
+    append( tbox );
+    append( _date );
+    append( _tags );
+    append( sep1 );
+    append( _quote_revealer );
+    append( _text_stack );
+    append( sep2 );
+    append( _stats );
+
+    initialize_spell_checker();
+
+  }
+
+  /* Creates the text viewer when editing an entry */
+  private Widget create_text_editor() {
+
     /* Create image area */
     _image_area = new ImageArea( _win );
 
@@ -260,23 +304,6 @@ public class TextArea : Box {
     set_line_spacing();
     set_margin( true );
 
-    _title.activate.connect(() => {
-      _text.grab_focus();
-    });
-    _title.changed.connect(() => {
-      _win.reset_timer();
-      if( _title.text == "" ) {
-        _title.remove_css_class( "title-bold" );
-      } else {
-        _title.add_css_class( "title-bold" );
-      }
-    });
-
-    title_focus.leave.connect(() => {
-      _title.select_region( 0, 0 );
-      save();
-    });
-
     var tscroll = new ScrolledWindow() {
       vscrollbar_policy = PolicyType.AUTOMATIC,
       child = _text
@@ -286,20 +313,44 @@ public class TextArea : Box {
       return( false );
     });
 
-    /* Create statistics bar */
-    _stats = new Statistics( _text.buffer );
+    var box = new Box( Orientation.VERTICAL, 0 );
+    box.append( tscroll );
+    box.append( _image_area );
 
-    append( tbox );
-    append( _date );
-    append( _tags );
-    append( sep1 );
-    append( _quote_revealer );
-    append( tscroll );
-    append( _image_area );
-    append( sep2 );
-    append( _stats );
+    return( box );
 
-    initialize_spell_checker();
+  }
+
+  /* Creates the text viewer when displaying read-only entries */
+  private Widget create_text_viewer() {
+
+    var ta = this;
+
+    var wk_settings = new WebKit.Settings();
+    wk_settings.set_allow_file_access_from_file_urls( true );
+    wk_settings.set_allow_top_navigation_to_data_urls( true );
+
+    _viewer = new WebView() {
+      settings = wk_settings
+    };
+
+    _viewer.decide_policy.connect((decision, type) => {
+      if( ta._allow_viewer_update ) {
+        ta._allow_viewer_update = false;
+      } else {
+        if( type == PolicyDecisionType.NAVIGATION_ACTION ) {
+          var nav     = (NavigationPolicyDecision)decision;
+          var action  = nav.get_navigation_action();
+          var request = action.get_request();
+          var uri     = request.uri;
+          Utils.open_url( uri );
+        }
+        decision.ignore();
+      }
+      return( false );
+    });
+
+    return( _viewer );
 
   }
 
@@ -524,6 +575,11 @@ public class TextArea : Box {
     provider.load_from_data( css_data, css_data.length );
     StyleContext.add_provider_for_display( get_display(), provider, STYLE_PROVIDER_PRIORITY_APPLICATION );
 
+    /* Handle the background color of the viewer */
+    RGBA c = {(float)1.0, (float)1.0, (float)1.0, (float)1.0};
+    c.parse( style.get_style( "background-pattern" ).background );
+    _viewer.set_background_color( c );
+
   }
 
   /* Returns true if the title of the entry has changed since it was loaded */
@@ -619,20 +675,40 @@ public class TextArea : Box {
     }
 
     /* Set the buffer text to the entry text or insert the snippet */
-    _text.buffer.begin_irreversible_action();
-    _text.buffer.text = "";
-    if( (entry.text != "") || !insert_template( _journals.current.template ) ) {
-      _text.buffer.text = entry.text;
+    if( enable_ui ) {
+
+      _text.buffer.begin_irreversible_action();
+      _text.buffer.text = "";
+      if( (entry.text != "") || !insert_template( _journals.current.template ) ) {
+        _text.buffer.text = entry.text;
+      }
+      _text.buffer.end_irreversible_action();
+
+      /* Set the editable bit */
+      _text.editable  = enable_ui;
+      _text.can_focus = enable_ui;
+      _text.focusable = enable_ui;
+
+      /* Clear the modified bits */
+      _text.buffer.set_modified( false );
+
+      _text_stack.visible_child_name = "editor";
+
+    } else {
+
+      var html  = "";
+      var flags = 0x47607004;
+      var md    = condition_markdown( entry.text );
+      var mkd   = new Markdown.Document.gfm_format( md.data, flags );
+      mkd.compile( flags );
+      mkd.get_document( out html );
+
+      _allow_viewer_update = true;
+      _viewer.load_html( condition_html( html ), "file:///" );
+
+      _text_stack.visible_child_name = "viewer";
+
     }
-    _text.buffer.end_irreversible_action();
-
-    /* Set the editable bit */
-    _text.editable  = enable_ui;
-    _text.can_focus = enable_ui;
-    _text.focusable = enable_ui;
-
-    /* Clear the modified bits */
-    _text.buffer.set_modified( false );
 
     /* Set the grab */
     if( enable_ui ) {
@@ -653,6 +729,118 @@ public class TextArea : Box {
       _burger.show();
     } else {
       _burger.hide();
+    }
+
+  }
+
+  /* Conditions the given Markdown text to improve the display */
+  private string condition_markdown( string text ) {
+    var new_text = text;
+    add_markdown_images( _journal, _entry, ref new_text );
+    return( new_text );
+  }
+
+  /* Conditions the HTML that is going to be displayed in the viewer */
+  private string condition_html( string text ) {
+    var new_text = text;
+    center_html_images( ref new_text );
+    return( new_text );
+  }
+
+  /* Returns the image size to use for the given image */
+  private string get_image_size( string path ) {
+
+    var canvas_width = get_allocated_width() - 20;
+    var img_width    = 400;
+    var img_height   = 300;
+
+    Pixbuf.get_file_info( path, out img_width, out img_height );
+
+    if( img_width > canvas_width ) {
+      var scale  = (double)canvas_width / img_width;
+      img_width  = (int)(img_width * scale);
+      img_height = (int)(img_height * scale);
+      return( " =%dx%d".printf( img_width, img_height ) );
+    }
+
+    return( "" );
+
+  }
+
+  /* Returns the image description for the given image */
+  private string get_description( DBImage image ) {
+
+    if( image.description != "" ) {
+      return( " \"%s\"".printf( image.description ) );
+    }
+
+    return( "" );
+
+  }
+
+  /*
+   Parses the given text to find embedded images, centers those images inline and then
+   adds the remaining images to the end of the document centered as well.
+  */
+  private void add_markdown_images( Journal journal, DBEntry entry, ref string text ) {
+
+    var images = new Gee.HashMap<string,DBImage>();
+    foreach( var image in entry.images ) {
+      images.set( image.uri, image );
+    }
+
+    try {
+      MatchInfo match_info;
+      var re = new Regex( "!\\[.*?\\]\\s*\\((.+?)\\)" );
+      var start_pos = 0;
+      while( re.match_full( text, -1, start_pos, 0, out match_info ) ) {
+        int start, end;
+        match_info.fetch_pos( 1, out start, out end );
+        var uri      = text.slice( start, end );
+        var new_uri  = uri;
+        var text_len = text.char_count();
+        if( images.has_key( uri ) ) {
+          var img = images.get( uri );
+          new_uri = img.image_path( journal );
+          text    = text.splice( start, end, new_uri + get_image_size( new_uri ) + get_description( img ) );
+          images.unset( uri );
+        }
+        match_info.fetch_pos( 0, out start, out end );
+        start_pos = text.index_of_nth_char( text.char_count( end ) + (text.char_count() - text_len) );
+      }
+    } catch( RegexError e ) {
+      stderr.printf( "ERROR:  add_markdown_images: %s\n", e.message );
+    }
+
+    /* Append the remaining images that weren't embedded */
+    if( images.size > 0 ) {
+      text += "\n\n---\n\n";
+      foreach( var image in entry.images ) {
+        if( images.has_key( image.uri ) ) {
+          var new_uri = image.image_path( journal );
+          text += "![](%s)\n\n".printf( new_uri + get_image_size( new_uri ) + get_description( image ) );
+        }
+      }
+    }
+
+  }
+
+  /* Centers all of the HTML images */
+  private void center_html_images( ref string text ) {
+
+    try {
+      MatchInfo match_info;
+      var re = new Regex( "<img .*? />" );
+      var start_pos = 0;
+      while( re.match_full( text, -1, start_pos, 0, out match_info ) ) {
+        int start, end;
+        match_info.fetch_pos( 0, out start, out end );
+        text = text.splice( end, end, "</center>" );
+        text = text.splice( start, start, "<center>" );
+        start_pos = text.index_of_nth_char( text.char_count( end ) + 17 );
+      }
+    } catch( RegexError e ) {
+      stderr.printf( "ERROR:  center_images: %s\n", e.message );
     }
 
   }
