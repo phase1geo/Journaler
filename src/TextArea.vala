@@ -607,6 +607,7 @@ public class TextArea : Box {
     _image_area.get_images( entry );
 
     if( _journal.db.save_entry( _journal, entry ) ) {
+
       if( (_journals.current == _journal) && (_title.text != _entry.text) ) {
         _journals.current_changed( true );
       }
@@ -614,12 +615,12 @@ public class TextArea : Box {
       _entry = entry;
 
       /* Update the goals */
-      _win.goals.mark_achievement( entry.date, false );
       if( _stats.goal_reached() ) {
-        _win.goals.mark_achievement( entry.date, true );
+        _win.goals.mark_achievement( entry.date );
       }
 
       stdout.printf( "Saved successfully to journal %s\n", _journal.name );
+
     }
 
   }

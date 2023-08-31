@@ -10,7 +10,6 @@ public class Goal {
   private string _name       = "";
   private string _label      = "";
   private bool   _achieved   = false;
-  private bool   _word_count = false;
 
   protected string last_achieved { set; get; default = DBEntry.yesterdays_date(); }
 
@@ -33,11 +32,10 @@ public class Goal {
   public int goal  { set; get; default = 0; }
 
   /* Default constructor */
-  public Goal( string name, string label, int goal, bool word_count ) {
-    _name       = name;
-    _label      = label;
-    _goal       = goal;
-    _word_count = word_count;
+  public Goal( string name, string label, int goal ) {
+    _name  = name;
+    _label = label;
+    _goal  = goal;
   }
 
   /* Constructor */
@@ -54,13 +52,13 @@ public class Goal {
    This should be called whenver an entry goal has been met.  It will return true if the goal requires
    saving.
   */
-  public bool mark_achievement( string todays_date, bool word_count_met, out bool achievement ) {
+  public bool mark_achievement( string todays_date, out bool achievement ) {
     achievement = false;
     /*
     stdout.printf( "In mark_achievement, name: %s, word_count_met: %s, word_count: %s, count: %d, achieved: %s\n",
                    _name, word_count_met.to_string(), _word_count.to_string(), count, _achieved.to_string() );
                    */
-    if( (word_count_met == _word_count) && !_achieved ) {
+    if( !_achieved ) {
       var save = true;
       switch( get_count_action( get_date( todays_date ), get_date( last_achieved ) ) ) {
         case CountAction.INCREMENT :  count++;        break;

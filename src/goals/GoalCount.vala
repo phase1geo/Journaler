@@ -1,8 +1,8 @@
 public class GoalCount : Goal {
 
   /* Default constructor */
-  public GoalCount( string label, int goal, bool word_count ) {
-    base( "count-%d-%d".printf( goal, (word_count ? 1 : 0) ), label, goal, word_count );
+  public GoalCount( string label, int goal ) {
+    base( "count-%d".printf( goal ), label, goal );
   }
 
   /* Constructor */

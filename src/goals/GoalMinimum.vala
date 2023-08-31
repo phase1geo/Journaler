@@ -28,8 +28,8 @@ public class GoalMinimum : Goal {
   private SubGoalDuration _sub_duration = SubGoalDuration.WEEK;
 
   /* Default constructor */
-  public GoalMinimum( string label, int sub_goal, SubGoalDuration sub_duration, int goal, bool word_count ) {
-    base( "minimum-%d-%d%s-%d".printf( goal, sub_goal, sub_duration.name(), (word_count ? 1 : 0) ), label, goal, word_count );
+  public GoalMinimum( string label, int sub_goal, SubGoalDuration sub_duration, int goal ) {
+    base( "minimum-%d-%d%s".printf( goal, sub_goal, sub_duration.name() ), label, goal );
     _sub_goal     = sub_goal;
     _sub_duration = sub_duration;
   }

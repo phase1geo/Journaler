@@ -11,81 +11,75 @@ public class Goals {
     _goals = new Array<Goal>();
     _hash  = new Gee.HashMap<string,Goal>();
 
-    for( int i=0; i<2; i++ ) {
+    add_goal( new GoalStreak( _( "First entry" ),         1 ) );
+    add_goal( new GoalStreak( _( "Two days in a Row" ),   2 ) );
+    add_goal( new GoalStreak( _( "Three days in a Row" ), 3 ) );
+    add_goal( new GoalStreak( _( "Five days in a Row" ),  5 ) );
+    add_goal( new GoalStreak( _( "One Week in a Row" ),   days_in_week( 1 ) ) );
+    add_goal( new GoalStreak( _( "Two Weeks in a Row" ),  days_in_week( 2 ) ) );
+    add_goal( new GoalStreak( _( "One month in a Row" ),  days_in_month( 1 ) ) );
+    add_goal( new GoalStreak( _( "Two months in a Row" ), days_in_month( 2 ) ) );
+    add_goal( new GoalStreak( _( "Six months in a Row" ), days_in_month( 6 ) ) );
+    add_goal( new GoalStreak( _( "One year in a Row" ),   days_in_year( 1 ) ) );
+    add_goal( new GoalStreak( _( "Two years in a Row" ),  days_in_year( 2 ) ) );
+    add_goal( new GoalStreak( _( "Five years in a Row" ), days_in_year( 5 ) ) );
 
-      bool word_count = (i == 1);
+    add_goal( new GoalCount( _( "10 entries" ), 10 ) );
+    add_goal( new GoalCount( _( "20 entries" ), 20 ) );
+    add_goal( new GoalCount( _( "50 entries" ), 50 ) );
+    add_goal( new GoalCount( _( "100 entries" ), 100 ) );
+    add_goal( new GoalCount( _( "200 entries" ), 200 ) );
+    add_goal( new GoalCount( _( "500 entries" ), 500 ) );
+    add_goal( new GoalCount( _( "1000 entries" ), 1000 ) );
 
-      add_goal( new GoalStreak( _( "First entry" ),         1, word_count ) );
-      add_goal( new GoalStreak( _( "Two days in a Row" ),   2, word_count ) );
-      add_goal( new GoalStreak( _( "Three days in a Row" ), 3, word_count ) );
-      add_goal( new GoalStreak( _( "Five days in a Row" ),  5, word_count ) );
-      add_goal( new GoalStreak( _( "One Week in a Row" ),   days_in_week( 1 ),  word_count ) );
-      add_goal( new GoalStreak( _( "Two Weeks in a Row" ),  days_in_week( 2 ),  word_count ) );
-      add_goal( new GoalStreak( _( "One month in a Row" ),  days_in_month( 1 ), word_count ) );
-      add_goal( new GoalStreak( _( "Two months in a Row" ), days_in_month( 2 ), word_count ) );
-      add_goal( new GoalStreak( _( "Six months in a Row" ), days_in_month( 6 ), word_count ) );
-      add_goal( new GoalStreak( _( "One year in a Row" ),   days_in_year( 1 ),  word_count ) );
-      add_goal( new GoalStreak( _( "Two years in a Row" ),  days_in_year( 2 ),  word_count ) );
-      add_goal( new GoalStreak( _( "Five years in a Row" ), days_in_year( 5 ),  word_count ) );
+    add_goal( new GoalMinimum( _( "1 day per week for 1 month" ),   1, SubGoalDuration.WEEK, 4 ) );
+    add_goal( new GoalMinimum( _( "1 day per week for 2 months" ),  1, SubGoalDuration.WEEK, 8 ) );
+    add_goal( new GoalMinimum( _( "1 day per week for 3 months" ),  1, SubGoalDuration.WEEK, 13 ) );
+    add_goal( new GoalMinimum( _( "1 day per week for 6 months" ),  1, SubGoalDuration.WEEK, 26 ) );
+    add_goal( new GoalMinimum( _( "1 day per week for 9 months" ),  1, SubGoalDuration.WEEK, 39 ) );
+    add_goal( new GoalMinimum( _( "1 day per week for 12 months" ), 1, SubGoalDuration.WEEK, 52 ) );
 
-      add_goal( new GoalCount( _( "10 entries" ), 10, word_count ) );
-      add_goal( new GoalCount( _( "20 entries" ), 20, word_count ) );
-      add_goal( new GoalCount( _( "50 entries" ), 50, word_count ) );
-      add_goal( new GoalCount( _( "100 entries" ), 100, word_count ) );
-      add_goal( new GoalCount( _( "200 entries" ), 200, word_count ) );
-      add_goal( new GoalCount( _( "500 entries" ), 500, word_count ) );
-      add_goal( new GoalCount( _( "1000 entries" ), 1000, word_count ) );
+    add_goal( new GoalMinimum( _( "2 days per week for 1 month" ),   2, SubGoalDuration.WEEK, 4 ) );
+    add_goal( new GoalMinimum( _( "2 days per week for 2 months" ),  2, SubGoalDuration.WEEK, 8 ) );
+    add_goal( new GoalMinimum( _( "2 days per week for 3 months" ),  2, SubGoalDuration.WEEK, 13 ) );
+    add_goal( new GoalMinimum( _( "2 days per week for 6 months" ),  2, SubGoalDuration.WEEK, 26 ) );
+    add_goal( new GoalMinimum( _( "2 days per week for 9 months" ),  2, SubGoalDuration.WEEK, 39 ) );
+    add_goal( new GoalMinimum( _( "2 days per week for 12 months" ), 2, SubGoalDuration.WEEK, 52 ) );
 
-      add_goal( new GoalMinimum( _( "1 day per week for 1 month" ),   1, SubGoalDuration.WEEK, 4,  word_count ) );
-      add_goal( new GoalMinimum( _( "1 day per week for 2 months" ),  1, SubGoalDuration.WEEK, 8,  word_count ) );
-      add_goal( new GoalMinimum( _( "1 day per week for 3 months" ),  1, SubGoalDuration.WEEK, 13, word_count ) );
-      add_goal( new GoalMinimum( _( "1 day per week for 6 months" ),  1, SubGoalDuration.WEEK, 26, word_count ) );
-      add_goal( new GoalMinimum( _( "1 day per week for 9 months" ),  1, SubGoalDuration.WEEK, 39, word_count ) );
-      add_goal( new GoalMinimum( _( "1 day per week for 12 months" ), 1, SubGoalDuration.WEEK, 52, word_count ) );
+    add_goal( new GoalMinimum( _( "3 days per week for 1 month" ),   3, SubGoalDuration.WEEK, 4 ) );
+    add_goal( new GoalMinimum( _( "3 days per week for 2 months" ),  3, SubGoalDuration.WEEK, 8 ) );
+    add_goal( new GoalMinimum( _( "3 days per week for 3 months" ),  3, SubGoalDuration.WEEK, 13 ) );
+    add_goal( new GoalMinimum( _( "3 days per week for 6 months" ),  3, SubGoalDuration.WEEK, 26 ) );
+    add_goal( new GoalMinimum( _( "3 days per week for 9 months" ),  3, SubGoalDuration.WEEK, 39 ) );
+    add_goal( new GoalMinimum( _( "3 days per week for 12 months" ), 3, SubGoalDuration.WEEK, 52 ) );
 
-      add_goal( new GoalMinimum( _( "2 days per week for 1 month" ),   2, SubGoalDuration.WEEK, 4,  word_count ) );
-      add_goal( new GoalMinimum( _( "2 days per week for 2 months" ),  2, SubGoalDuration.WEEK, 8,  word_count ) );
-      add_goal( new GoalMinimum( _( "2 days per week for 3 months" ),  2, SubGoalDuration.WEEK, 13, word_count ) );
-      add_goal( new GoalMinimum( _( "2 days per week for 6 months" ),  2, SubGoalDuration.WEEK, 26, word_count ) );
-      add_goal( new GoalMinimum( _( "2 days per week for 9 months" ),  2, SubGoalDuration.WEEK, 39, word_count ) );
-      add_goal( new GoalMinimum( _( "2 days per week for 12 months" ), 2, SubGoalDuration.WEEK, 52, word_count ) );
+    add_goal( new GoalMinimum( _( "5 days per week for 1 month" ),   5, SubGoalDuration.WEEK, 4 ) );
+    add_goal( new GoalMinimum( _( "5 days per week for 2 months" ),  5, SubGoalDuration.WEEK, 8 ) );
+    add_goal( new GoalMinimum( _( "5 days per week for 3 months" ),  5, SubGoalDuration.WEEK, 13 ) );
+    add_goal( new GoalMinimum( _( "5 days per week for 6 months" ),  5, SubGoalDuration.WEEK, 26 ) );
+    add_goal( new GoalMinimum( _( "5 days per week for 9 months" ),  5, SubGoalDuration.WEEK, 39 ) );
+    add_goal( new GoalMinimum( _( "5 days per week for 12 months" ), 5, SubGoalDuration.WEEK, 52 ) );
 
-      add_goal( new GoalMinimum( _( "3 days per week for 1 month" ),   3, SubGoalDuration.WEEK, 4,  word_count ) );
-      add_goal( new GoalMinimum( _( "3 days per week for 2 months" ),  3, SubGoalDuration.WEEK, 8,  word_count ) );
-      add_goal( new GoalMinimum( _( "3 days per week for 3 months" ),  3, SubGoalDuration.WEEK, 13, word_count ) );
-      add_goal( new GoalMinimum( _( "3 days per week for 6 months" ),  3, SubGoalDuration.WEEK, 26, word_count ) );
-      add_goal( new GoalMinimum( _( "3 days per week for 9 months" ),  3, SubGoalDuration.WEEK, 39, word_count ) );
-      add_goal( new GoalMinimum( _( "3 days per week for 12 months" ), 3, SubGoalDuration.WEEK, 52, word_count ) );
+    add_goal( new GoalMinimum( _( "5 days per month for 1 month" ),   5, SubGoalDuration.MONTH, 1 ) );
+    add_goal( new GoalMinimum( _( "5 days per month for 2 months" ),  5, SubGoalDuration.MONTH, 2 ) );
+    add_goal( new GoalMinimum( _( "5 days per month for 3 months" ),  5, SubGoalDuration.MONTH, 3 ) );
+    add_goal( new GoalMinimum( _( "5 days per month for 6 months" ),  5, SubGoalDuration.MONTH, 6 ) );
+    add_goal( new GoalMinimum( _( "5 days per month for 9 months" ),  5, SubGoalDuration.MONTH, 9 ) );
+    add_goal( new GoalMinimum( _( "5 days per month for 12 months" ), 5, SubGoalDuration.MONTH, 12 ) );
 
-      add_goal( new GoalMinimum( _( "5 days per week for 1 month" ),   5, SubGoalDuration.WEEK, 4,  word_count ) );
-      add_goal( new GoalMinimum( _( "5 days per week for 2 months" ),  5, SubGoalDuration.WEEK, 8,  word_count ) );
-      add_goal( new GoalMinimum( _( "5 days per week for 3 months" ),  5, SubGoalDuration.WEEK, 13, word_count ) );
-      add_goal( new GoalMinimum( _( "5 days per week for 6 months" ),  5, SubGoalDuration.WEEK, 26, word_count ) );
-      add_goal( new GoalMinimum( _( "5 days per week for 9 months" ),  5, SubGoalDuration.WEEK, 39, word_count ) );
-      add_goal( new GoalMinimum( _( "5 days per week for 12 months" ), 5, SubGoalDuration.WEEK, 52, word_count ) );
+    add_goal( new GoalMinimum( _( "10 days per month for 1 month" ),   10, SubGoalDuration.MONTH, 1 ) );
+    add_goal( new GoalMinimum( _( "10 days per month for 2 months" ),  10, SubGoalDuration.MONTH, 2 ) );
+    add_goal( new GoalMinimum( _( "10 days per month for 3 months" ),  10, SubGoalDuration.MONTH, 3 ) );
+    add_goal( new GoalMinimum( _( "10 days per month for 6 months" ),  10, SubGoalDuration.MONTH, 6 ) );
+    add_goal( new GoalMinimum( _( "10 days per month for 9 months" ),  10, SubGoalDuration.MONTH, 9 ) );
+    add_goal( new GoalMinimum( _( "10 days per month for 12 months" ), 10, SubGoalDuration.MONTH, 12 ) );
 
-      add_goal( new GoalMinimum( _( "5 days per month for 1 month" ),   5, SubGoalDuration.MONTH, 1,  word_count ) );
-      add_goal( new GoalMinimum( _( "5 days per month for 2 months" ),  5, SubGoalDuration.MONTH, 2,  word_count ) );
-      add_goal( new GoalMinimum( _( "5 days per month for 3 months" ),  5, SubGoalDuration.MONTH, 3,  word_count ) );
-      add_goal( new GoalMinimum( _( "5 days per month for 6 months" ),  5, SubGoalDuration.MONTH, 6,  word_count ) );
-      add_goal( new GoalMinimum( _( "5 days per month for 9 months" ),  5, SubGoalDuration.MONTH, 9,  word_count ) );
-      add_goal( new GoalMinimum( _( "5 days per month for 12 months" ), 5, SubGoalDuration.MONTH, 12, word_count ) );
-
-      add_goal( new GoalMinimum( _( "10 days per month for 1 month" ),   10, SubGoalDuration.MONTH, 1,  word_count ) );
-      add_goal( new GoalMinimum( _( "10 days per month for 2 months" ),  10, SubGoalDuration.MONTH, 2,  word_count ) );
-      add_goal( new GoalMinimum( _( "10 days per month for 3 months" ),  10, SubGoalDuration.MONTH, 3,  word_count ) );
-      add_goal( new GoalMinimum( _( "10 days per month for 6 months" ),  10, SubGoalDuration.MONTH, 6,  word_count ) );
-      add_goal( new GoalMinimum( _( "10 days per month for 9 months" ),  10, SubGoalDuration.MONTH, 9,  word_count ) );
-      add_goal( new GoalMinimum( _( "10 days per month for 12 months" ), 10, SubGoalDuration.MONTH, 12, word_count ) );
-
-      add_goal( new GoalMinimum( _( "20 days per month for 1 month" ),   20, SubGoalDuration.MONTH, 1,  word_count ) );
-      add_goal( new GoalMinimum( _( "20 days per month for 2 months" ),  20, SubGoalDuration.MONTH, 2,  word_count ) );
-      add_goal( new GoalMinimum( _( "20 days per month for 3 months" ),  20, SubGoalDuration.MONTH, 3,  word_count ) );
-      add_goal( new GoalMinimum( _( "20 days per month for 6 months" ),  20, SubGoalDuration.MONTH, 6,  word_count ) );
-      add_goal( new GoalMinimum( _( "20 days per month for 9 months" ),  20, SubGoalDuration.MONTH, 9,  word_count ) );
-      add_goal( new GoalMinimum( _( "20 days per month for 12 months" ), 20, SubGoalDuration.MONTH, 12, word_count ) );
-
-    }
+    add_goal( new GoalMinimum( _( "20 days per month for 1 month" ),   20, SubGoalDuration.MONTH, 1 ) );
+    add_goal( new GoalMinimum( _( "20 days per month for 2 months" ),  20, SubGoalDuration.MONTH, 2 ) );
+    add_goal( new GoalMinimum( _( "20 days per month for 3 months" ),  20, SubGoalDuration.MONTH, 3 ) );
+    add_goal( new GoalMinimum( _( "20 days per month for 6 months" ),  20, SubGoalDuration.MONTH, 6 ) );
+    add_goal( new GoalMinimum( _( "20 days per month for 9 months" ),  20, SubGoalDuration.MONTH, 9 ) );
+    add_goal( new GoalMinimum( _( "20 days per month for 12 months" ), 20, SubGoalDuration.MONTH, 12 ) );
 
   }
 
@@ -124,14 +118,14 @@ public class Goals {
   }
 
   /* Checks for any achievements when an entry meets an entry goal (on save only) */
-  public void mark_achievement( string entry_date, bool word_count_met ) {
+  public void mark_achievement( string entry_date ) {
     var todays_date = DBEntry.todays_date();
     if( todays_date == entry_date ) {
       string[] notify_msgs = {};
       bool     save_needed = false;
       for( int i=0; i<_goals.length; i++ ) {
         bool achieved;
-        save_needed |= _goals.index( i ).mark_achievement( todays_date, word_count_met, out achieved );
+        save_needed |= _goals.index( i ).mark_achievement( todays_date, out achieved );
         if( achieved ) {
           notify_msgs += _goals.index( i ).label;
         }

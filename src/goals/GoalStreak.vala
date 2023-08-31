@@ -1,8 +1,8 @@
 public class GoalStreak : Goal {
 
   /* Default constructor */
-  public GoalStreak( string label, int goal, bool word_count ) {
-    base( "streak-%d-%d".printf( goal, (word_count ? 1 : 0) ), label, goal, word_count );
+  public GoalStreak( string label, int goal ) {
+    base( "streak-%d".printf( goal ), label, goal );
   }
 
   /* Constructor */
