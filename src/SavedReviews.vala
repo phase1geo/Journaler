@@ -14,14 +14,9 @@ public class SavedReviews {
   }
 
   /* Removes the review from the list */
-  public void remove_review( SavedReview review ) {
-    for( int i=0; i<_reviews.length; i++ ) {
-      if( _reviews.index( i ) == review ) {
-        _reviews.remove_index( i );
-        save();
-        return;
-      }
-    }
+  public void remove_review( int index ) {
+    _reviews.remove_index( index );
+    save();
   }
 
   /* Returns the number of stored reviews */

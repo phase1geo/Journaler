@@ -28,6 +28,7 @@ public class Reviewer : Grid {
   private SearchEntry _search_entry;
   private MenuButton  _search_save;
   private GLib.Menu   _saved_search_menu;
+  private GLib.Menu   _saved_delete_menu;
 
   private ListBox                _match_lb;
   private Gee.ArrayList<DBEntry> _match_entries;
@@ -35,8 +36,9 @@ public class Reviewer : Grid {
   private Button                 _restore_btn;
 
   private const GLib.ActionEntry action_entries[] = {
-    { "action_save_review", action_save_review, "s" },
-    { "action_load_review", action_load_review, "i" },
+    { "action_save_review",   action_save_review,   "s" },
+    { "action_load_review",   action_load_review,   "i" },
+    { "action_delete_review", action_delete_review, "i" },
   };
 
   public signal void show_matched_entry( DBEntry entry );
@@ -284,6 +286,7 @@ public class Reviewer : Grid {
   private void add_search_save() {
 
     _saved_search_menu = new GLib.Menu();
+    _saved_delete_menu = new GLib.Menu();
 
     var new_submenu = new GLib.Menu();
     new_submenu.append( _( "Save exact dates" ),                  "review.action_save_review(\"abs_abs\")" );
@@ -293,9 +296,13 @@ public class Reviewer : Grid {
     var new_entry = new GLib.Menu();
     new_entry.append_submenu( _( "Save search" ), new_submenu );
 
+    var del_entry = new GLib.Menu();
+    del_entry.append_submenu( _( "Delete saved search" ), _saved_delete_menu );
+
     var menu = new GLib.Menu();
     menu.append_section( null, _saved_search_menu );
     menu.append_section( null, new_entry );
+    menu.append_section( null, del_entry );
 
     _search_save = new MenuButton() {
       icon_name  = "folder-symbolic",
@@ -310,10 +317,12 @@ public class Reviewer : Grid {
   private void populate_reviews() {
 
     _saved_search_menu.remove_all();
+    _saved_delete_menu.remove_all();
 
     for( int i=0; i<_reviews.size(); i++ ) {
       var review = _reviews.get_review( i );
       _saved_search_menu.append( review.name, "review.action_load_review(%d)".printf( i ) );
+      _saved_delete_menu.append( review.name, "review.action_delete_review(%d)".printf( i ) );
     }
 
   }
@@ -359,6 +368,19 @@ public class Reviewer : Grid {
     var review = _reviews.get_review( index );
 
     initialize( review );
+
+  }
+
+  /* Deletes the selected review and updates the menu */
+  private void action_delete_review( SimpleAction action, Variant? variant ) {
+
+    var index = variant.get_int32();
+
+    /* Remove the review */
+    _reviews.remove_review( index );
+
+    /* Update the saved reviews */
+    populate_reviews();
 
   }
 
