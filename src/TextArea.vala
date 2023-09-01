@@ -709,8 +709,6 @@ public class TextArea : Box {
       mkd.compile( flags );
       mkd.get_document( out html );
 
-      stdout.printf( html );
-
       _allow_viewer_update = true;
       _viewer.load_html( condition_html( html ), "file:///" );
 
@@ -751,8 +749,6 @@ public class TextArea : Box {
   /* Conditions the HTML that is going to be displayed in the viewer */
   private string condition_html( string text ) {
     var new_text = text;
-    // center_html_images( ref new_text );
-    // center_html_tables( ref new_text );
     add_html_css( ref new_text );
     return( new_text );
   }
@@ -831,49 +827,6 @@ public class TextArea : Box {
           text += "![](%s)\n\n".printf( new_uri + get_image_size( new_uri ) + get_description( image ) );
         }
       }
-    }
-
-  }
-
-  /* Centers all of the HTML images */
-  private void center_html_images( ref string text ) {
-
-    try {
-      MatchInfo match_info;
-      var re = new Regex( "<img .*? />" );
-      var start_pos = 0;
-      while( re.match_full( text, -1, start_pos, 0, out match_info ) ) {
-        int start, end;
-        match_info.fetch_pos( 0, out start, out end );
-        text = text.splice( end, end, "</center>" );
-        text = text.splice( start, start, "<center>" );
-        start_pos = text.index_of_nth_char( text.char_count( end ) + 17 );
-      }
-    } catch( RegexError e ) {
-      stderr.printf( "ERROR:  center_images: %s\n", e.message );
-    }
-
-  }
-
-  /* Centers all of the HTML tables */
-  private void center_html_tables( ref string text ) {
-
-    try {
-      MatchInfo match_info;
-      var re = new Regex( "</?table>" );
-      var start_pos = 0;
-      while( re.match_full( text, -1, start_pos, 0, out match_info ) ) {
-        int start, end;
-        match_info.fetch_pos( 0, out start, out end );
-        if( text.slice( start, end ) == "<table>" ) {
-          text = text.splice( start, start, "<center>" );
-        } else {
-          text = text.splice( end, end, "</center>" );
-        }
-        start_pos = text.index_of_nth_char( text.char_count( end ) + 17 );
-      }
-    } catch( RegexError e ) {
-      stderr.printf( "ERROR:  center_images: %s\n", e.message );
     }
 
   }

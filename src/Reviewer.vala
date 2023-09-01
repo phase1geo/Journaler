@@ -66,6 +66,12 @@ public class Reviewer : Grid {
     _reviews.load();
     populate_reviews();
 
+    /* When the journals are loaded, grab the start date and use it in the start date widget */
+    _journals.loaded.connect(() => {
+      _start_date.default_date = _journals.get_start_date();
+      _start_date.date         = _journals.get_start_date();
+    });
+
     /* Add the menu actions */
     var actions = new SimpleActionGroup();
     actions.add_action_entries( action_entries, this );
@@ -548,8 +554,8 @@ public class Reviewer : Grid {
   private void populate_dates( SavedReview? review = null ) {
 
     if( review == null ) {
-      _start_date.date = new GLib.DateTime.now_local();
-      _end_date.date   = new GLib.DateTime.now_local();
+      _start_date.set_to_default();
+      _end_date.set_to_default();
     } else {
       _start_date.date = review.get_start_date();
       _end_date.date   = review.get_end_date();

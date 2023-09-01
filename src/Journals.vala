@@ -3,6 +3,8 @@ public class Journals {
   private Array<Journal> _journals;
   private Journal        _trash;
   private Journal        _current;
+  private DateTime       _start_date;
+  private DateTime       _end_date;
 
   public Journal current {
     get {
@@ -22,14 +24,17 @@ public class Journals {
     }
   }
 
+  public signal void loaded();
   public signal void current_changed( bool refresh );
   public signal void list_changed();
 
   /* Default constructor */
   public Journals( Templates templates ) {
 
-    _journals = new Array<Journal>();
-    _trash    = new Journal.trash();
+    _journals   = new Array<Journal>();
+    _trash      = new Journal.trash();
+    _start_date = new DateTime.now_local();
+    _end_date   = new DateTime.now_local();
 
     templates.changed.connect((name, added) => {
       if( !added ) {
@@ -88,6 +93,18 @@ public class Journals {
       return( true );
     }
     return( false );
+  }
+
+  /* Returns a copy of the stored start date */
+  public DateTime get_start_date() {
+    var date = new DateTime.local( _start_date.get_year(), _start_date.get_month(), _start_date.get_day_of_month(), 0, 0, 0 );
+    return( date );
+  }
+
+  /* Returns a copy of the stored end date */
+  public DateTime get_end_date() {
+    var date = new DateTime.local( _end_date.get_year(), _end_date.get_month(), _end_date.get_day_of_month(), 0, 0, 0 );
+    return( date );
   }
 
   /* Returns the number of stored journals */
@@ -169,6 +186,7 @@ public class Journals {
     }
 
     root->set_prop( "current", current_index.to_string() );
+    root->set_prop( "start-date", DBEntry.datetime_date( _start_date ) );
 
     doc->set_root_element( root );
     doc->save_format_file( xml_file(), 1 );
@@ -199,6 +217,11 @@ public class Journals {
       current_index = int.parse( c );
     }
 
+    var s = root->get_prop( "start-date" );
+    if( s != null ) {
+      _start_date = DBEntry.datetime_from_date( s );
+    }
+
     for( Xml.Node* it = doc->get_root_element()->children; it != null; it = it->next ) {
       if( (it->type == Xml.ElementType.ELEMENT_NODE) && (it->name == "journal") ) {
         bool loaded = false;
@@ -221,6 +244,7 @@ public class Journals {
 
     current_changed( false );
     list_changed();
+    loaded();
 
   }
 
