@@ -36,6 +36,7 @@ public class Reviewer : Grid {
   private Button                 _restore_btn;
 
   private const GLib.ActionEntry action_entries[] = {
+    { "action_show_all",      action_show_all },
     { "action_save_review",   action_save_review,   "s" },
     { "action_load_review",   action_load_review,   "i" },
     { "action_delete_review", action_delete_review, "i" },
@@ -306,6 +307,7 @@ public class Reviewer : Grid {
     del_entry.append_submenu( _( "Delete saved search" ), _saved_delete_menu );
 
     var menu = new GLib.Menu();
+    menu.append( _( "Show all entries" ), "review.action_show_all" );
     menu.append_section( null, _saved_search_menu );
     menu.append_section( null, new_entry );
     menu.append_section( null, del_entry );
@@ -331,6 +333,11 @@ public class Reviewer : Grid {
       _saved_delete_menu.append( review.name, "review.action_delete_review(%d)".printf( i ) );
     }
 
+  }
+
+  /* Shows all entries */
+  private void action_show_all() {
+    initialize( null );
   }
 
   /* Handles search saves */
