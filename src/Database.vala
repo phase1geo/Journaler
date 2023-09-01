@@ -328,6 +328,13 @@ public class DBEntry {
     return( dt );
   }
 
+  /* Returns the DateTime for the given date */
+  public static DateTime datetime_from_date( string date ) {
+    var date_bits = date.split( "-" );
+    var dt = new DateTime.local( int.parse( date_bits[0] ), int.parse( date_bits[1] ), int.parse( date_bits[2] ), 0, 0, 0 );
+    return( dt );
+  }
+
   /* Returns the string date for the given DateTime object */
   public static string datetime_date( DateTime dt ) {
     return( "%04d-%02d-%02d".printf( dt.get_year(), dt.get_month(), dt.get_day_of_month() ) );
@@ -811,7 +818,7 @@ public class Database {
         case ChangeState.DELETED :
           image_query = """
             DELETE FROM Image
-            WHERE file_id = %d";
+            WHERE file_id = %d;
           """.printf( image.id );
           break;
         default :  break;
