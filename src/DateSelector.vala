@@ -32,9 +32,25 @@ public class DateSelector : Entry {
       }
     });
 
-    calendar.day_selected.connect (() => {
+    calendar.day_selected.connect(() => {
       date = new GLib.DateTime.local( calendar.year, (calendar.month + 1), calendar.day, 0, 0, 0 );
       popover.popdown();
+    });
+
+    calendar.next_month.connect(() => {
+      date = new GLib.DateTime.local( calendar.year, (calendar.month + 1), calendar.day, 0, 0, 0 );
+    });
+
+    calendar.prev_month.connect(() => {
+      date = new GLib.DateTime.local( calendar.year, (calendar.month + 1), calendar.day, 0, 0, 0 );
+    });
+
+    calendar.next_year.connect(() => {
+      date = new GLib.DateTime.local( calendar.year, (calendar.month + 1), calendar.day, 0, 0, 0 );
+    });
+
+    calendar.prev_year.connect(() => {
+      date = new GLib.DateTime.local( calendar.year, (calendar.month + 1), calendar.day, 0, 0, 0 );
     });
 
     notify["date"].connect(() => {

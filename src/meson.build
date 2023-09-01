@@ -16,6 +16,8 @@ sources += files(
     'Quotes.vala',
     'Reviewer.vala',
     'RSS.vala',
+    'SavedReview.vala',
+    'SavedReviews.vala',
     'Security.vala',
     'SidebarEditor.vala',
     'SidebarEntries.vala',

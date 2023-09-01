@@ -6,6 +6,8 @@ public class Reviewer : Grid {
   private MainWindow _win;
   private Journals   _journals;
 
+  private SavedReviews _reviews;
+
   private MenuButton  _journal_mb;
   private ListBox     _journal_lb;
   private Button      _journal_set_all;
@@ -33,7 +35,8 @@ public class Reviewer : Grid {
   private Button                 _restore_btn;
 
   private const GLib.ActionEntry action_entries[] = {
-    { "action_save", action_save, "s" },
+    { "action_save_review", action_save_review, "s" },
+    { "action_load_review", action_load_review, "i" },
   };
 
   public signal void show_matched_entry( DBEntry entry );
@@ -47,6 +50,7 @@ public class Reviewer : Grid {
     _win           = win;
     _journals      = journals;
     _match_entries = new Gee.ArrayList<DBEntry>();
+    _reviews       = new SavedReviews();
 
     /* Add the UI components */
     add_journal_list();
@@ -55,6 +59,10 @@ public class Reviewer : Grid {
     add_close();
     add_search();
     add_search_save();
+
+    /* Load the stored reviews */
+    _reviews.load();
+    populate_reviews();
 
     /* Add the menu actions */
     var actions = new SimpleActionGroup();
@@ -278,9 +286,9 @@ public class Reviewer : Grid {
     _saved_search_menu = new GLib.Menu();
 
     var new_submenu = new GLib.Menu();
-    new_submenu.append( _( "Save exact dates" ),                  "review.action_save(\"exact\")" );
-    new_submenu.append( _( "Save relative to exact start date" ), "review.action_save(\"rel_exact\")" );
-    new_submenu.append( _( "Save relative to current date" ),     "review.action_save(\"rel_current\")" );
+    new_submenu.append( _( "Save exact dates" ),                  "review.action_save_review(\"abs_abs\")" );
+    new_submenu.append( _( "Save relative to exact start date" ), "review.action_save_review(\"abs_rel\")" );
+    new_submenu.append( _( "Save relative to current date" ),     "review.action_save_review(\"rel_rel\")" );
 
     var new_entry = new GLib.Menu();
     new_entry.append_submenu( _( "Save search" ), new_submenu );
@@ -298,12 +306,59 @@ public class Reviewer : Grid {
 
   }
 
+  /* Populates the list of saved searches/reviews */
+  private void populate_reviews() {
+
+    _saved_search_menu.remove_all();
+
+    for( int i=0; i<_reviews.size(); i++ ) {
+      var review = _reviews.get_review( i );
+      _saved_search_menu.append( review.name, "review.action_load_review(%d)".printf( i ) );
+    }
+
+  }
+
   /* Handles search saves */
-  private void action_save( SimpleAction action, Variant? variant ) {
+  private void action_save_review( SimpleAction action, Variant? variant ) {
 
     var search_type = variant.get_string();
+    var start_abs   = false;
+    var end_abs     = false;
 
-    // FOOBAR - Handle the saves
+    switch( search_type ) {
+      case "abs_abs" :  start_abs = true;   end_abs = true;   break;
+      case "abs_rel" :  start_abs = true;   end_abs = false;  break;
+      case "rel_rel" :  start_abs = false;  end_abs = false;  break;
+      default        :  assert_not_reached();
+    }
+
+    var journals = new List<string>();
+    var tags     = new List<string>();
+
+    /* Get the selected journals and tags */
+    if( _trash_cb.active ) {
+      journals.append( _journals.trash.name );
+    } else {
+      get_activated_items_from_list( _journal_lb, ref journals );
+    }
+    get_activated_items_from_list( _tag_lb, ref tags );
+
+    /* Create the review and add it to the list */
+    var review = new SavedReview( journals, _num_journals, tags, _num_tags, _start_date.date, start_abs, _end_date.date, end_abs, _search_entry.text );
+    _reviews.add_review( review );
+
+    /* Update the saved reviews */
+    populate_reviews();
+
+  }
+
+  /* Loads the current review and performs the search */
+  private void action_load_review( SimpleAction action, Variant? variant ) {
+
+    var index  = variant.get_int32();
+    var review = _reviews.get_review( index );
+
+    initialize( review );
 
   }
 
@@ -390,7 +445,7 @@ public class Reviewer : Grid {
   }
 
   /* Populates the journal listbox with the available journals to review */
-  private void populate_journals() {
+  private void populate_journals( SavedReview? review = null ) {
 
     clear_listbox( _journal_lb );
 
@@ -399,9 +454,23 @@ public class Reviewer : Grid {
     for( int i=0; i<_journals.num_journals(); i++ ) {
       journals.append( _journals.get_journal( i ).name );
     }
-    journals.sort( strcmp );
 
-    foreach( var journal_name in journals ) {
+    var selected = new List<string>();
+    if( (review == null) || review.all_journals ) {
+      foreach( var journal in journals ) {
+        selected.append( journal );
+      }
+    } else {
+      foreach( var journal in review.journals ) {
+        if( journals.find( journal ).length() > 0 ) {
+          selected.append( journal );
+        }
+      }
+    }
+
+    selected.sort( strcmp );
+
+    foreach( var journal_name in selected ) {
       add_item_to_list( _journal_lb, journal_name, true );
     }
 
@@ -410,7 +479,7 @@ public class Reviewer : Grid {
   }
 
   /* Grab the lastest tags */
-  private void populate_tags() {
+  private void populate_tags( SavedReview? review = null ) {
 
     clear_listbox( _tag_lb );
 
@@ -428,11 +497,24 @@ public class Reviewer : Grid {
         }
       }
     }
-    all_tags.sort( strcmp );
+
+    var selected = new List<string>();
+    if( (review == null) || review.all_journals ) {
+      foreach( var tag in all_tags ) {
+        selected.append( tag );
+      }
+    } else {
+      foreach( var tag in review.tags ) {
+        if( all_tags.find( tag ).length() > 0 ) {
+          selected.append( tag );
+        }
+      }
+    }
+    selected.sort( strcmp );
 
     /* Populate the listbox */
     add_item_to_list( _tag_lb, _( "Untagged" ), true );
-    foreach( var tag in all_tags ) {
+    foreach( var tag in selected ) {
       add_item_to_list( _tag_lb, tag, true );
     }
 
@@ -441,22 +523,27 @@ public class Reviewer : Grid {
   }
 
   /* Initializes the dates in the range selectors */
-  private void populate_dates() {
+  private void populate_dates( SavedReview? review = null ) {
 
-    _start_date.date = new GLib.DateTime.now_local();
-    _end_date.date   = new GLib.DateTime.now_local();
+    if( review == null ) {
+      _start_date.date = new GLib.DateTime.now_local();
+      _end_date.date   = new GLib.DateTime.now_local();
+    } else {
+      _start_date.date = review.get_start_date();
+      _end_date.date   = review.get_end_date();
+    }
 
   }
 
   /* Initializes the reviewer UI when this is shown */
-  public void initialize() {
+  public void initialize( SavedReview? review = null ) {
 
     /* Populate the journals and tags lists */
-    populate_journals();
-    populate_tags();
-    populate_dates();
+    populate_journals( review );
+    populate_tags( review );
+    populate_dates( review );
 
-    _search_entry.text = "";
+    _search_entry.text = (review == null) ? "" : review.search_str;
 
     /* Do an initial search */
     do_search();
@@ -473,7 +560,7 @@ public class Reviewer : Grid {
   // --------------------------------------------------------------
 
   /* Creates the label that will be displayed on the journals or tags menubutton based on what is currently selected */
-  private string make_menubutton_label( List<string> list, int max_length, string all_str, string none_str ) {
+  public static string make_menubutton_label( List<string> list, int max_length, string all_str, string none_str ) {
     if( list.length() == 0 ) {
       return( none_str );
     } else if( list.length() == max_length ) {

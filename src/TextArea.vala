@@ -48,6 +48,7 @@ public class TextArea : Box {
   private Revealer         _quote_revealer;
   private Quotes           _quotes;
   private SpellChecker     _spell;
+  private bool             _entry_goal_reached = false;
 
   private const GLib.ActionEntry action_entries[] = {
     { "action_add_entry_image",    action_add_entry_image },
@@ -615,8 +616,9 @@ public class TextArea : Box {
       _entry = entry;
 
       /* Update the goals */
-      if( _stats.goal_reached() ) {
+      if( _stats.goal_reached() && !_entry_goal_reached ) {
         _win.goals.mark_achievement( entry.date );
+        _entry_goal_reached = true;
       }
 
       stdout.printf( "Saved successfully to journal %s\n", _journal.name );
@@ -694,6 +696,9 @@ public class TextArea : Box {
       _text.buffer.set_modified( false );
 
       _text_stack.visible_child_name = "editor";
+
+      /* Remember if we previously reached our goal with this entry */
+      _entry_goal_reached = _stats.goal_reached();
 
     } else {
 
