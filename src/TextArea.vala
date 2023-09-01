@@ -572,13 +572,13 @@ public class TextArea : Box {
       .image-button {
         opacity: 0.7;
       }
-    """.printf( font_size, font_size, margin, margin, style.get_style( "background-pattern" ).background, (margin - 4) );
+    """.printf( font_size, font_size, margin, margin, style.get_style( "text" ).background, (margin - 4) );
     provider.load_from_data( css_data.data );
     StyleContext.add_provider_for_display( get_display(), provider, STYLE_PROVIDER_PRIORITY_APPLICATION );
 
     /* Handle the background color of the viewer */
     RGBA c = {(float)1.0, (float)1.0, (float)1.0, (float)1.0};
-    c.parse( style.get_style( "background-pattern" ).background );
+    c.parse( style.get_style( "text" ).background );
     _viewer.set_background_color( c );
 
   }
@@ -709,6 +709,8 @@ public class TextArea : Box {
       mkd.compile( flags );
       mkd.get_document( out html );
 
+      stdout.printf( html );
+
       _allow_viewer_update = true;
       _viewer.load_html( condition_html( html ), "file:///" );
 
@@ -749,7 +751,9 @@ public class TextArea : Box {
   /* Conditions the HTML that is going to be displayed in the viewer */
   private string condition_html( string text ) {
     var new_text = text;
-    center_html_images( ref new_text );
+    // center_html_images( ref new_text );
+    // center_html_tables( ref new_text );
+    add_html_css( ref new_text );
     return( new_text );
   }
 
@@ -848,6 +852,82 @@ public class TextArea : Box {
     } catch( RegexError e ) {
       stderr.printf( "ERROR:  center_images: %s\n", e.message );
     }
+
+  }
+
+  /* Centers all of the HTML tables */
+  private void center_html_tables( ref string text ) {
+
+    try {
+      MatchInfo match_info;
+      var re = new Regex( "</?table>" );
+      var start_pos = 0;
+      while( re.match_full( text, -1, start_pos, 0, out match_info ) ) {
+        int start, end;
+        match_info.fetch_pos( 0, out start, out end );
+        if( text.slice( start, end ) == "<table>" ) {
+          text = text.splice( start, start, "<center>" );
+        } else {
+          text = text.splice( end, end, "</center>" );
+        }
+        start_pos = text.index_of_nth_char( text.char_count( end ) + 17 );
+      }
+    } catch( RegexError e ) {
+      stderr.printf( "ERROR:  center_images: %s\n", e.message );
+    }
+
+  }
+
+  /* Adds CSS to the HTML */
+  private void add_html_css( ref string text ) {
+
+    var style_mgr = GtkSource.StyleSchemeManager.get_default();
+    var style = style_mgr.get_scheme( _theme );
+    var color = style.get_style( "text" ).foreground;
+    var rowbg = _win.themes.dark_mode ? "255, 255, 255, 0.05" : "0, 0, 0, 0.1";
+
+    var prefix = """
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <style>
+            body {
+              color: %s;
+            }
+            table, th, td {
+              border: 1px solid;
+            }
+            table {
+              // display: block;
+              margin-left: auto;
+              margin-right: auto;
+              border-collapse: collapse;
+            }
+            th {
+              background: rgba(%s);
+            }
+            th, td {
+              padding: 8px;
+            }
+            tr:nth-child(odd) {
+              background: rgba(%s);
+            }
+            img {
+              display: block;
+              margin-left: auto;
+              margin-right: auto;
+            }
+          </style>
+        </head>
+        <body>
+    """.printf( color, rowbg, rowbg );
+
+    var suffix = """
+        </body>
+      </html>
+    """;
+
+    text = prefix + text + suffix;
 
   }
 

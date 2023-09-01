@@ -811,7 +811,7 @@ public class Database {
         case ChangeState.DELETED :
           image_query = """
             DELETE FROM Image
-            WHERE file_id = %d";
+            WHERE file_id = %d;
           """.printf( image.id );
           break;
         default :  break;
