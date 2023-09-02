@@ -112,19 +112,21 @@ public class MainWindow : Gtk.ApplicationWindow {
   private Revealer                   _reviewer_revealer;
   private Reviewer                   _reviewer;
   private bool                       _review_mode = false;
+  private bool                       _distraction_free_mode = false;
 
   private const GLib.ActionEntry[] action_entries = {
-    { "action_today",         action_today },
-    { "action_save",          action_save },
-    { "action_lock",          action_lock },
-    { "action_quit",          action_quit },
-    { "action_new_template",  action_new_template },
-    { "action_edit_template", action_edit_template, "s" },
-    { "action_review",        action_review },
-    { "action_awards",        action_awards },
-    { "action_shortcuts",     action_shortcuts },
-    { "action_preferences",   action_preferences },
-    { "action_distract",      action_distract },
+    { "action_today",           action_today },
+    { "action_save",            action_save },
+    { "action_lock",            action_lock },
+    { "action_quit",            action_quit },
+    { "action_new_template",    action_new_template },
+    { "action_edit_template",   action_edit_template, "s" },
+    { "action_review",          action_review },
+    { "action_awards",          action_awards },
+    { "action_shortcuts",       action_shortcuts },
+    { "action_preferences",     action_preferences },
+    { "action_toggle_distract", action_toggle_distract },
+    { "action_escape",          action_escape },
   };
 
   private bool on_elementary = Gtk.Settings.get_default().gtk_icon_theme_name == "elementary";
@@ -841,15 +843,16 @@ public class MainWindow : Gtk.ApplicationWindow {
   /* Adds keyboard shortcuts for the menu actions */
   private void add_keyboard_shortcuts( Gtk.Application app ) {
 
-    app.set_accels_for_action( "win.action_today",       { "<Control>t" } );
-    app.set_accels_for_action( "win.action_save",        { "<Control>s" } );
-    app.set_accels_for_action( "win.action_lock",        { "<Control>l" } );
-    app.set_accels_for_action( "win.action_quit",        { "<Control>q" } );
-    app.set_accels_for_action( "win.action_review",      { "<Control>r" } );
-    app.set_accels_for_action( "win.action_awards",      { "<Control>1" } );
-    app.set_accels_for_action( "win.action_shortcuts",   { "<Control>question" } );
-    app.set_accels_for_action( "win.action_preferences", { "<Control>comma" } );
-    app.set_accels_for_action( "win.action_distract",    { "<Control>d" } );
+    app.set_accels_for_action( "win.action_today",           { "<Control>t" } );
+    app.set_accels_for_action( "win.action_save",            { "<Control>s" } );
+    app.set_accels_for_action( "win.action_lock",            { "<Control>l" } );
+    app.set_accels_for_action( "win.action_quit",            { "<Control>q" } );
+    app.set_accels_for_action( "win.action_review",          { "<Control>r" } );
+    app.set_accels_for_action( "win.action_awards",          { "<Control>1" } );
+    app.set_accels_for_action( "win.action_shortcuts",       { "<Control>question" } );
+    app.set_accels_for_action( "win.action_preferences",     { "<Control>comma" } );
+    app.set_accels_for_action( "win.action_toggle_distract", { "<Control>d" } );
+    app.set_accels_for_action( "win.action_escape",          { "Escape" } );
 
   }
 
@@ -969,6 +972,11 @@ public class MainWindow : Gtk.ApplicationWindow {
     reset_timer();
     if( locked ) return;
 
+    /* If we are in distraction-free mode, switch back */
+    if( _distraction_free_mode ) {
+      action_toggle_distract();
+    }
+
     if( _review_mode ) {
       _reviewer.on_close();
       _reviewer_revealer.reveal_child = false;
@@ -1039,19 +1047,39 @@ public class MainWindow : Gtk.ApplicationWindow {
   }
 
   /* Toggles distraction-free modes in edit and review modes */
-  private void action_distract() {
+  private void action_toggle_distract() {
+
+    _distraction_free_mode = !_distraction_free_mode;
 
     if( _lock_stack.visible_child_name == "entry-view" ) {
 
       if( _review_mode ) {
-        _reviewer_revealer.reveal_child = !_reviewer_revealer.reveal_child;
+        _reviewer_revealer.reveal_child = !_distraction_free_mode;
       } else {
         // Toggle entry
       }
 
       // Toggle the sidebar (regardless of mode)
-      _sidebar_revealer.reveal_child = !_sidebar_revealer.reveal_child;
+      _sidebar_revealer.reveal_child = !_distraction_free_mode;
+      _text_area.set_distraction_free_mode( _distraction_free_mode );
 
+      if( _distraction_free_mode ) {
+        get_titlebar().hide();
+        fullscreen();
+      } else {
+        get_titlebar().show();
+        unfullscreen();
+      }
+
+    }
+
+  }
+
+  /* Handles a press of the escape key */
+  private void action_escape() {
+
+    if( _distraction_free_mode ) {
+      action_toggle_distract();
     }
 
   }

@@ -130,8 +130,16 @@ public class TextArea : Box {
 
     _text.top_margin    = margin / 2;
     _text.left_margin   = margin;
-    _text.bottom_margin = margin;
     _text.right_margin  = margin;
+
+    Timeout.add(100, () => {
+      var height = _text.get_allocated_height();
+      if( height > 0 ) {
+        _text.bottom_margin = height / 2;
+        return( false );
+      }
+      return( true );
+    });
 
     if( !init ) {
       update_theme();
@@ -887,6 +895,32 @@ public class TextArea : Box {
   /* Sets the reviewer mode */
   public void set_reviewer_mode( bool review_mode ) {
     set_buffer( _entry, !review_mode );
+  }
+
+  /* Sets the distraction free mode to the given value and updates the UI. */
+  public void set_distraction_free_mode( bool mode ) {
+    if( mode ) {
+      if( !_text.editable ) {
+        _stats.hide();
+      }
+      _image_area.hide();
+      Timeout.add( 100, () => {
+        if( _win.is_fullscreen() ) {
+          var width  = _text.get_allocated_width();
+          var height = _text.get_allocated_height();
+          _text.left_margin   = width / 4;
+          _text.right_margin  = width / 4;
+          _text.top_margin    = 100;
+          _text.bottom_margin = height / 2;
+          return( false );
+        }
+        return( true );
+      });
+    } else {
+      _stats.show();
+      _image_area.show();
+      set_margin( false );
+    }
   }
 
 }
