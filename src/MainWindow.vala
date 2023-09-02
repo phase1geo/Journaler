@@ -90,6 +90,7 @@ public class MainWindow : Gtk.ApplicationWindow {
   private Stack                      _lock_stack;
   private TextArea                   _text_area;
   private Stack                      _sidebar_stack;
+  private Revealer                   _sidebar_revealer;
   private Journals                   _journals;
   private Templates                  _templates;
   private Templater                  _templater;
@@ -110,6 +111,7 @@ public class MainWindow : Gtk.ApplicationWindow {
   private Locker                     _locker;
   private Revealer                   _reviewer_revealer;
   private Reviewer                   _reviewer;
+  private bool                       _review_mode = false;
 
   private const GLib.ActionEntry[] action_entries = {
     { "action_today",         action_today },
@@ -122,6 +124,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     { "action_awards",        action_awards },
     { "action_shortcuts",     action_shortcuts },
     { "action_preferences",   action_preferences },
+    { "action_distract",      action_distract },
   };
 
   private bool on_elementary = Gtk.Settings.get_default().gtk_icon_theme_name == "elementary";
@@ -573,7 +576,13 @@ public class MainWindow : Gtk.ApplicationWindow {
     _sidebar_stack.add_named( add_journal_edit(),    "editor" );
     _sidebar_stack.add_named( _reviewer.create_reviewer_match_sidebar(), "review" );
 
-    box.append( _sidebar_stack );
+    _sidebar_revealer = new Revealer() {
+      child = _sidebar_stack,
+      transition_type = RevealerTransitionType.SLIDE_LEFT,
+      reveal_child = true
+    };
+
+    box.append( _sidebar_revealer );
 
   }
 
@@ -840,6 +849,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     app.set_accels_for_action( "win.action_awards",      { "<Control>1" } );
     app.set_accels_for_action( "win.action_shortcuts",   { "<Control>question" } );
     app.set_accels_for_action( "win.action_preferences", { "<Control>comma" } );
+    app.set_accels_for_action( "win.action_distract",    { "<Control>d" } );
 
   }
 
@@ -849,7 +859,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     reset_timer();
     if( locked ) return;
 
-    if( _reviewer_revealer.reveal_child ) {
+    if( _review_mode ) {
       action_review();
     }
 
@@ -959,16 +969,18 @@ public class MainWindow : Gtk.ApplicationWindow {
     reset_timer();
     if( locked ) return;
 
-    if( _reviewer_revealer.reveal_child ) {
+    if( _review_mode ) {
       _reviewer.on_close();
       _reviewer_revealer.reveal_child = false;
       _sidebar_stack.visible_child_name = "entries";
       _text_area.set_reviewer_mode( false );
+      _review_mode = false;
     } else {
       _reviewer.initialize();
       _reviewer_revealer.reveal_child = true;
       _sidebar_stack.visible_child_name = "review";
       _text_area.set_reviewer_mode( true );
+      _review_mode = true;
     }
 
   }
@@ -1023,6 +1035,24 @@ public class MainWindow : Gtk.ApplicationWindow {
       });
       return( false );
     });
+
+  }
+
+  /* Toggles distraction-free modes in edit and review modes */
+  private void action_distract() {
+
+    if( _lock_stack.visible_child_name == "entry-view" ) {
+
+      if( _review_mode ) {
+        _reviewer_revealer.reveal_child = !_reviewer_revealer.reveal_child;
+      } else {
+        // Toggle entry
+      }
+
+      // Toggle the sidebar (regardless of mode)
+      _sidebar_revealer.reveal_child = !_sidebar_revealer.reveal_child;
+
+    }
 
   }
 
