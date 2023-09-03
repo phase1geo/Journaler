@@ -710,16 +710,7 @@ public class TextArea : Box {
 
     } else {
 
-      var html  = "";
-      var flags = 0x47607004;
-      var md    = condition_markdown( entry.text );
-      var mkd   = new Markdown.Document.gfm_format( md.data, flags );
-      mkd.compile( flags );
-      mkd.get_document( out html );
-
-      _allow_viewer_update = true;
-      _viewer.load_html( condition_html( html ), "file:///" );
-
+      show_review();
       _text_stack.visible_child_name = "viewer";
 
     }
@@ -751,13 +742,6 @@ public class TextArea : Box {
   private string condition_markdown( string text ) {
     var new_text = text;
     add_markdown_images( _journal, _entry, ref new_text );
-    return( new_text );
-  }
-
-  /* Conditions the HTML that is going to be displayed in the viewer */
-  private string condition_html( string text ) {
-    var new_text = text;
-    add_html_css( ref new_text );
     return( new_text );
   }
 
@@ -840,12 +824,27 @@ public class TextArea : Box {
   }
 
   /* Adds CSS to the HTML */
-  private void add_html_css( ref string text ) {
+  private void show_review() {
+
+    var html  = "";
+    var flags = 0x47607004;
+    var md    = condition_markdown( _entry.text );
+    var mkd   = new Markdown.Document.gfm_format( md.data, flags );
+    mkd.compile( flags );
+    mkd.get_document( out html );
 
     var style_mgr = GtkSource.StyleSchemeManager.get_default();
     var style = style_mgr.get_scheme( _theme );
     var color = style.get_style( "text" ).foreground;
     var rowbg = _win.themes.dark_mode ? "255, 255, 255, 0.05" : "0, 0, 0, 0.1";
+
+    var distraction_free = _win.distraction_free_mode ? """
+      body {
+        width: 50%;
+        margin-left: auto;
+        margin-right: auto;
+      }
+    """ : "";
 
     var prefix = """
       <!DOCTYPE html>
@@ -855,6 +854,7 @@ public class TextArea : Box {
             body {
               color: %s;
             }
+            %s
             table, th, td {
               border: 1px solid;
             }
@@ -881,14 +881,15 @@ public class TextArea : Box {
           </style>
         </head>
         <body>
-    """.printf( color, rowbg, rowbg );
+    """.printf( color, distraction_free, rowbg, rowbg );
 
     var suffix = """
         </body>
       </html>
     """;
 
-    text = prefix + text + suffix;
+    _allow_viewer_update = true;
+    _viewer.load_html( (prefix + html + suffix), "file:///" );
 
   }
 
@@ -899,11 +900,15 @@ public class TextArea : Box {
 
   /* Sets the distraction free mode to the given value and updates the UI. */
   public void set_distraction_free_mode( bool mode ) {
+
     if( mode ) {
       if( !_text.editable ) {
         _stats.hide();
       }
       _image_area.hide();
+      if( _win.review_mode ) {
+        show_review();
+      }
       Timeout.add( 100, () => {
         if( _win.is_fullscreen() ) {
           var width  = _text.get_allocated_width();
@@ -919,8 +924,12 @@ public class TextArea : Box {
     } else {
       _stats.show();
       _image_area.show();
+      if( _win.review_mode ) {
+        show_review();
+      }
       set_margin( false );
     }
+
   }
 
 }

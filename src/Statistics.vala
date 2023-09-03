@@ -47,7 +47,7 @@ public class Statistics : Box {
   /* Default constructor */
   public Statistics( Gtk.TextBuffer buffer ) {
 
-    Object( orientation: Orientation.HORIZONTAL, spacing: 5 );
+    Object( orientation: Orientation.HORIZONTAL, spacing: 5, halign: Align.FILL, hexpand: true );
 
     _buffer = buffer;
     _buffer.changed.connect(() => {
@@ -70,13 +70,15 @@ public class Statistics : Box {
     });
 
     _label = new Label( "" ) {
-      halign     = Align.FILL,
+      halign     = Align.CENTER,
       hexpand    = true,
       xalign     = (float)0,
       use_markup = true
     };
-    _label.add_css_class( "text-background" );
+    // _label.add_css_class( "text-background" );
     _label.add_css_class( "statistics-padding" );
+
+    add_css_class( "text-background" );
 
     append( _label );
 

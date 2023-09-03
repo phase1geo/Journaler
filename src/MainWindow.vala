@@ -111,8 +111,6 @@ public class MainWindow : Gtk.ApplicationWindow {
   private Locker                     _locker;
   private Revealer                   _reviewer_revealer;
   private Reviewer                   _reviewer;
-  private bool                       _review_mode = false;
-  private bool                       _distraction_free_mode = false;
 
   private const GLib.ActionEntry[] action_entries = {
     { "action_today",           action_today },
@@ -167,6 +165,8 @@ public class MainWindow : Gtk.ApplicationWindow {
       return( _goals );
     }
   }
+  public bool review_mode           { get; set; default = false; }
+  public bool distraction_free_mode { get; set; default = false; }
 
   /* Create the main window UI */
   public MainWindow( Gtk.Application app, GLib.Settings settings ) {
@@ -862,7 +862,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     reset_timer();
     if( locked ) return;
 
-    if( _review_mode ) {
+    if( review_mode ) {
       action_review();
     }
 
@@ -888,7 +888,14 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   /* Called when the user uses the Control-q keyboard shortcut */
   private void action_quit() {
-    destroy();
+    unfullscreen();
+    Timeout.add(100, () => {
+      if( is_fullscreen() ) {
+        return( true );
+      }
+      destroy();
+      return( false );
+    });
   }
 
   /* Creates a new template */
@@ -973,22 +980,22 @@ public class MainWindow : Gtk.ApplicationWindow {
     if( locked ) return;
 
     /* If we are in distraction-free mode, switch back */
-    if( _distraction_free_mode ) {
+    if( distraction_free_mode ) {
       action_toggle_distract();
     }
 
-    if( _review_mode ) {
+    if( review_mode ) {
       _reviewer.on_close();
       _reviewer_revealer.reveal_child = false;
       _sidebar_stack.visible_child_name = "entries";
       _text_area.set_reviewer_mode( false );
-      _review_mode = false;
+      review_mode = false;
     } else {
       _reviewer.initialize();
       _reviewer_revealer.reveal_child = true;
       _sidebar_stack.visible_child_name = "review";
       _text_area.set_reviewer_mode( true );
-      _review_mode = true;
+      review_mode = true;
     }
 
   }
@@ -1049,25 +1056,30 @@ public class MainWindow : Gtk.ApplicationWindow {
   /* Toggles distraction-free modes in edit and review modes */
   private void action_toggle_distract() {
 
-    _distraction_free_mode = !_distraction_free_mode;
+    distraction_free_mode = !distraction_free_mode;
 
     if( _lock_stack.visible_child_name == "entry-view" ) {
 
-      if( _review_mode ) {
-        _reviewer_revealer.reveal_child = !_distraction_free_mode;
+      if( review_mode ) {
+        if( distraction_free_mode ) {
+          _reviewer_revealer.hide();
+        } else {
+          _reviewer_revealer.show();
+        }
       } else {
         // Toggle entry
       }
 
       // Toggle the sidebar (regardless of mode)
-      _sidebar_revealer.reveal_child = !_distraction_free_mode;
-      _text_area.set_distraction_free_mode( _distraction_free_mode );
+      _text_area.set_distraction_free_mode( distraction_free_mode );
 
-      if( _distraction_free_mode ) {
+      if( distraction_free_mode ) {
         get_titlebar().hide();
+        _sidebar_revealer.hide();
         fullscreen();
       } else {
         get_titlebar().show();
+        _sidebar_revealer.show();
         unfullscreen();
       }
 
@@ -1078,7 +1090,7 @@ public class MainWindow : Gtk.ApplicationWindow {
   /* Handles a press of the escape key */
   private void action_escape() {
 
-    if( _distraction_free_mode ) {
+    if( distraction_free_mode ) {
       action_toggle_distract();
     }
 
