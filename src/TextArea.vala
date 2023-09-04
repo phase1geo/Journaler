@@ -56,7 +56,10 @@ public class TextArea : Box {
     { "action_insert_template",    action_insert_template, "s" },
     { "action_restore_entry",      action_restore_entry },
     { "action_delete_entry",       action_delete_entry },
-    { "action_trash_entry",        action_trash_entry }
+    { "action_trash_entry",        action_trash_entry },
+    { "action_bold_text",          action_bold_text },
+    { "action_italicize_text",     action_italicize_text },
+    { "action_code_text",          action_code_text },
   };
 
   public ImageArea image_area {
@@ -287,17 +290,28 @@ public class TextArea : Box {
     var lang_mgr = GtkSource.LanguageManager.get_default();
     var lang     = lang_mgr.get_language( "markdown" );
 
+    /* Create the list of shortcuts */
+    var bold_shortcut   = new Shortcut( ShortcutTrigger.parse_string( "<Control>b" ), ShortcutAction.parse_string( "action(textarea.action_bold_text)" ) );
+    var italic_shortcut = new Shortcut( ShortcutTrigger.parse_string( "<Control>i" ), ShortcutAction.parse_string( "action(textarea.action_italicize_text)" ) ); 
+    var code_shortcut   = new Shortcut( ShortcutTrigger.parse_string( "<Control>m" ), ShortcutAction.parse_string( "action(textarea.action_code_text)" ) );
+
     /* Create the text entry view */
     _buffer = new GtkSource.Buffer.with_language( lang );
     _text = new GtkSource.View.with_buffer( _buffer ) {
-      valign             = Align.FILL,
-      vexpand            = true,
-      wrap_mode          = WrapMode.WORD,
-      cursor_visible     = true,
-      enable_snippets    = true
+      valign          = Align.FILL,
+      vexpand         = true,
+      wrap_mode       = WrapMode.WORD,
+      cursor_visible  = true,
+      enable_snippets = true
     };
+
     _text.add_controller( _image_area.create_image_drop() );
     _text.add_css_class( "journal-text" );
+
+    _text.add_shortcut( bold_shortcut );
+    _text.add_shortcut( italic_shortcut );
+    _text.add_shortcut( code_shortcut );
+
     _buffer.apply_tag.connect((tag, start, end) => {
       var text = _buffer.get_text( start, end, false );
       _image_area.add_image_from_uri( text );
@@ -503,6 +517,94 @@ public class TextArea : Box {
     if( _journals.trash.db.remove_entry( _entry ) ) {
       entry_moved( _entry );
       stdout.printf( "Entry permanently deleted from trash\n" );
+    }
+
+  }
+
+  /*
+   If text is currently selected, make sure the selection is adjusted such that the start of
+   the selection is not on a whitespace character and the end selection is one character to the
+   right of a non-whitespace character.
+  */
+  private bool get_markup_selection( out TextIter start, out TextIter end ) {
+    if( _buffer.get_selection_bounds( out start, out end ) ) {
+      if( start.get_char().isspace() ) {
+        start.forward_find_char( (c) => { return( !c.isspace() ); }, null );
+      }
+      end.backward_char();
+      if( end.get_char().isspace()  ) {
+        end.backward_find_char( (c) => { return( !c.isspace() ); }, null );
+      }
+      end.forward_char();
+      return( start.compare( end ) <= 0 );
+    }
+    return( false );
+  }
+
+  /* Adds the given text markup based on whether valid text is selected or not */
+  private void add_text_markup( string prefix, string suffix = "" ) {
+
+    TextIter sel_start, sel_end;
+
+    if( get_markup_selection( out sel_start, out sel_end ) ) {
+
+      _buffer.begin_user_action();
+
+      if( suffix == "" ) {
+        sel_start.set_line( sel_start.get_line() );
+        _buffer.insert( ref sel_start, prefix, prefix.length );
+      } else {
+        _buffer.insert( ref sel_start, prefix, prefix.length );
+        get_markup_selection( out sel_start, out sel_end );
+        _buffer.insert( ref sel_end, suffix, suffix.length );
+      }
+
+      _buffer.select_range( sel_end, sel_end );
+      _buffer.end_user_action();
+
+    } else {
+
+      TextIter cursor;
+
+      _buffer.begin_user_action();
+
+      if( suffix == "" ) {
+        _buffer.get_iter_at_mark( out cursor, _buffer.get_insert() );
+        cursor.set_line( cursor.get_line() );
+        _buffer.insert( ref cursor, prefix, prefix.length );
+      } else {
+        var text = prefix + suffix;
+        _buffer.insert_at_cursor( text, text.length );
+        _buffer.get_iter_at_mark( out cursor, _buffer.get_insert() );
+      }
+
+      cursor.backward_chars( suffix.char_count() );
+      _buffer.place_cursor( cursor );
+      _buffer.end_user_action();
+
+    }
+
+  }
+
+  /* Adds Markdown bold syntax around selected text */
+  private void action_bold_text() {
+    add_text_markup( "**", "**" );
+  }
+
+  /* Adds Markdown italic syntax around selected text */
+  private void action_italicize_text() {
+    add_text_markup( "_", "_" );
+  }
+
+  /* Adds Markdown code syntax around selected text */
+  private void action_code_text() {
+
+    TextIter start, end;
+
+    if( _buffer.get_selection_bounds( out start, out end ) && start.starts_line() && end.ends_line() ) {
+      add_text_markup( "```\n", "\n```" );
+    } else {
+      add_text_markup( "`", "`" );
     }
 
   }
