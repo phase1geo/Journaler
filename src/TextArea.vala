@@ -62,6 +62,8 @@ public class TextArea : Box {
     { "action_code_text",           action_code_text },
     { "action_header_text",         action_header_text, "i" },
     { "action_h1_text",             action_h1_text },
+    { "action_h1_ul_text",          action_h1_ul_text },
+    { "action_h2_ul_text",          action_h2_ul_text },
     { "action_ordered_list_text",   action_ordered_list_text },
     { "action_unordered_list_text", action_unordered_list_text },
     { "action_task_text",           action_task_text },
@@ -136,8 +138,10 @@ public class TextArea : Box {
     app.set_accels_for_action( "textarea.action_italicize_text",      { "<Control>i" } );
     app.set_accels_for_action( "textarea.action_code_text",           { "<Control>m" } );
     app.set_accels_for_action( "textarea.action_h1_text",             { "<Control>h" } );
+    app.set_accels_for_action( "textarea.action_h1_ul_text",          { "<Control>equal" } );
+    app.set_accels_for_action( "textarea.action_h2_ul_text",          { "<Control>minus" } );
     app.set_accels_for_action( "textarea.action_ordered_list_text",   { "<Control>numbersign" } );
-    app.set_accels_for_action( "textarea.action_unordered_list_text", { "<Control>minus" } );
+    app.set_accels_for_action( "textarea.action_unordered_list_text", { "<Control>asterisk" } );
     app.set_accels_for_action( "textarea.action_task_text",           { "<Control>bracketleft" } );
     app.set_accels_for_action( "textarea.action_task_done_text",      { "<Control>bracketright" } );
     app.set_accels_for_action( "textarea.action_remove_markup",       { "<Control><Shift>r" } );
@@ -320,8 +324,10 @@ public class TextArea : Box {
     var italic_shortcut    = new Shortcut( ShortcutTrigger.parse_string( "<Control>i" ),            ShortcutAction.parse_string( "action(textarea.action_italicize_text)" ) ); 
     var code_shortcut      = new Shortcut( ShortcutTrigger.parse_string( "<Control>m" ),            ShortcutAction.parse_string( "action(textarea.action_code_text)" ) );
     var header_shortcut    = new Shortcut( ShortcutTrigger.parse_string( "<Control>h" ),            ShortcutAction.parse_string( "action(textarea.action_h1_text)" ) );
+    var h1_ul_shortcut     = new Shortcut( ShortcutTrigger.parse_string( "<Control>equal" ),        ShortcutAction.parse_string( "action(textarea.action_h1_ul_text)" ) );
+    var h2_ul_shortcut     = new Shortcut( ShortcutTrigger.parse_string( "<Control>minus" ),        ShortcutAction.parse_string( "action(textarea.action_h2_ul_text)" ) );
     var ordered_shortcut   = new Shortcut( ShortcutTrigger.parse_string( "<Control>numbersign" ),   ShortcutAction.parse_string( "action(textarea.action_ordered_list_text)" ) );
-    var unordered_shortcut = new Shortcut( ShortcutTrigger.parse_string( "<Control>minus" ),        ShortcutAction.parse_string( "action(textarea.action_unordered_list_text)" ) );
+    var unordered_shortcut = new Shortcut( ShortcutTrigger.parse_string( "<Control>asterisk" ),     ShortcutAction.parse_string( "action(textarea.action_unordered_list_text)" ) );
     var task_shortcut      = new Shortcut( ShortcutTrigger.parse_string( "<Control>bracketleft" ),  ShortcutAction.parse_string( "action(textarea.action_task_text)" ) );
     var done_shortcut      = new Shortcut( ShortcutTrigger.parse_string( "<Control>bracketright" ), ShortcutAction.parse_string( "action(textarea.action_task_done_text)" ) );
     var remove_shortcut    = new Shortcut( ShortcutTrigger.parse_string( "<Shift><Control>r" ),     ShortcutAction.parse_string( "action(textarea.action_remove_markup)" ) );
@@ -345,6 +351,8 @@ public class TextArea : Box {
     _text.add_shortcut( italic_shortcut );
     _text.add_shortcut( code_shortcut );
     _text.add_shortcut( header_shortcut );
+    _text.add_shortcut( h1_ul_shortcut );
+    _text.add_shortcut( h2_ul_shortcut );
     _text.add_shortcut( ordered_shortcut );
     _text.add_shortcut( unordered_shortcut );
     _text.add_shortcut( task_shortcut );
@@ -455,6 +463,10 @@ public class TextArea : Box {
     formatter_menu.append( "Italicize", "textarea.action_italicize_text" );
     formatter_menu.append( "Monospace", "textarea.action_code_text" );
 
+    var header_ul_menu = new GLib.Menu();
+    header_ul_menu.append( "Header 1 Underline", "textarea.action_h1_ul_text" );
+    header_ul_menu.append( "Header 2 Underline", "textarea.action_h2_ul_text" );
+
     var header_menu = new GLib.Menu();
     header_menu.append( "Header 1", "textarea.action_h1_text" );
     header_menu.append( "Header 2", "textarea.action_header_text(2)" );
@@ -463,18 +475,23 @@ public class TextArea : Box {
     header_menu.append( "Header 5", "textarea.action_header_text(5)" );
     header_menu.append( "Header 6", "textarea.action_header_text(6)" );
 
-    var start_menu = new GLib.Menu();
-    start_menu.append( "Unordered List", "textarea.action_ordered_list_text" );
-    start_menu.append( "Ordered List",   "textarea.action_unordered_list_text" );
-    start_menu.append( "Task",           "textarea.action_task_text" );
-    start_menu.append( "Task Done",      "textarea.action_task_done_text" );
+    var list_menu = new GLib.Menu();
+    list_menu.append( "Unordered List", "textarea.action_ordered_list_text" );
+    list_menu.append( "Ordered List",   "textarea.action_unordered_list_text" );
+
+    var task_menu = new GLib.Menu();
+    task_menu.append( "Task",      "textarea.action_task_text" );
+    task_menu.append( "Task Done", "textarea.action_task_done_text" );
 
     var deformat_menu = new GLib.Menu();
     deformat_menu.append( "Remove Formatting", "textarea.action_remove_markup" );
 
     var format_menu = new GLib.Menu();
     format_menu.append_section( null, formatter_menu );
+    format_menu.append_section( null, header_ul_menu );
     format_menu.append_section( null, header_menu );
+    format_menu.append_section( null, list_menu );
+    format_menu.append_section( null, task_menu );
     format_menu.append_section( null, deformat_menu );
 
     var format_submenu = new GLib.Menu();
@@ -782,6 +799,47 @@ public class TextArea : Box {
       add_text_markup( "# " );
       _buffer.end_user_action();
     }
+  }
+
+  private void action_h1_ul_text() {
+
+    _buffer.begin_user_action();
+
+    remove_markup( "^\\s*[=-]+" );
+
+    TextIter start, end;
+    get_markup_range( true, out start, out end );
+    var endrange = _buffer.create_mark( "endrange", end, true );
+
+    while( start.compare( end ) < 0 ) {
+      TextIter cend = start;
+      TextIter cstart = start;
+      if( !cend.ends_line() ) {
+        cend.forward_to_line_end();
+        if( cstart.get_char().isspace() ) {
+          cstart.forward_find_char( (c) => { return( !c.isspace() ); }, cend );
+        }
+        var text = _buffer.get_text( cstart, cend, false ).strip();
+        if( text != "" ) {
+          var ul = _buffer.get_text( start, cstart, false ) + string.nfill( text.char_count(), '=' ) + "\n";
+          start.forward_line();
+          _buffer.insert( ref start, ul, ul.length );
+        }
+      }
+      start.forward_line();
+      _buffer.get_iter_at_mark( out end, endrange );
+    }
+
+    _buffer.select_range( end, end );
+    _buffer.end_user_action();
+    _text.grab_focus();
+
+  }
+
+  private void action_h2_ul_text() {
+
+    // TBD
+
   }
 
   /* Inserts ordered list numbers at the beginning of each non-empty line */
