@@ -109,7 +109,7 @@ public class MarkdownFuncs {
   /* Inserts the given text prior to the beginning of the line if the line is not empty */
   public static void insert_line_chars( TextBuffer buffer, ref TextIter linestart, TextIter lineend, string text, int index ) {
     if( buffer.get_text( linestart, lineend, false ).strip() != "" ) {
-      var ins = text.contains( "%%d" ) ? text.printf( index ) : text;
+      var ins = text.contains( "%d" ) ? text.printf( index + 1 ) : text;
       buffer.insert( ref linestart, ins, ins.length );
     }
   }
