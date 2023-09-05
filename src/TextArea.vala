@@ -71,7 +71,7 @@ public class TextArea : Box {
   public signal void entry_moved( DBEntry entry );
 
   /* Create the main window UI */
-  public TextArea( MainWindow win, Journals journals, Templates templates ) {
+  public TextArea( Gtk.Application app, MainWindow win, Journals journals, Templates templates ) {
 
     Object( orientation: Orientation.VERTICAL, spacing: 0 );
 
@@ -116,6 +116,18 @@ public class TextArea : Box {
     var actions = new SimpleActionGroup();
     actions.add_action_entries( action_entries, this );
     insert_action_group( "textarea", actions );
+
+    /* Add keyboard shortcuts */
+    add_keyboard_shortcuts( app );
+
+  }
+
+  /* Add keyboard shortcuts */
+  private void add_keyboard_shortcuts( Gtk.Application app ) {
+
+    app.set_accels_for_action( "textarea.action_bold_text",      { "<Control>b" } );
+    app.set_accels_for_action( "textarea.action_italicize_text", { "<Control>i" } );
+    app.set_accels_for_action( "textarea.action_code_text",      { "<Control>m" } );
 
   }
 
@@ -305,6 +317,8 @@ public class TextArea : Box {
       enable_snippets = true
     };
 
+    populate_extra_menu();
+
     _text.add_controller( _image_area.create_image_drop() );
     _text.add_css_class( "journal-text" );
 
@@ -381,6 +395,7 @@ public class TextArea : Box {
   private void initialize_spell_checker() {
 
     _spell = new SpellChecker();
+    _spell.populate_extra_menu.connect( populate_extra_menu );
 
     var lang_exists = false;
     var lang      = Environment.get_variable( "LANGUAGE" );
@@ -403,6 +418,26 @@ public class TextArea : Box {
     }
 
     set_spellchecker();
+
+  }
+
+  /* Adds the extra menu for the textview */
+  private void populate_extra_menu() {
+
+    /* Create extra menu */
+    var format_menu = new GLib.Menu();
+    format_menu.append( "Bold",      "textarea.action_bold_text" );
+    format_menu.append( "Italicize", "textarea.action_italicize_text" );
+    format_menu.append( "Monospace", "textarea.action_code_text" );
+
+    var format_submenu = new GLib.Menu();
+    format_submenu.append_submenu( _( "Format Text" ), format_menu );
+
+    var extra = new GLib.Menu();
+    extra.append_section( null, format_submenu );
+
+    /* Finally, add the extra menu to the textview */
+    _text.extra_menu = extra;
 
   }
 

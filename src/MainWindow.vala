@@ -274,7 +274,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     var lbox = new Box( Orientation.VERTICAL, 0 );
     var rbox = new Box( Orientation.VERTICAL, 0 );
 
-    add_text_area( lbox );
+    add_text_area( app, lbox );
     add_sidebar( rbox );
 
     var pw = new Paned( Orientation.HORIZONTAL ) {
@@ -560,9 +560,9 @@ public class MainWindow : Gtk.ApplicationWindow {
   }
 
   /* Creates the textbox with today's entry. */
-  private void add_text_area( Box box ) {
+  private void add_text_area( Gtk.Application app, Box box ) {
 
-    _text_area = new TextArea( this, _journals, _templates );
+    _text_area = new TextArea( app, this, _journals, _templates );
 
     box.append( _text_area );
 

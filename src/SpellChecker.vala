@@ -21,6 +21,8 @@ public class SpellChecker {
     { "action_ignore_all",        action_ignore_all }
   };
 
+  public signal void populate_extra_menu();
+
   /* Default constructor */
   public SpellChecker() {
     broker = new Broker();
@@ -230,10 +232,8 @@ public class SpellChecker {
     spell_menu.append_section( null, suggest_menu );
     spell_menu.append_section( null, add_ign_menu );
 
-    var top_menu = new GLib.Menu();
+    var top_menu = (GLib.Menu)view.extra_menu;
     top_menu.append_section( _( "Spell Check" ), spell_menu );
-
-    view.extra_menu = top_menu;
 
   }
 
@@ -242,8 +242,10 @@ public class SpellChecker {
     TextIter start, end;
     get_word_extents_from_mark( out start, out end, mark_click );
 
+    view.extra_menu = null;
+    populate_extra_menu();
+
     if( !start.has_tag( tag_highlight ) ) {
-      view.extra_menu = null;
       return;
     }
 
