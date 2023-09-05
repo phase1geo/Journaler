@@ -801,6 +801,7 @@ public class TextArea : Box {
     }
   }
 
+  /* Adds a double underline below each line of selected text, converting them to H1 headers */
   private void action_h1_ul_text() {
 
     _buffer.begin_user_action();
@@ -824,21 +825,53 @@ public class TextArea : Box {
           var ul = _buffer.get_text( start, cstart, false ) + string.nfill( text.char_count(), '=' ) + "\n";
           start.forward_line();
           _buffer.insert( ref start, ul, ul.length );
+          start.backward_line();
         }
       }
       start.forward_line();
       _buffer.get_iter_at_mark( out end, endrange );
     }
 
-    _buffer.select_range( end, end );
+    _buffer.select_range( start, start );
     _buffer.end_user_action();
     _text.grab_focus();
 
   }
 
+  /* Adds a single underline below each line of selected text, converting them to H2 headers */
   private void action_h2_ul_text() {
 
-    // TBD
+    _buffer.begin_user_action();
+
+    remove_markup( "^\\s*[=-]+" );
+
+    TextIter start, end;
+    get_markup_range( true, out start, out end );
+    var endrange = _buffer.create_mark( "endrange", end, true );
+
+    while( start.compare( end ) < 0 ) {
+      TextIter cend = start;
+      TextIter cstart = start;
+      if( !cend.ends_line() ) {
+        cend.forward_to_line_end();
+        if( cstart.get_char().isspace() ) {
+          cstart.forward_find_char( (c) => { return( !c.isspace() ); }, cend );
+        }
+        var text = _buffer.get_text( cstart, cend, false ).strip();
+        if( text != "" ) {
+          var ul = _buffer.get_text( start, cstart, false ) + string.nfill( text.char_count(), '-' ) + "\n";
+          start.forward_line();
+          _buffer.insert( ref start, ul, ul.length );
+          start.backward_line();
+        }
+      }
+      start.forward_line();
+      _buffer.get_iter_at_mark( out end, endrange );
+    }
+
+    _buffer.select_range( start, start );
+    _buffer.end_user_action();
+    _text.grab_focus();
 
   }
 
