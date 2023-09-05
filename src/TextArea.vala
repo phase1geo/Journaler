@@ -138,8 +138,8 @@ public class TextArea : Box {
     app.set_accels_for_action( "textarea.action_h1_text",             { "<Control>h" } );
     app.set_accels_for_action( "textarea.action_ordered_list_text",   { "<Control>numbersign" } );
     app.set_accels_for_action( "textarea.action_unordered_list_text", { "<Control>minus" } );
-    app.set_accels_for_action( "textarea.action_task_text",           { "<Control>t" } );
-    app.set_accels_for_action( "textarea.action_task_done_text",      { "<Control><Shift>t" } );
+    app.set_accels_for_action( "textarea.action_task_text",           { "<Control>bracketleft" } );
+    app.set_accels_for_action( "textarea.action_task_done_text",      { "<Control>bracketright" } );
     app.set_accels_for_action( "textarea.action_remove_markup",       { "<Control><Shift>r" } );
 
   }
@@ -316,15 +316,15 @@ public class TextArea : Box {
     var lang     = lang_mgr.get_language( "markdown" );
 
     /* Create the list of shortcuts */
-    var bold_shortcut      = new Shortcut( ShortcutTrigger.parse_string( "<Control>b" ),          ShortcutAction.parse_string( "action(textarea.action_bold_text)" ) );
-    var italic_shortcut    = new Shortcut( ShortcutTrigger.parse_string( "<Control>i" ),          ShortcutAction.parse_string( "action(textarea.action_italicize_text)" ) ); 
-    var code_shortcut      = new Shortcut( ShortcutTrigger.parse_string( "<Control>m" ),          ShortcutAction.parse_string( "action(textarea.action_code_text)" ) );
-    var header_shortcut    = new Shortcut( ShortcutTrigger.parse_string( "<Control>h" ),          ShortcutAction.parse_string( "action(textarea.action_h1_text)" ) );
-    var ordered_shortcut   = new Shortcut( ShortcutTrigger.parse_string( "<Control>numbersign" ), ShortcutAction.parse_string( "action(textarea.action_ordered_list_text)" ) );
-    var unordered_shortcut = new Shortcut( ShortcutTrigger.parse_string( "<Control>minus" ),      ShortcutAction.parse_string( "action(textarea.action_unordered_list_text)" ) );
-    var task_shortcut      = new Shortcut( ShortcutTrigger.parse_string( "<Control>t" ),          ShortcutAction.parse_string( "action(textarea.action_task_text)" ) );
-    var done_shortcut      = new Shortcut( ShortcutTrigger.parse_string( "<Control><Shift>t" ),   ShortcutAction.parse_string( "action(textarea.action_task_done_text)" ) );
-    var remove_shortcut    = new Shortcut( ShortcutTrigger.parse_string( "<Shift><Control>r" ), ShortcutAction.parse_string( "action(textarea.action_remove_markup)" ) );
+    var bold_shortcut      = new Shortcut( ShortcutTrigger.parse_string( "<Control>b" ),            ShortcutAction.parse_string( "action(textarea.action_bold_text)" ) );
+    var italic_shortcut    = new Shortcut( ShortcutTrigger.parse_string( "<Control>i" ),            ShortcutAction.parse_string( "action(textarea.action_italicize_text)" ) ); 
+    var code_shortcut      = new Shortcut( ShortcutTrigger.parse_string( "<Control>m" ),            ShortcutAction.parse_string( "action(textarea.action_code_text)" ) );
+    var header_shortcut    = new Shortcut( ShortcutTrigger.parse_string( "<Control>h" ),            ShortcutAction.parse_string( "action(textarea.action_h1_text)" ) );
+    var ordered_shortcut   = new Shortcut( ShortcutTrigger.parse_string( "<Control>numbersign" ),   ShortcutAction.parse_string( "action(textarea.action_ordered_list_text)" ) );
+    var unordered_shortcut = new Shortcut( ShortcutTrigger.parse_string( "<Control>minus" ),        ShortcutAction.parse_string( "action(textarea.action_unordered_list_text)" ) );
+    var task_shortcut      = new Shortcut( ShortcutTrigger.parse_string( "<Control>bracketleft" ),  ShortcutAction.parse_string( "action(textarea.action_task_text)" ) );
+    var done_shortcut      = new Shortcut( ShortcutTrigger.parse_string( "<Control>bracketright" ), ShortcutAction.parse_string( "action(textarea.action_task_done_text)" ) );
+    var remove_shortcut    = new Shortcut( ShortcutTrigger.parse_string( "<Shift><Control>r" ),     ShortcutAction.parse_string( "action(textarea.action_remove_markup)" ) );
 
     /* Create the text entry view */
     _buffer = new GtkSource.Buffer.with_language( lang );
@@ -723,6 +723,9 @@ public class TextArea : Box {
         _buffer.begin_user_action();
         _buffer.delete( ref start, ref end );
         _buffer.insert( ref start, new_text, new_text.length );
+        end = start;
+        end.backward_chars( new_text.char_count() );
+        _buffer.select_range( start, end );
         _buffer.end_user_action();
       }
     } catch( RegexError e ) {
@@ -842,6 +845,10 @@ public class TextArea : Box {
 
   }
 
+  private string iter_string( TextIter iter ) {
+    return( "%d.%d".printf( iter.get_line(), iter.get_line_offset() ) );
+  }
+
   /* Inserts incomplete task strings at the beginning of each non-empty line */
   private void action_task_text() {
 
@@ -904,8 +911,17 @@ public class TextArea : Box {
 
   /* Removes all markup from the selected area */
   private void action_remove_markup() {
+
+    /* Remove the markup */
     remove_markup( "(^#+\\s+|`+|\\*+|_{1,2}|^-\\s+|^[0-9]+\\.\\s+|\\[[ xX]\\]\\s+)" );
+
+    /* Deselect text */
+    TextIter cursor;
+    _buffer.get_iter_at_mark( out cursor, _buffer.get_insert() );
+    _buffer.select_range( cursor, cursor );
+
     _text.grab_focus();
+
   }
 
   /* Inserts the given snippet name */
