@@ -51,15 +51,22 @@ public class TextArea : Box {
   private bool             _entry_goal_reached = false;
 
   private const GLib.ActionEntry action_entries[] = {
-    { "action_add_entry_image",    action_add_entry_image },
-    { "action_remove_entry_image", action_remove_entry_image },
-    { "action_insert_template",    action_insert_template, "s" },
-    { "action_restore_entry",      action_restore_entry },
-    { "action_delete_entry",       action_delete_entry },
-    { "action_trash_entry",        action_trash_entry },
-    { "action_bold_text",          action_bold_text },
-    { "action_italicize_text",     action_italicize_text },
-    { "action_code_text",          action_code_text },
+    { "action_add_entry_image",     action_add_entry_image },
+    { "action_remove_entry_image",  action_remove_entry_image },
+    { "action_insert_template",     action_insert_template, "s" },
+    { "action_restore_entry",       action_restore_entry },
+    { "action_delete_entry",        action_delete_entry },
+    { "action_trash_entry",         action_trash_entry },
+    { "action_bold_text",           action_bold_text },
+    { "action_italicize_text",      action_italicize_text },
+    { "action_code_text",           action_code_text },
+    { "action_header_text",         action_header_text, "i" },
+    { "action_h1_text",             action_h1_text },
+    { "action_ordered_list_text",   action_ordered_list_text },
+    { "action_unordered_list_text", action_unordered_list_text },
+    { "action_task_text",           action_task_text },
+    { "action_task_done_text",      action_task_done_text },
+    { "action_remove_markup",       action_remove_markup },
   };
 
   public ImageArea image_area {
@@ -125,9 +132,15 @@ public class TextArea : Box {
   /* Add keyboard shortcuts */
   private void add_keyboard_shortcuts( Gtk.Application app ) {
 
-    app.set_accels_for_action( "textarea.action_bold_text",      { "<Control>b" } );
-    app.set_accels_for_action( "textarea.action_italicize_text", { "<Control>i" } );
-    app.set_accels_for_action( "textarea.action_code_text",      { "<Control>m" } );
+    app.set_accels_for_action( "textarea.action_bold_text",           { "<Control>b" } );
+    app.set_accels_for_action( "textarea.action_italicize_text",      { "<Control>i" } );
+    app.set_accels_for_action( "textarea.action_code_text",           { "<Control>m" } );
+    app.set_accels_for_action( "textarea.action_h1_text",             { "<Control>h" } );
+    app.set_accels_for_action( "textarea.action_ordered_list_text",   { "<Control>numbersign" } );
+    app.set_accels_for_action( "textarea.action_unordered_list_text", { "<Control>minus" } );
+    app.set_accels_for_action( "textarea.action_task_text",           { "<Control>t" } );
+    app.set_accels_for_action( "textarea.action_task_done_text",      { "<Control><Shift>t" } );
+    app.set_accels_for_action( "textarea.action_remove_markup",       { "<Control><Shift>r" } );
 
   }
 
@@ -303,9 +316,15 @@ public class TextArea : Box {
     var lang     = lang_mgr.get_language( "markdown" );
 
     /* Create the list of shortcuts */
-    var bold_shortcut   = new Shortcut( ShortcutTrigger.parse_string( "<Control>b" ), ShortcutAction.parse_string( "action(textarea.action_bold_text)" ) );
-    var italic_shortcut = new Shortcut( ShortcutTrigger.parse_string( "<Control>i" ), ShortcutAction.parse_string( "action(textarea.action_italicize_text)" ) ); 
-    var code_shortcut   = new Shortcut( ShortcutTrigger.parse_string( "<Control>m" ), ShortcutAction.parse_string( "action(textarea.action_code_text)" ) );
+    var bold_shortcut      = new Shortcut( ShortcutTrigger.parse_string( "<Control>b" ),          ShortcutAction.parse_string( "action(textarea.action_bold_text)" ) );
+    var italic_shortcut    = new Shortcut( ShortcutTrigger.parse_string( "<Control>i" ),          ShortcutAction.parse_string( "action(textarea.action_italicize_text)" ) ); 
+    var code_shortcut      = new Shortcut( ShortcutTrigger.parse_string( "<Control>m" ),          ShortcutAction.parse_string( "action(textarea.action_code_text)" ) );
+    var header_shortcut    = new Shortcut( ShortcutTrigger.parse_string( "<Control>h" ),          ShortcutAction.parse_string( "action(textarea.action_h1_text)" ) );
+    var ordered_shortcut   = new Shortcut( ShortcutTrigger.parse_string( "<Control>numbersign" ), ShortcutAction.parse_string( "action(textarea.action_ordered_list_text)" ) );
+    var unordered_shortcut = new Shortcut( ShortcutTrigger.parse_string( "<Control>minus" ),      ShortcutAction.parse_string( "action(textarea.action_unordered_list_text)" ) );
+    var task_shortcut      = new Shortcut( ShortcutTrigger.parse_string( "<Control>t" ),          ShortcutAction.parse_string( "action(textarea.action_task_text)" ) );
+    var done_shortcut      = new Shortcut( ShortcutTrigger.parse_string( "<Control><Shift>t" ),   ShortcutAction.parse_string( "action(textarea.action_task_done_text)" ) );
+    var remove_shortcut    = new Shortcut( ShortcutTrigger.parse_string( "<Shift><Control>r" ), ShortcutAction.parse_string( "action(textarea.action_remove_markup)" ) );
 
     /* Create the text entry view */
     _buffer = new GtkSource.Buffer.with_language( lang );
@@ -325,6 +344,12 @@ public class TextArea : Box {
     _text.add_shortcut( bold_shortcut );
     _text.add_shortcut( italic_shortcut );
     _text.add_shortcut( code_shortcut );
+    _text.add_shortcut( header_shortcut );
+    _text.add_shortcut( ordered_shortcut );
+    _text.add_shortcut( unordered_shortcut );
+    _text.add_shortcut( task_shortcut );
+    _text.add_shortcut( done_shortcut );
+    _text.add_shortcut( remove_shortcut );
 
     _buffer.apply_tag.connect((tag, start, end) => {
       var text = _buffer.get_text( start, end, false );
@@ -425,10 +450,32 @@ public class TextArea : Box {
   private void populate_extra_menu() {
 
     /* Create extra menu */
+    var formatter_menu = new GLib.Menu();
+    formatter_menu.append( "Bold",      "textarea.action_bold_text" );
+    formatter_menu.append( "Italicize", "textarea.action_italicize_text" );
+    formatter_menu.append( "Monospace", "textarea.action_code_text" );
+
+    var header_menu = new GLib.Menu();
+    header_menu.append( "Header 1", "textarea.action_h1_text" );
+    header_menu.append( "Header 2", "textarea.action_header_text(2)" );
+    header_menu.append( "Header 3", "textarea.action_header_text(3)" );
+    header_menu.append( "Header 4", "textarea.action_header_text(4)" );
+    header_menu.append( "Header 5", "textarea.action_header_text(5)" );
+    header_menu.append( "Header 6", "textarea.action_header_text(6)" );
+
+    var start_menu = new GLib.Menu();
+    start_menu.append( "Unordered List", "textarea.action_ordered_list_text" );
+    start_menu.append( "Ordered List",   "textarea.action_unordered_list_text" );
+    start_menu.append( "Task",           "textarea.action_task_text" );
+    start_menu.append( "Task Done",      "textarea.action_task_done_text" );
+
+    var deformat_menu = new GLib.Menu();
+    deformat_menu.append( "Remove Formatting", "textarea.action_remove_markup" );
+
     var format_menu = new GLib.Menu();
-    format_menu.append( "Bold",      "textarea.action_bold_text" );
-    format_menu.append( "Italicize", "textarea.action_italicize_text" );
-    format_menu.append( "Monospace", "textarea.action_code_text" );
+    format_menu.append_section( null, formatter_menu );
+    format_menu.append_section( null, header_menu );
+    format_menu.append_section( null, deformat_menu );
 
     var format_submenu = new GLib.Menu();
     format_submenu.append_submenu( _( "Format Text" ), format_menu );
@@ -619,6 +666,69 @@ public class TextArea : Box {
 
     }
 
+    _text.grab_focus();
+
+  }
+
+  private void get_markup_range( bool line, out TextIter start, out TextIter end ) {
+
+    /* Get the string to replace */
+    if( _buffer.get_selection_bounds( out start, out end ) ) {
+      if( line ) {
+        start.set_line( start.get_line() );
+        end.forward_to_line_end();
+      }
+    } else {
+      _buffer.get_iter_at_mark( out start, _buffer.get_insert() );
+      end = start;
+      start.set_line( start.get_line() );
+      end.forward_to_line_end();
+    }
+
+  }
+
+  /* Returns true if the selected text contains the given markup pattern */
+  private bool contains_markup( string pattern ) {
+
+    TextIter start, end;
+
+    get_markup_range( (pattern.get_char( 0 ) == '^'), out start, out end );
+
+    var text = _buffer.get_text( start, end, false );
+
+    try {
+      var re = new Regex( pattern, RegexCompileFlags.MULTILINE );
+      return( re.match( text ) );
+    } catch( RegexError e ) {
+      stderr.printf( "ERROR: %s\n", e.message );
+    }
+
+    return( false );
+
+  }
+
+  /* Removes any markup that matches the given regex pattern */
+  private void remove_markup( string pattern ) {
+
+    TextIter start, end;
+
+    get_markup_range( (pattern.get_char( 0 ) == '^'), out start, out end );
+
+    var text = _buffer.get_text( start, end, false );
+
+    try {
+      var re = new Regex( pattern, RegexCompileFlags.MULTILINE );
+      var new_text = re.replace_literal( text, text.length, 0, "" );
+      if( new_text != text ) {
+        _buffer.begin_user_action();
+        _buffer.delete( ref start, ref end );
+        _buffer.insert( ref start, new_text, new_text.length );
+        _buffer.end_user_action();
+      }
+    } catch( RegexError e ) {
+      stderr.printf( "ERROR: %s\n", e.message );
+    }
+
   }
 
   /* Adds Markdown bold syntax around selected text */
@@ -638,10 +748,164 @@ public class TextArea : Box {
 
     if( _buffer.get_selection_bounds( out start, out end ) && start.starts_line() && end.ends_line() ) {
       add_text_markup( "```\n", "\n```" );
+    } else if( contains_markup( "`" ) ) {
+      add_text_markup( "``", "``" );
     } else {
       add_text_markup( "`", "`" );
     }
 
+  }
+
+  /* Adds Markdown header syntax around selected text */
+  private void action_header_text( SimpleAction action, Variant? variant ) {
+
+    var type   = variant.get_int32();
+    var syntax = string.nfill( type, '#' ) + " ";
+
+    _buffer.begin_user_action();
+    remove_markup( "^#{1,6} " );
+    add_text_markup( syntax );
+    _buffer.end_user_action();
+
+  }
+
+  /* Adds an H1 header syntax at the beginning of the selected text */
+  private void action_h1_text() {
+    if( contains_markup( "^#{1,5} " ) ) {
+      add_text_markup( "#" );
+    } else {
+      _buffer.begin_user_action();
+      remove_markup( "^#{1,6} " );
+      add_text_markup( "# " );
+      _buffer.end_user_action();
+    }
+  }
+
+  /* Inserts ordered list numbers at the beginning of each non-empty line */
+  private void action_ordered_list_text() {
+
+    _buffer.begin_user_action();
+
+    remove_markup( "^([-*+]|[0-9]+\\.) " );
+
+    TextIter start, end;
+    get_markup_range( true, out start, out end );
+    var endrange = _buffer.create_mark( "endrange", end, true );
+
+    int index = 1;
+    while( start.compare( end ) < 0 ) {
+      TextIter cend = start;
+      if( !cend.ends_line() ) {
+        cend.forward_to_line_end();
+      }
+      if( _buffer.get_text( start, cend, false ).strip() != "" ) {
+        var text = "%d. ".printf( index++ );
+        _buffer.insert( ref start, text, text.length );
+      }
+      start.forward_line();
+      _buffer.get_iter_at_mark( out end, endrange );
+    }
+
+    _buffer.select_range( end, end );
+    _buffer.end_user_action();
+    _text.grab_focus();
+
+  }
+
+  /* Inserts unordered list (-) characters at the beginning of each non-empty line */
+  private void action_unordered_list_text() {
+
+    _buffer.begin_user_action();
+
+    remove_markup( "^([-*+]|[0-9]+\\.) " );
+
+    TextIter start, end;
+    get_markup_range( true, out start, out end );
+    var endrange = _buffer.create_mark( "endrange", end, true );
+
+    while( start.compare( end ) < 0 ) {
+      TextIter cend = start;
+      if( !cend.ends_line() ) {
+        cend.forward_to_line_end();
+      }
+      if( _buffer.get_text( start, cend, false ).strip() != "" ) {
+        var text = "- ";
+        _buffer.insert( ref start, text, text.length );
+      }
+      start.forward_line();
+      _buffer.get_iter_at_mark( out end, endrange );
+    }
+
+    _buffer.select_range( end, end );
+    _buffer.end_user_action();
+    _text.grab_focus();
+
+  }
+
+  /* Inserts incomplete task strings at the beginning of each non-empty line */
+  private void action_task_text() {
+
+    _buffer.begin_user_action();
+
+    remove_markup( "\\[[ xX]\\] " );
+
+    TextIter start, end;
+    get_markup_range( true, out start, out end );
+    var endrange = _buffer.create_mark( "endrange", end, true );
+
+    while( start.compare( end ) < 0 ) {
+      TextIter cend = start;
+      if( !cend.ends_line() ) {
+        cend.forward_to_line_end();
+      }
+      if( _buffer.get_text( start, cend, false ).strip() != "" ) {
+        var text = "[ ] ";
+        _buffer.insert( ref start, text, text.length );
+      }
+      start.forward_line();
+      _buffer.get_iter_at_mark( out end, endrange );
+    }
+
+    _buffer.select_range( end, end );
+    _buffer.end_user_action();
+    _text.grab_focus();
+
+  }
+
+  /* Inserts incomplete task strings at the beginning of each non-empty line */
+  private void action_task_done_text() {
+
+    _buffer.begin_user_action();
+
+    remove_markup( "\\[[ xX]\\] " );
+
+    TextIter start, end;
+    get_markup_range( true, out start, out end );
+    var endrange = _buffer.create_mark( "endrange", end, true );
+
+    while( start.compare( end ) < 0 ) {
+      TextIter cend = start;
+      if( !cend.ends_line() ) {
+        cend.forward_to_line_end();
+      }
+      if( _buffer.get_text( start, cend, false ).strip() != "" ) {
+        var text = "[x] ";
+        _buffer.insert( ref start, text, text.length );
+      }
+      start.forward_line();
+      _buffer.get_iter_at_mark( out end, endrange );
+    }
+
+    _buffer.select_range( end, end );
+    _buffer.end_user_action();
+    _text.grab_focus();
+
+  }
+
+  /* Removes all markup from the selected area */
+  private void action_remove_markup() {
+    remove_markup( "(^#+\\s+|`+|\\*+|_{1,2}|^-\\s+|^[0-9]+\\.\\s+|\\[[ xX]\\]\\s+)" );
+    _text.grab_focus();
   }
 
   /* Inserts the given snippet name */
