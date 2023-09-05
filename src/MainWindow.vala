@@ -848,7 +848,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     app.set_accels_for_action( "win.action_lock",            { "<Control>l" } );
     app.set_accels_for_action( "win.action_quit",            { "<Control>q" } );
     app.set_accels_for_action( "win.action_review",          { "<Control>r" } );
-    app.set_accels_for_action( "win.action_awards",          { "<Control>1" } );
+    app.set_accels_for_action( "win.action_awards",          { "<Control>g" } );
     app.set_accels_for_action( "win.action_shortcuts",       { "<Control>question" } );
     app.set_accels_for_action( "win.action_preferences",     { "<Control>comma" } );
     app.set_accels_for_action( "win.action_toggle_distract", { "<Control>d" } );

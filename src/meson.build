@@ -12,6 +12,7 @@ sources += files(
     'Journals.vala',
     'Locker.vala',
     'MainWindow.vala',
+    'MarkdownFuncs.vala',
     'Preferences.vala',
     'Quotes.vala',
     'Reviewer.vala',

@@ -60,8 +60,12 @@ public class TextArea : Box {
     { "action_bold_text",           action_bold_text },
     { "action_italicize_text",      action_italicize_text },
     { "action_code_text",           action_code_text },
-    { "action_header_text",         action_header_text, "i" },
     { "action_h1_text",             action_h1_text },
+    { "action_h2_text",             action_h2_text },
+    { "action_h3_text",             action_h3_text },
+    { "action_h4_text",             action_h4_text },
+    { "action_h5_text",             action_h5_text },
+    { "action_h6_text",             action_h6_text },
     { "action_h1_ul_text",          action_h1_ul_text },
     { "action_h2_ul_text",          action_h2_ul_text },
     { "action_ordered_list_text",   action_ordered_list_text },
@@ -137,7 +141,12 @@ public class TextArea : Box {
     app.set_accels_for_action( "textarea.action_bold_text",           { "<Control>b" } );
     app.set_accels_for_action( "textarea.action_italicize_text",      { "<Control>i" } );
     app.set_accels_for_action( "textarea.action_code_text",           { "<Control>m" } );
-    app.set_accels_for_action( "textarea.action_h1_text",             { "<Control>h" } );
+    app.set_accels_for_action( "textarea.action_h1_text",             { "<Control>1" } );
+    app.set_accels_for_action( "textarea.action_h2_text",             { "<Control>2" } );
+    app.set_accels_for_action( "textarea.action_h3_text",             { "<Control>3" } );
+    app.set_accels_for_action( "textarea.action_h4_text",             { "<Control>4" } );
+    app.set_accels_for_action( "textarea.action_h5_text",             { "<Control>5" } );
+    app.set_accels_for_action( "textarea.action_h6_text",             { "<Control>6" } );
     app.set_accels_for_action( "textarea.action_h1_ul_text",          { "<Control>equal" } );
     app.set_accels_for_action( "textarea.action_h2_ul_text",          { "<Control>minus" } );
     app.set_accels_for_action( "textarea.action_ordered_list_text",   { "<Control>numbersign" } );
@@ -323,7 +332,12 @@ public class TextArea : Box {
     var bold_shortcut      = new Shortcut( ShortcutTrigger.parse_string( "<Control>b" ),            ShortcutAction.parse_string( "action(textarea.action_bold_text)" ) );
     var italic_shortcut    = new Shortcut( ShortcutTrigger.parse_string( "<Control>i" ),            ShortcutAction.parse_string( "action(textarea.action_italicize_text)" ) ); 
     var code_shortcut      = new Shortcut( ShortcutTrigger.parse_string( "<Control>m" ),            ShortcutAction.parse_string( "action(textarea.action_code_text)" ) );
-    var header_shortcut    = new Shortcut( ShortcutTrigger.parse_string( "<Control>h" ),            ShortcutAction.parse_string( "action(textarea.action_h1_text)" ) );
+    var h1_shortcut        = new Shortcut( ShortcutTrigger.parse_string( "<Control>1" ),            ShortcutAction.parse_string( "action(textarea.action_h1_text)" ) );
+    var h2_shortcut        = new Shortcut( ShortcutTrigger.parse_string( "<Control>2" ),            ShortcutAction.parse_string( "action(textarea.action_h2_text)" ) );
+    var h3_shortcut        = new Shortcut( ShortcutTrigger.parse_string( "<Control>3" ),            ShortcutAction.parse_string( "action(textarea.action_h3_text)" ) );
+    var h4_shortcut        = new Shortcut( ShortcutTrigger.parse_string( "<Control>4" ),            ShortcutAction.parse_string( "action(textarea.action_h4_text)" ) );
+    var h5_shortcut        = new Shortcut( ShortcutTrigger.parse_string( "<Control>5" ),            ShortcutAction.parse_string( "action(textarea.action_h5_text)" ) );
+    var h6_shortcut        = new Shortcut( ShortcutTrigger.parse_string( "<Control>6" ),            ShortcutAction.parse_string( "action(textarea.action_h6_text)" ) );
     var h1_ul_shortcut     = new Shortcut( ShortcutTrigger.parse_string( "<Control>equal" ),        ShortcutAction.parse_string( "action(textarea.action_h1_ul_text)" ) );
     var h2_ul_shortcut     = new Shortcut( ShortcutTrigger.parse_string( "<Control>minus" ),        ShortcutAction.parse_string( "action(textarea.action_h2_ul_text)" ) );
     var ordered_shortcut   = new Shortcut( ShortcutTrigger.parse_string( "<Control>numbersign" ),   ShortcutAction.parse_string( "action(textarea.action_ordered_list_text)" ) );
@@ -350,7 +364,12 @@ public class TextArea : Box {
     _text.add_shortcut( bold_shortcut );
     _text.add_shortcut( italic_shortcut );
     _text.add_shortcut( code_shortcut );
-    _text.add_shortcut( header_shortcut );
+    _text.add_shortcut( h1_shortcut );
+    _text.add_shortcut( h2_shortcut );
+    _text.add_shortcut( h3_shortcut );
+    _text.add_shortcut( h4_shortcut );
+    _text.add_shortcut( h5_shortcut );
+    _text.add_shortcut( h6_shortcut );
     _text.add_shortcut( h1_ul_shortcut );
     _text.add_shortcut( h2_ul_shortcut );
     _text.add_shortcut( ordered_shortcut );
@@ -469,11 +488,11 @@ public class TextArea : Box {
 
     var header_menu = new GLib.Menu();
     header_menu.append( "Header 1", "textarea.action_h1_text" );
-    header_menu.append( "Header 2", "textarea.action_header_text(2)" );
-    header_menu.append( "Header 3", "textarea.action_header_text(3)" );
-    header_menu.append( "Header 4", "textarea.action_header_text(4)" );
-    header_menu.append( "Header 5", "textarea.action_header_text(5)" );
-    header_menu.append( "Header 6", "textarea.action_header_text(6)" );
+    header_menu.append( "Header 2", "textarea.action_h2_text" );
+    header_menu.append( "Header 3", "textarea.action_h3_text" );
+    header_menu.append( "Header 4", "textarea.action_h4_text" );
+    header_menu.append( "Header 5", "textarea.action_h5_text" );
+    header_menu.append( "Header 6", "textarea.action_h6_text" );
 
     var list_menu = new GLib.Menu();
     list_menu.append( "Unordered List", "textarea.action_ordered_list_text" );
@@ -620,399 +639,100 @@ public class TextArea : Box {
 
   }
 
-  /*
-   If text is currently selected, make sure the selection is adjusted such that the start of
-   the selection is not on a whitespace character and the end selection is one character to the
-   right of a non-whitespace character.
-  */
-  private bool get_markup_selection( out TextIter start, out TextIter end ) {
-    if( _buffer.get_selection_bounds( out start, out end ) ) {
-      if( start.get_char().isspace() ) {
-        start.forward_find_char( (c) => { return( !c.isspace() ); }, null );
-      }
-      end.backward_char();
-      if( end.get_char().isspace()  ) {
-        end.backward_find_char( (c) => { return( !c.isspace() ); }, null );
-      }
-      end.forward_char();
-      return( start.compare( end ) <= 0 );
-    }
-    return( false );
-  }
-
-  /* Adds the given text markup based on whether valid text is selected or not */
-  private void add_text_markup( string prefix, string suffix = "" ) {
-
-    TextIter sel_start, sel_end;
-
-    if( get_markup_selection( out sel_start, out sel_end ) ) {
-
-      _buffer.begin_user_action();
-
-      if( suffix == "" ) {
-        sel_start.set_line( sel_start.get_line() );
-        _buffer.insert( ref sel_start, prefix, prefix.length );
-      } else {
-        _buffer.insert( ref sel_start, prefix, prefix.length );
-        get_markup_selection( out sel_start, out sel_end );
-        _buffer.insert( ref sel_end, suffix, suffix.length );
-      }
-
-      _buffer.select_range( sel_end, sel_end );
-      _buffer.end_user_action();
-
-    } else {
-
-      TextIter cursor;
-
-      _buffer.begin_user_action();
-
-      if( suffix == "" ) {
-        _buffer.get_iter_at_mark( out cursor, _buffer.get_insert() );
-        cursor.set_line( cursor.get_line() );
-        _buffer.insert( ref cursor, prefix, prefix.length );
-      } else {
-        var text = prefix + suffix;
-        _buffer.insert_at_cursor( text, text.length );
-        _buffer.get_iter_at_mark( out cursor, _buffer.get_insert() );
-      }
-
-      cursor.backward_chars( suffix.char_count() );
-      _buffer.place_cursor( cursor );
-      _buffer.end_user_action();
-
-    }
-
-    _text.grab_focus();
-
-  }
-
-  private void get_markup_range( bool line, out TextIter start, out TextIter end ) {
-
-    /* Get the string to replace */
-    if( _buffer.get_selection_bounds( out start, out end ) ) {
-      if( line ) {
-        start.set_line( start.get_line() );
-        end.forward_to_line_end();
-      }
-    } else {
-      _buffer.get_iter_at_mark( out start, _buffer.get_insert() );
-      end = start;
-      start.set_line( start.get_line() );
-      end.forward_to_line_end();
-    }
-
-  }
-
-  /* Returns true if the selected text contains the given markup pattern */
-  private bool contains_markup( string pattern ) {
-
-    TextIter start, end;
-
-    get_markup_range( (pattern.get_char( 0 ) == '^'), out start, out end );
-
-    var text = _buffer.get_text( start, end, false );
-
-    try {
-      var re = new Regex( pattern, RegexCompileFlags.MULTILINE );
-      return( re.match( text ) );
-    } catch( RegexError e ) {
-      stderr.printf( "ERROR: %s\n", e.message );
-    }
-
-    return( false );
-
-  }
-
-  /* Removes any markup that matches the given regex pattern */
-  private void remove_markup( string pattern ) {
-
-    TextIter start, end;
-
-    get_markup_range( (pattern.get_char( 0 ) == '^'), out start, out end );
-
-    var text = _buffer.get_text( start, end, false );
-
-    try {
-      var re = new Regex( pattern, RegexCompileFlags.MULTILINE );
-      var new_text = re.replace_literal( text, text.length, 0, "" );
-      if( new_text != text ) {
-        _buffer.begin_user_action();
-        _buffer.delete( ref start, ref end );
-        _buffer.insert( ref start, new_text, new_text.length );
-        end = start;
-        end.backward_chars( new_text.char_count() );
-        _buffer.select_range( start, end );
-        _buffer.end_user_action();
-      }
-    } catch( RegexError e ) {
-      stderr.printf( "ERROR: %s\n", e.message );
-    }
-
-  }
-
   /* Adds Markdown bold syntax around selected text */
   private void action_bold_text() {
-    add_text_markup( "**", "**" );
+    MarkdownFuncs.insert_bold_text( _buffer );
+    _text.grab_focus();
   }
 
   /* Adds Markdown italic syntax around selected text */
   private void action_italicize_text() {
-    add_text_markup( "_", "_" );
+    MarkdownFuncs.insert_italicize_text( _buffer );
+    _text.grab_focus();
   }
 
   /* Adds Markdown code syntax around selected text */
   private void action_code_text() {
-
-    TextIter start, end;
-
-    if( _buffer.get_selection_bounds( out start, out end ) && start.starts_line() && end.ends_line() ) {
-      add_text_markup( "```\n", "\n```" );
-    } else if( contains_markup( "`" ) ) {
-      add_text_markup( "``", "``" );
-    } else {
-      add_text_markup( "`", "`" );
-    }
-
+    MarkdownFuncs.insert_code_text( _buffer );
+    _text.grab_focus();
   }
 
   /* Adds Markdown header syntax around selected text */
-  private void action_header_text( SimpleAction action, Variant? variant ) {
-
-    var type   = variant.get_int32();
-    var syntax = string.nfill( type, '#' ) + " ";
-
-    _buffer.begin_user_action();
-    remove_markup( "^#{1,6} " );
-    add_text_markup( syntax );
-    _buffer.end_user_action();
-
+  private void action_h1_text() {
+    MarkdownFuncs.insert_header_text( _buffer, 1 );
+    _text.grab_focus();
   }
 
-  /* Adds an H1 header syntax at the beginning of the selected text */
-  private void action_h1_text() {
-    if( contains_markup( "^#{1,5} " ) ) {
-      add_text_markup( "#" );
-    } else {
-      _buffer.begin_user_action();
-      remove_markup( "^#{1,6} " );
-      add_text_markup( "# " );
-      _buffer.end_user_action();
-    }
+  /* Adds Markdown header syntax around selected text */
+  private void action_h2_text() {
+    MarkdownFuncs.insert_header_text( _buffer, 2 );
+    _text.grab_focus();
+  }
+
+  /* Adds Markdown header syntax around selected text */
+  private void action_h3_text() {
+    MarkdownFuncs.insert_header_text( _buffer, 3 );
+    _text.grab_focus();
+  }
+
+  /* Adds Markdown header syntax around selected text */
+  private void action_h4_text() {
+    MarkdownFuncs.insert_header_text( _buffer, 4 );
+    _text.grab_focus();
+  }
+
+  /* Adds Markdown header syntax around selected text */
+  private void action_h5_text() {
+    MarkdownFuncs.insert_header_text( _buffer, 5 );
+    _text.grab_focus();
+  }
+
+  /* Adds Markdown header syntax around selected text */
+  private void action_h6_text() {
+    MarkdownFuncs.insert_header_text( _buffer, 6 );
+    _text.grab_focus();
   }
 
   /* Adds a double underline below each line of selected text, converting them to H1 headers */
   private void action_h1_ul_text() {
-
-    _buffer.begin_user_action();
-
-    remove_markup( "^\\s*[=-]+" );
-
-    TextIter start, end;
-    get_markup_range( true, out start, out end );
-    var endrange = _buffer.create_mark( "endrange", end, true );
-
-    while( start.compare( end ) < 0 ) {
-      TextIter cend = start;
-      TextIter cstart = start;
-      if( !cend.ends_line() ) {
-        cend.forward_to_line_end();
-        if( cstart.get_char().isspace() ) {
-          cstart.forward_find_char( (c) => { return( !c.isspace() ); }, cend );
-        }
-        var text = _buffer.get_text( cstart, cend, false ).strip();
-        if( text != "" ) {
-          var ul = _buffer.get_text( start, cstart, false ) + string.nfill( text.char_count(), '=' ) + "\n";
-          start.forward_line();
-          _buffer.insert( ref start, ul, ul.length );
-          start.backward_line();
-        }
-      }
-      start.forward_line();
-      _buffer.get_iter_at_mark( out end, endrange );
-    }
-
-    _buffer.select_range( start, start );
-    _buffer.end_user_action();
+    MarkdownFuncs.insert_h1_ul_text( _buffer );
     _text.grab_focus();
-
   }
 
   /* Adds a single underline below each line of selected text, converting them to H2 headers */
   private void action_h2_ul_text() {
-
-    _buffer.begin_user_action();
-
-    remove_markup( "^\\s*[=-]+" );
-
-    TextIter start, end;
-    get_markup_range( true, out start, out end );
-    var endrange = _buffer.create_mark( "endrange", end, true );
-
-    while( start.compare( end ) < 0 ) {
-      TextIter cend = start;
-      TextIter cstart = start;
-      if( !cend.ends_line() ) {
-        cend.forward_to_line_end();
-        if( cstart.get_char().isspace() ) {
-          cstart.forward_find_char( (c) => { return( !c.isspace() ); }, cend );
-        }
-        var text = _buffer.get_text( cstart, cend, false ).strip();
-        if( text != "" ) {
-          var ul = _buffer.get_text( start, cstart, false ) + string.nfill( text.char_count(), '-' ) + "\n";
-          start.forward_line();
-          _buffer.insert( ref start, ul, ul.length );
-          start.backward_line();
-        }
-      }
-      start.forward_line();
-      _buffer.get_iter_at_mark( out end, endrange );
-    }
-
-    _buffer.select_range( start, start );
-    _buffer.end_user_action();
+    MarkdownFuncs.insert_h2_ul_text( _buffer );
     _text.grab_focus();
-
   }
 
   /* Inserts ordered list numbers at the beginning of each non-empty line */
   private void action_ordered_list_text() {
-
-    _buffer.begin_user_action();
-
-    remove_markup( "^([-*+]|[0-9]+\\.) " );
-
-    TextIter start, end;
-    get_markup_range( true, out start, out end );
-    var endrange = _buffer.create_mark( "endrange", end, true );
-
-    int index = 1;
-    while( start.compare( end ) < 0 ) {
-      TextIter cend = start;
-      if( !cend.ends_line() ) {
-        cend.forward_to_line_end();
-      }
-      if( _buffer.get_text( start, cend, false ).strip() != "" ) {
-        var text = "%d. ".printf( index++ );
-        _buffer.insert( ref start, text, text.length );
-      }
-      start.forward_line();
-      _buffer.get_iter_at_mark( out end, endrange );
-    }
-
-    _buffer.select_range( end, end );
-    _buffer.end_user_action();
+    MarkdownFuncs.insert_ordered_list_text( _buffer );
     _text.grab_focus();
-
   }
 
   /* Inserts unordered list (-) characters at the beginning of each non-empty line */
   private void action_unordered_list_text() {
-
-    _buffer.begin_user_action();
-
-    remove_markup( "^([-*+]|[0-9]+\\.) " );
-
-    TextIter start, end;
-    get_markup_range( true, out start, out end );
-    var endrange = _buffer.create_mark( "endrange", end, true );
-
-    while( start.compare( end ) < 0 ) {
-      TextIter cend = start;
-      if( !cend.ends_line() ) {
-        cend.forward_to_line_end();
-      }
-      if( _buffer.get_text( start, cend, false ).strip() != "" ) {
-        var text = "- ";
-        _buffer.insert( ref start, text, text.length );
-      }
-      start.forward_line();
-      _buffer.get_iter_at_mark( out end, endrange );
-    }
-
-    _buffer.select_range( end, end );
-    _buffer.end_user_action();
+    MarkdownFuncs.insert_unordered_list_text( _buffer );
     _text.grab_focus();
-
-  }
-
-  private string iter_string( TextIter iter ) {
-    return( "%d.%d".printf( iter.get_line(), iter.get_line_offset() ) );
   }
 
   /* Inserts incomplete task strings at the beginning of each non-empty line */
   private void action_task_text() {
-
-    _buffer.begin_user_action();
-
-    remove_markup( "\\[[ xX]\\] " );
-
-    TextIter start, end;
-    get_markup_range( true, out start, out end );
-    var endrange = _buffer.create_mark( "endrange", end, true );
-
-    while( start.compare( end ) < 0 ) {
-      TextIter cend = start;
-      if( !cend.ends_line() ) {
-        cend.forward_to_line_end();
-      }
-      if( _buffer.get_text( start, cend, false ).strip() != "" ) {
-        var text = "[ ] ";
-        _buffer.insert( ref start, text, text.length );
-      }
-      start.forward_line();
-      _buffer.get_iter_at_mark( out end, endrange );
-    }
-
-    _buffer.select_range( end, end );
-    _buffer.end_user_action();
+    MarkdownFuncs.insert_task_text( _buffer );
     _text.grab_focus();
-
   }
 
   /* Inserts incomplete task strings at the beginning of each non-empty line */
   private void action_task_done_text() {
-
-    _buffer.begin_user_action();
-
-    remove_markup( "\\[[ xX]\\] " );
-
-    TextIter start, end;
-    get_markup_range( true, out start, out end );
-    var endrange = _buffer.create_mark( "endrange", end, true );
-
-    while( start.compare( end ) < 0 ) {
-      TextIter cend = start;
-      if( !cend.ends_line() ) {
-        cend.forward_to_line_end();
-      }
-      if( _buffer.get_text( start, cend, false ).strip() != "" ) {
-        var text = "[x] ";
-        _buffer.insert( ref start, text, text.length );
-      }
-      start.forward_line();
-      _buffer.get_iter_at_mark( out end, endrange );
-    }
-
-    _buffer.select_range( end, end );
-    _buffer.end_user_action();
+    MarkdownFuncs.insert_task_done_text( _buffer );
     _text.grab_focus();
-
   }
 
   /* Removes all markup from the selected area */
   private void action_remove_markup() {
-
-    /* Remove the markup */
-    remove_markup( "(^#+\\s+|`+|\\*+|_{1,2}|^-\\s+|^[0-9]+\\.\\s+|\\[[ xX]\\]\\s+)" );
-
-    /* Deselect text */
-    TextIter cursor;
-    _buffer.get_iter_at_mark( out cursor, _buffer.get_insert() );
-    _buffer.select_range( cursor, cursor );
-
+    MarkdownFuncs.clear_markup( _buffer );
     _text.grab_focus();
-
   }
 
   /* Inserts the given snippet name */
