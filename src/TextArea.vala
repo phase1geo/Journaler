@@ -72,6 +72,8 @@ public class TextArea : Box {
     { "action_unordered_list_text", action_unordered_list_text },
     { "action_task_text",           action_task_text },
     { "action_task_done_text",      action_task_done_text },
+    { "action_link_text",           action_link_text },
+    { "action_image_text",          action_image_text },
     { "action_remove_markup",       action_remove_markup },
   };
 
@@ -153,6 +155,8 @@ public class TextArea : Box {
     app.set_accels_for_action( "textarea.action_unordered_list_text", { "<Control>asterisk" } );
     app.set_accels_for_action( "textarea.action_task_text",           { "<Control>bracketleft" } );
     app.set_accels_for_action( "textarea.action_task_done_text",      { "<Control>bracketright" } );
+    app.set_accels_for_action( "textarea.action_link_text",           { "<Control>k" } );
+    app.set_accels_for_action( "textarea.action_image_text",          { "<Control><Shift>k" } );
     app.set_accels_for_action( "textarea.action_remove_markup",       { "<Control><Shift>r" } );
 
   }
@@ -344,6 +348,8 @@ public class TextArea : Box {
     var unordered_shortcut = new Shortcut( ShortcutTrigger.parse_string( "<Control>asterisk" ),     ShortcutAction.parse_string( "action(textarea.action_unordered_list_text)" ) );
     var task_shortcut      = new Shortcut( ShortcutTrigger.parse_string( "<Control>bracketleft" ),  ShortcutAction.parse_string( "action(textarea.action_task_text)" ) );
     var done_shortcut      = new Shortcut( ShortcutTrigger.parse_string( "<Control>bracketright" ), ShortcutAction.parse_string( "action(textarea.action_task_done_text)" ) );
+    var link_shortcut      = new Shortcut( ShortcutTrigger.parse_string( "<Control>k" ),            ShortcutAction.parse_string( "action(textarea.action_link_text)" ) );
+    var image_shortcut     = new Shortcut( ShortcutTrigger.parse_string( "<Control><Shift>k" ),     ShortcutAction.parse_string( "action(textarea.action_image_text)" ) );
     var remove_shortcut    = new Shortcut( ShortcutTrigger.parse_string( "<Shift><Control>r" ),     ShortcutAction.parse_string( "action(textarea.action_remove_markup)" ) );
 
     /* Create the text entry view */
@@ -376,6 +382,8 @@ public class TextArea : Box {
     _text.add_shortcut( unordered_shortcut );
     _text.add_shortcut( task_shortcut );
     _text.add_shortcut( done_shortcut );
+    _text.add_shortcut( link_shortcut );
+    _text.add_shortcut( image_shortcut );
     _text.add_shortcut( remove_shortcut );
 
     _buffer.apply_tag.connect((tag, start, end) => {
@@ -498,6 +506,10 @@ public class TextArea : Box {
     list_menu.append( "Unordered List", "textarea.action_ordered_list_text" );
     list_menu.append( "Ordered List",   "textarea.action_unordered_list_text" );
 
+    var link_menu = new GLib.Menu();
+    link_menu.append( "Link",  "textarea.action_link_text" );
+    link_menu.append( "Image", "textarea.action_image_text" );
+
     var task_menu = new GLib.Menu();
     task_menu.append( "Task",      "textarea.action_task_text" );
     task_menu.append( "Task Done", "textarea.action_task_done_text" );
@@ -510,6 +522,7 @@ public class TextArea : Box {
     format_menu.append_section( null, header_ul_menu );
     format_menu.append_section( null, header_menu );
     format_menu.append_section( null, list_menu );
+    format_menu.append_section( null, link_menu );
     format_menu.append_section( null, task_menu );
     format_menu.append_section( null, deformat_menu );
 
@@ -726,6 +739,18 @@ public class TextArea : Box {
   /* Inserts incomplete task strings at the beginning of each non-empty line */
   private void action_task_done_text() {
     MarkdownFuncs.insert_task_done_text( _buffer );
+    _text.grab_focus();
+  }
+
+  /* Inserts link syntax around the selected URI or text */
+  private void action_link_text() {
+    MarkdownFuncs.insert_link_text( _buffer );
+    _text.grab_focus();
+  }
+
+  /* Inserts image syntax around the selected image URI or text */
+  private void action_image_text() {
+    MarkdownFuncs.insert_image_text( _buffer, _image_area );
     _text.grab_focus();
   }
 

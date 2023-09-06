@@ -302,6 +302,74 @@ public class MarkdownFuncs {
 
   }
 
+  /* Inserts a link */
+  public static void insert_link_text( TextBuffer buffer ) {
+
+    TextIter start, end;
+
+    if( buffer.get_selection_bounds( out start, out end ) ) {
+
+      var selected = buffer.get_text( start, end, false );
+
+      try {
+        if( Uri.is_valid( selected, UriFlags.NONE ) ) {
+          var text = "[](" + selected + ")";
+          buffer.begin_user_action();
+          buffer.delete( ref start, ref end );
+          buffer.insert( ref start, text, text.length );
+          start.backward_chars( text.char_count() - 1 );
+          buffer.place_cursor( start );
+          buffer.end_user_action();
+          return;
+        }
+      } catch( Error e ) {}
+
+      var text = "[" + selected + "]()";
+      buffer.begin_user_action();
+      buffer.delete( ref start, ref end );
+      buffer.insert( ref start, text, text.length );
+      start.backward_char();
+      buffer.place_cursor( start ); 
+      buffer.end_user_action();
+
+    }
+
+  }
+
+  /* Inserts a link */
+  public static void insert_image_text( TextBuffer buffer, ImageArea imager ) {
+
+    TextIter start, end;
+
+    if( buffer.get_selection_bounds( out start, out end ) ) {
+
+      var selected = buffer.get_text( start, end, false );
+
+      try {
+        if( Uri.is_valid( selected, UriFlags.NONE ) && imager.is_uri_supported_image( selected ) ) {
+          var text = "![](" + selected + ")";
+          buffer.begin_user_action();
+          buffer.delete( ref start, ref end );
+          buffer.insert( ref start, text, text.length );
+          start.backward_chars( text.char_count() - 2 );
+          buffer.place_cursor( start );
+          buffer.end_user_action();
+          return;
+        }
+      } catch( Error e ) {}
+
+      var text = "![" + selected + "]()";
+      buffer.begin_user_action();
+      buffer.delete( ref start, ref end );
+      buffer.insert( ref start, text, text.length );
+      start.backward_char();
+      buffer.place_cursor( start ); 
+      buffer.end_user_action();
+
+    }
+
+  }
+
   /* Removes all markup from the selected area */
   public static void clear_markup( TextBuffer buffer ) {
 
