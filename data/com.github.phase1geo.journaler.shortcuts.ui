@@ -38,6 +38,27 @@
             </child>
             <child>
               <object class="GtkShortcutsShortcut">
+                <property name="title" translatable="yes">Toggle Review Mode</property>
+                <property name="accelerator">&lt;ctrl&gt;r</property>
+                <property name="visible">1</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="title" translatable="yes">Toggle Distraction-Free Mode</property>
+                <property name="accelerator">&lt;ctrl&gt;d</property>
+                <property name="visible">1</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="title" translatable="yes">Show Awards</property>
+                <property name="accelerator">&lt;ctrl&gt;g</property>
+                <property name="visible">1</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkShortcutsShortcut">
                 <property name="title" translatable="yes">Show Shortcut Cheatsheet</property>
                 <property name="accelerator">&lt;ctrl&gt;question</property>
                 <property name="visible">1</property>
@@ -54,6 +75,237 @@
               <object class="GtkShortcutsShortcut">
                 <property name="title" translatable="yes">Quit</property>
                 <property name="accelerator">&lt;ctrl&gt;q</property>
+                <property name="visible">1</property>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+    <child>
+      <object class="GtkShortcutsSection">
+        <property name="section-name">editing</property>
+        <property name="title" translatable="yes">Editing</property>
+        <property name="visible">1</property>
+        <child>
+          <object class="GtkShortcutsGroup">
+            <property name="title" translatable="yes">General</property>
+            <property name="view">general</property>
+            <property name="visible">1</property>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="title" translatable="yes">Cut Selected Text</property>
+                <property name="accelerator">&lt;ctrl&gt;x</property>
+                <property name="visible">1</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="title" translatable="yes">Copy Selected Text</property>
+                <property name="accelerator">&lt;ctrl&gt;c</property>
+                <property name="visible">1</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="title" translatable="yes">Paste From Clipboard</property>
+                <property name="accelerator">&lt;ctrl&gt;p</property>
+                <property name="visible">1</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="title" translatable="yes">Delete Selected Text</property>
+                <property name="accelerator">Delete BackSpace</property>
+                <property name="visible">1</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="title" translatable="yes">Undo Last Change</property>
+                <property name="accelerator">&lt;ctrl&gt;z</property>
+                <property name="visible">1</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="title" translatable="yes">Redo Last Undo</property>
+                <property name="accelerator">&lt;ctrl&gt;&lt;shift&gt;z</property>
+                <property name="visible">1</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="title" translatable="yes">Select All Text</property>
+                <property name="accelerator">&lt;ctrl&gt;a</property>
+                <property name="visible">1</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="title" translatable="yes">Insert Emoji</property>
+                <property name="accelerator">&lt;ctrl&gt;semicolon</property>
+                <property name="visible">1</property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="GtkShortcutsGroup">
+            <property name="title" translatable="yes">Markdown Formatting</property>
+            <property name="view">general</property>
+            <property name="visible">1</property>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="title" translatable="yes">Bold</property>
+                <property name="accelerator">&lt;ctrl&gt;b</property>
+                <property name="visible">1</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="title" translatable="yes">Italicize</property>
+                <property name="accelerator">&lt;ctrl&gt;i</property>
+                <property name="visible">1</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="title" translatable="yes">Monospace</property>
+                <property name="accelerator">&lt;ctrl&gt;m</property>
+                <property name="visible">1</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="title" translatable="yes">Remove Markdown Syntax</property>
+                <property name="accelerator">&lt;ctrl&gt;&lt;shift&gt;r</property>
+                <property name="visible">1</property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="GtkShortcutsGroup">
+            <property name="title" translatable="yes">Markdown Headers</property>
+            <property name="view">general</property>
+            <property name="visible">1</property>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="title" translatable="yes">Header 1 (Underlined)</property>
+                <property name="accelerator">&lt;ctrl&gt;equal</property>
+                <property name="visible">1</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="title" translatable="yes">Header 2 (Underlined)</property>
+                <property name="accelerator">&lt;ctrl&gt;minus</property>
+                <property name="visible">1</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="title" translatable="yes">Header 1</property>
+                <property name="accelerator">&lt;ctrl&gt;1</property>
+                <property name="visible">1</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="title" translatable="yes">Header 2</property>
+                <property name="accelerator">&lt;ctrl&gt;2</property>
+                <property name="visible">1</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="title" translatable="yes">Header 3</property>
+                <property name="accelerator">&lt;ctrl&gt;3</property>
+                <property name="visible">1</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="title" translatable="yes">Header 4</property>
+                <property name="accelerator">&lt;ctrl&gt;4</property>
+                <property name="visible">1</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="title" translatable="yes">Header 5</property>
+                <property name="accelerator">&lt;ctrl&gt;5</property>
+                <property name="visible">1</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="title" translatable="yes">Header 6</property>
+                <property name="accelerator">&lt;ctrl&gt;6</property>
+                <property name="visible">1</property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="GtkShortcutsGroup">
+            <property name="title" translatable="yes">Markdown Lists</property>
+            <property name="view">general</property>
+            <property name="visible">1</property>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="title" translatable="yes">Ordered List Item</property>
+                <property name="accelerator">&lt;ctrl&gt;numbersign</property>
+                <property name="visible">1</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="title" translatable="yes">Unordered List Item</property>
+                <property name="accelerator">&lt;ctrl&gt;asterisk</property>
+                <property name="visible">1</property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="GtkShortcutsGroup">
+            <property name="title" translatable="yes">Markdown Tasks</property>
+            <property name="view">general</property>
+            <property name="visible">1</property>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="title" translatable="yes">Task</property>
+                <property name="accelerator">&lt;ctrl&gt;bracketleft</property>
+                <property name="visible">1</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="title" translatable="yes">Completed Task</property>
+                <property name="accelerator">&lt;ctrl&gt;bracketright</property>
+                <property name="visible">1</property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="GtkShortcutsGroup">
+            <property name="title" translatable="yes">Markdown Linking</property>
+            <property name="view">general</property>
+            <property name="visible">1</property>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="title" translatable="yes">Link</property>
+                <property name="accelerator">&lt;ctrl&gt;k</property>
+                <property name="visible">1</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="title" translatable="yes">Image</property>
+                <property name="accelerator">&lt;ctrl&gt;&lt;shift&gt;k</property>
                 <property name="visible">1</property>
               </object>
             </child>

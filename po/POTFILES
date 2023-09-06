@@ -1,14 +1,17 @@
 src/Application.vala
 src/Database.vala
+src/DateSelector.vala
 src/exports/ExportJSON.vala
 src/exports/ExportXML.vala
 src/Goals.vala
+src/ImageArea.vala
 src/Journals.vala
 src/Journal.vala
 src/MainWindow.vala
 src/Preferences.vala
 src/Quotes.vala
 src/Reviewer.vala
+src/SavedReview.vala
 src/SidebarEditor.vala
 src/SidebarEntries.vala
 src/SpellChecker.vala
