@@ -189,7 +189,25 @@ public class MarkdownFuncs {
 
     try {
       var re = new Regex( pattern, RegexCompileFlags.MULTILINE );
-      var new_text = re.replace_literal( text, text.length, 0, "" );
+      var new_text = re.replace_eval( text, text.length, 0, 0, (mi, res) => {
+        int start_pos, end_pos;
+        if( mi.fetch_pos( 1, out start_pos, out end_pos ) ) {
+          TextIter fstart = start;
+          TextIter fend   = start;
+          fstart.forward_chars( text.char_count( start_pos ) );
+          fend.forward_chars( text.char_count( end_pos ) );
+          if( fstart.starts_line() && fend.ends_line() ) {
+            res.erase( (res.len - 1), 1 );
+          }
+        }
+        for( int i=2; i<mi.get_match_count(); i++ ) {
+          var str = mi.fetch( i );
+          if( str != null ) {
+            res = res.append( str + ((i == 2) ? " " : "") );
+          }
+        }
+        return( false );
+      });
       if( new_text != text ) {
         buffer.begin_user_action();
         buffer.delete( ref start, ref end );
@@ -374,7 +392,7 @@ public class MarkdownFuncs {
   public static void clear_markup( TextBuffer buffer ) {
 
     /* Remove the markup */
-    remove_markup( buffer, "(^#+\\s+|`+|\\*+|_{1,2}|^-\\s+|^[0-9]+\\.\\s+|\\[[ xX]\\]\\s+|^\\s*[=-]+)" );
+    remove_markup( buffer, "(^#+\\s+|`+|\\*+|_{1,2}|^-\\s+|^[0-9]+\\.\\s+|\\[[ xX]\\]\\s+|^\\s*[=-]+|!?\\[(.*?)\\]\\s*\\((.*?)\\))" );
 
     /* Deselect text */
     TextIter cursor;
