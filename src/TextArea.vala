@@ -875,6 +875,7 @@ public class TextArea : Box {
       }
 
       _entry = entry;
+      _text.buffer.set_modified( false );
 
       /* Update the goals */
       if( _stats.goal_reached() && !_entry_goal_reached ) {
@@ -889,7 +890,7 @@ public class TextArea : Box {
   }
 
   /* Sets the entry contents to the given entry, saving the previous contents, if necessary */
-  public void set_buffer( DBEntry entry, bool editable ) {
+  public void set_buffer( DBEntry? entry, bool editable ) {
 
     /* Save the current buffer before loading a new one */
     save();
@@ -900,36 +901,39 @@ public class TextArea : Box {
     }
 
     _journal = _journals.current;
-    _entry   = entry;
+
+    if( entry != null ) {
+      _entry = entry;
+    }
 
     var enable_ui = editable && !_journal.is_trash && _entry.loaded;
 
     /* Set the title */
-    _title.text      = entry.title;
+    _title.text      = _entry.title;
     _title.editable  = enable_ui;
     _title.can_focus = enable_ui;
     _title.focusable = enable_ui;
 
     /* Set the date */
-    if( entry.date == "" ) {
+    if( _entry.date == "" ) {
       _date.label = "";
     } else {
-      var dt = entry.datetime();
+      var dt = _entry.datetime();
       _date.label = dt.format( "%A, %B %e, %Y  %I:%M %p" );
     }
 
     /* Set the image */
-    _image_area.set_images( _journal, entry );
+    _image_area.set_images( _journal, _entry );
     _image_area.editable = enable_ui;
 
     /* Set the tags */
     _tags.journal = _journal;
-    _tags.entry   = entry;
+    _tags.entry   = _entry;
     _tags.update_tags();
     _tags.editable = enable_ui;
 
     /* Show the quote of the day if the text field is empty */
-    if( (entry.text == "") && Journaler.settings.get_boolean( "enable-quotations" ) && enable_ui ) {
+    if( (_entry.text == "") && Journaler.settings.get_boolean( "enable-quotations" ) && enable_ui ) {
       _quote.label                        = _quotes.get_quote();
       _quote_revealer.transition_duration = 0;
       _quote_revealer.reveal_child        = true;
@@ -943,8 +947,8 @@ public class TextArea : Box {
 
       _text.buffer.begin_irreversible_action();
       _text.buffer.text = "";
-      if( (entry.text != "") || !insert_template( _journals.current.template ) ) {
-        _text.buffer.text = entry.text;
+      if( (_entry.text != "") || !insert_template( _journals.current.template ) ) {
+        _text.buffer.text = _entry.text;
       }
       _text.buffer.end_irreversible_action();
 
@@ -1148,7 +1152,7 @@ public class TextArea : Box {
 
   /* Sets the reviewer mode */
   public void set_reviewer_mode( bool review_mode ) {
-    set_buffer( _entry, !review_mode );
+    set_buffer( null, !review_mode );
   }
 
   /* Sets the distraction free mode to the given value and updates the UI. */

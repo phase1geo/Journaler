@@ -832,6 +832,9 @@ public class Database {
       }
     }
 
+    /* Indicate that the entry matches what is in the database */
+    entry.loaded = true;
+
     show_all_tables( "After save" );
 
     return( true );
