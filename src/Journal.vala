@@ -1,6 +1,7 @@
 public class Journal {
 
   private string    _name        = "";
+  private bool      _hidden      = false;
   private string    _template    = "";
   private string    _description = "";
   private Database? _db          = null;
@@ -29,6 +30,14 @@ public class Journal {
       _template = value;
     }
   }
+  public bool hidden {
+    get {
+      return( _hidden );
+    }
+    set {
+      _hidden = value;
+    }
+  }
   public string description {
     get {
       return( _description );
@@ -47,7 +56,6 @@ public class Journal {
       return( _db.include_journal );
     }
   }
-  public bool hidden { set; get; default = false; }
 
   public signal void save_needed();
 

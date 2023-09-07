@@ -593,6 +593,8 @@ public class TextArea : Box {
   /* Moves the current entry to the trash */
   private void action_trash_entry() {
 
+    _win.reset_timer();
+
     var journal = _journals.get_journal_by_name( _entry.journal );
     if( journal != null ) {
 
@@ -620,6 +622,8 @@ public class TextArea : Box {
   /* Moves an entry from the trash back to the originating journal */
   private void action_restore_entry() {
 
+    _win.reset_timer();
+
     var journal = _journals.get_journal_by_name( _entry.journal );
 
     /* If the journal needs to be created, do it now */
@@ -645,6 +649,8 @@ public class TextArea : Box {
   /* Permanently delete the entry from the trash */
   private void action_delete_entry() {
 
+    _win.reset_timer();
+
     if( _journals.trash.db.remove_entry( _entry ) ) {
       entry_moved( _entry );
       stdout.printf( "Entry permanently deleted from trash\n" );
@@ -654,108 +660,126 @@ public class TextArea : Box {
 
   /* Adds Markdown bold syntax around selected text */
   private void action_bold_text() {
+    _win.reset_timer();
     MarkdownFuncs.insert_bold_text( _buffer );
     _text.grab_focus();
   }
 
   /* Adds Markdown italic syntax around selected text */
   private void action_italicize_text() {
+    _win.reset_timer();
     MarkdownFuncs.insert_italicize_text( _buffer );
     _text.grab_focus();
   }
 
   /* Adds Markdown code syntax around selected text */
   private void action_code_text() {
+    _win.reset_timer();
     MarkdownFuncs.insert_code_text( _buffer );
     _text.grab_focus();
   }
 
   /* Adds Markdown header syntax around selected text */
   private void action_h1_text() {
+    _win.reset_timer();
     MarkdownFuncs.insert_header_text( _buffer, 1 );
     _text.grab_focus();
   }
 
   /* Adds Markdown header syntax around selected text */
   private void action_h2_text() {
+    _win.reset_timer();
     MarkdownFuncs.insert_header_text( _buffer, 2 );
     _text.grab_focus();
   }
 
   /* Adds Markdown header syntax around selected text */
   private void action_h3_text() {
+    _win.reset_timer();
     MarkdownFuncs.insert_header_text( _buffer, 3 );
     _text.grab_focus();
   }
 
   /* Adds Markdown header syntax around selected text */
   private void action_h4_text() {
+    _win.reset_timer();
     MarkdownFuncs.insert_header_text( _buffer, 4 );
     _text.grab_focus();
   }
 
   /* Adds Markdown header syntax around selected text */
   private void action_h5_text() {
+    _win.reset_timer();
     MarkdownFuncs.insert_header_text( _buffer, 5 );
     _text.grab_focus();
   }
 
   /* Adds Markdown header syntax around selected text */
   private void action_h6_text() {
+    _win.reset_timer();
     MarkdownFuncs.insert_header_text( _buffer, 6 );
     _text.grab_focus();
   }
 
   /* Adds a double underline below each line of selected text, converting them to H1 headers */
   private void action_h1_ul_text() {
+    _win.reset_timer();
     MarkdownFuncs.insert_h1_ul_text( _buffer );
     _text.grab_focus();
   }
 
   /* Adds a single underline below each line of selected text, converting them to H2 headers */
   private void action_h2_ul_text() {
+    _win.reset_timer();
     MarkdownFuncs.insert_h2_ul_text( _buffer );
     _text.grab_focus();
   }
 
   /* Inserts ordered list numbers at the beginning of each non-empty line */
   private void action_ordered_list_text() {
+    _win.reset_timer();
     MarkdownFuncs.insert_ordered_list_text( _buffer );
     _text.grab_focus();
   }
 
   /* Inserts unordered list (-) characters at the beginning of each non-empty line */
   private void action_unordered_list_text() {
+    _win.reset_timer();
     MarkdownFuncs.insert_unordered_list_text( _buffer );
     _text.grab_focus();
   }
 
   /* Inserts incomplete task strings at the beginning of each non-empty line */
   private void action_task_text() {
+    _win.reset_timer();
     MarkdownFuncs.insert_task_text( _buffer );
     _text.grab_focus();
   }
 
   /* Inserts incomplete task strings at the beginning of each non-empty line */
   private void action_task_done_text() {
+    _win.reset_timer();
     MarkdownFuncs.insert_task_done_text( _buffer );
     _text.grab_focus();
   }
 
   /* Inserts link syntax around the selected URI or text */
   private void action_link_text() {
+    _win.reset_timer();
     MarkdownFuncs.insert_link_text( _buffer );
     _text.grab_focus();
   }
 
   /* Inserts image syntax around the selected image URI or text */
   private void action_image_text() {
+    _win.reset_timer();
     MarkdownFuncs.insert_image_text( _buffer, _image_area );
     _text.grab_focus();
   }
 
   /* Removes all markup from the selected area */
   private void action_remove_markup() {
+    _win.reset_timer();
     MarkdownFuncs.clear_markup( _buffer );
     _text.grab_focus();
   }

@@ -32,20 +32,24 @@ public class SidebarEntries : Box {
   private Array<DBEntry> _listbox_entries;
   private MenuButton     _journal_mb;
   private GLib.Menu      _journals_menu;
+  private GLib.Menu      _hidden_menu;
   private ListBox        _listbox;
   private ScrolledWindow _lb_scroll;
   private Calendar       _cal;
   private bool           _ignore_select = false;
   private MenuButton     _burger_mb;
   private GLib.Menu      _journal_burger_menu;
+  private GLib.Menu      _hidden_burger_menu;
   private GLib.Menu      _trash_burger_menu;
   private string         _selected_date = "";
+  private bool           _show_hidden = false;
 
   private const GLib.ActionEntry action_entries[] = {
     { "action_select_trash",         action_select_trash },
     { "action_select_journal",       action_select_journal, "s" },
     { "action_new_journal",          action_new_journal },
     { "action_edit_current_journal", action_edit_current_journal },
+    { "action_show_hidden_journals", action_show_hidden_journals },
     { "action_empty_trash",          action_empty_trash }
   };
 
@@ -64,29 +68,25 @@ public class SidebarEntries : Box {
     _journals.current_changed.connect((refresh) => {
       populate( refresh );
       if( !refresh ) {
-        if( _journals.current.is_trash ) {
-          _burger_mb.menu_model = _trash_burger_menu;
-          action_set_enabled( "entries.action_empty_trash", (_listbox_entries.length > 0) );
-          if( _listbox_entries.length > 0 ) {
-            var listbox_entry = _listbox_entries.index( 0 );
-            show_entry_for_date( listbox_entry.journal, listbox_entry.date, false, true, "constructor A" );
+        if( _journals.current != null ) {
+          if( _journals.current.is_trash ) {
+            _burger_mb.menu_model = _trash_burger_menu;
+            action_set_enabled( "entries.action_empty_trash", (_listbox_entries.length > 0) );
+            if( _listbox_entries.length > 0 ) {
+              var listbox_entry = _listbox_entries.index( 0 );
+              show_entry_for_date( listbox_entry.journal, listbox_entry.date, false, true, "constructor A" );
+            } else {
+              show_entry_for_date( _journals.current.name, "", false, false, "constructor B" );
+            }
           } else {
-            show_entry_for_date( _journals.current.name, "", false, false, "constructor B" );
+            _burger_mb.menu_model = _journal_burger_menu;
+            show_entry_for_date( _journals.current.name, DBEntry.todays_date(), true, true, "constructor C" );
           }
-        } else {
-          _burger_mb.menu_model = _journal_burger_menu;
-          show_entry_for_date( _journals.current.name, DBEntry.todays_date(), true, true, "constructor C" );
         }
       }
     });
     _journals.list_changed.connect(() => {
       populate_journal_menu();
-      if( _journals.current.is_trash ) {
-        var listbox_entry = _listbox_entries.index( 0 );
-        show_entry_for_date( listbox_entry.journal, listbox_entry.date, true, true, "constructor D" );
-      } else {
-        show_entry_for_date( _journals.current.name, DBEntry.todays_date(), true, true, "constructor E" );
-      }
     });
 
     text_area.entry_moved.connect((entry) => {
@@ -131,17 +131,14 @@ public class SidebarEntries : Box {
   private void add_journals() {
 
     _journals_menu = new GLib.Menu();
+    _hidden_menu   = new GLib.Menu();
 
     var trash_menu = new GLib.Menu();
     trash_menu.append( _journals.trash.name, "entries.action_select_trash" );
 
-    var new_menu = new GLib.Menu();
-    new_menu.append( _( "Create New Journal" ), "entries.action_new_journal" );
-
     var journal_menu = new GLib.Menu();
     journal_menu.append_section( null, _journals_menu );
     journal_menu.append_section( null, trash_menu );
-    journal_menu.append_section( null, new_menu );
 
     _journal_mb = new MenuButton() {
       halign     = Align.FILL,
@@ -149,11 +146,21 @@ public class SidebarEntries : Box {
       menu_model = journal_menu
     };
 
+    var edit_menu = new GLib.Menu();
+    edit_menu.append( _( "Edit current journal" ), "entries.action_edit_current_journal" );
+
+    _hidden_burger_menu = new GLib.Menu();
+    populate_hidden_burger_menu();
+
     _journal_burger_menu = new GLib.Menu();
-    _journal_burger_menu.append( _( "Edit current journal" ), "entries.action_edit_current_journal" );
+    _journal_burger_menu.append( _( "Create New Journal" ), "entries.action_new_journal" );
+    _journal_burger_menu.append_section( null, edit_menu );
+    _journal_burger_menu.append_section( null, _hidden_burger_menu );
 
     _trash_burger_menu = new GLib.Menu();
+    _trash_burger_menu.append( _( "Create New Journal" ), "entries.action_new_journal" );
     _trash_burger_menu.append( _( "Empty trash" ), "entries.action_empty_trash" );
+    _trash_burger_menu.append_section( null, _hidden_burger_menu );
 
     _burger_mb = new MenuButton() {
       icon_name  = "view-more-symbolic",
@@ -165,6 +172,19 @@ public class SidebarEntries : Box {
     box.append( _burger_mb );
 
     append( box );
+
+  }
+
+  /* Updates the items in the hidden burger menu to match the current "hidden" state */
+  private void populate_hidden_burger_menu() {
+
+    _hidden_burger_menu.remove_all();
+
+    if( _show_hidden ) {
+      _hidden_burger_menu.append( _( "Hide hidden journals" ), "entries.action_show_hidden_journals" );
+    } else {
+      _hidden_burger_menu.append( _( "Show hidden journals" ), "entries.action_show_hidden_journals" );
+    }
 
   }
 
@@ -190,6 +210,14 @@ public class SidebarEntries : Box {
   private void action_edit_current_journal() {
     _win.reset_timer();
     edit_journal( _journals.current );
+  }
+
+  /* Displays the hidden journals */
+  private void action_show_hidden_journals() {
+    _win.reset_timer();
+    _show_hidden = !_show_hidden;
+    populate_hidden_burger_menu();
+    populate_journal_menu();
   }
 
   /* Empties the trash */
@@ -306,10 +334,23 @@ public class SidebarEntries : Box {
   public void populate_journal_menu() {
 
     _journals_menu.remove_all();
+    _hidden_menu.remove_all();
 
     for( int i=0; i<_journals.num_journals(); i++ ) {
       var journal = _journals.get_journal( i );
-      _journals_menu.append( journal.name, "entries.action_select_journal('%s')".printf( journal.name ) );
+      if( !journal.hidden ) {
+        _journals_menu.append( journal.name, "entries.action_select_journal('%s')".printf( journal.name ) );
+      }
+    }
+
+    if( _show_hidden ) {
+      for( int i=0; i<_journals.num_journals(); i++ ) {
+        var journal = _journals.get_journal( i );
+        if( journal.hidden ) {
+          _hidden_menu.append( journal.name, "entries.action_select_journal('%s')".printf( journal.name ) );
+        }
+      }
+      _journals_menu.append_submenu( _( "Hidden Journals" ), _hidden_menu );
     }
 
   }
@@ -318,7 +359,7 @@ public class SidebarEntries : Box {
   private void populate( bool refresh ) {
 
     var display_date = "";
-    _journal_mb.label = _journals.current.name;
+    _journal_mb.label = (_journals.current == null) ? _( "No journal selected" ) : _journals.current.name;
 
     if( _listbox_entries.length > 0 ) {
       var selected = _listbox.get_selected_row();
@@ -328,9 +369,11 @@ public class SidebarEntries : Box {
       _listbox_entries.remove_range( 0, _listbox_entries.length );
     }
 
-    if( !_journals.current.db.get_all_entries( _journals.current.is_trash, _listbox_entries ) ) {
-      stdout.printf( "ERROR:  Unable to get all entries in the journal\n" );
-      return;
+    if( _journals.current != null ) {
+      if( !_journals.current.db.get_all_entries( _journals.current.is_trash, _listbox_entries ) ) {
+        stdout.printf( "ERROR:  Unable to get all entries in the journal\n" );
+        return;
+      }
     }
 
     populate_listbox( refresh, display_date );

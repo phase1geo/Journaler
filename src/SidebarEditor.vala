@@ -123,7 +123,7 @@ public class SidebarEditor : Box {
     _hidden = new Switch() {
       halign = Align.START
     };
-    _hidden.activate.connect(() => {
+    _hidden.notify["active"].connect(() => {
       _save_hidden    = _hidden.active != _orig_hidden;
       _save.sensitive = (_name.buffer.text != "") && (_save_name || _save_hidden || _save_template || _save_description);
       _win.reset_timer();
@@ -230,7 +230,12 @@ public class SidebarEditor : Box {
         _journal.hidden      = _hidden.get_active();
         _journal.template    = get_template_name();
         _journal.description = _description.buffer.text;
-        stdout.printf( "name: %s, template: %s\n", _journal.name, _journal.template );
+        if( _save_hidden ) {
+          _journals.list_changed();
+        }
+        if( _journal.hidden ) {
+          _journals.adjust_current();
+        }
         _journals.save();
       }
       _win.reset_timer();

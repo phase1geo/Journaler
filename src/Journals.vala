@@ -2,11 +2,11 @@ public class Journals {
 
   private Array<Journal> _journals;
   private Journal        _trash;
-  private Journal        _current;
+  private Journal?       _current = null;
   private DateTime       _start_date;
   private DateTime       _end_date;
 
-  public Journal current {
+  public Journal? current {
     get {
       return( _current );
     }
@@ -44,15 +44,26 @@ public class Journals {
 
   }
 
+  /* This will select the first non-hidden journal and make it the current one */
+  public void adjust_current() {
+    for( int i=0; i<_journals.length; i++ ) {
+      if( !_journals.index( i ).hidden ) {
+        current = _journals.index( i );
+      }
+    }
+    current = null;
+  }
+
   /* Adds the given journal to the list of journals */
   public void add_journal( Journal journal, bool fast = false ) {
     journal.save_needed.connect( save );
     _journals.append_val( journal );
+    list_changed();
     if( !fast ) {
-      current = journal;
-      list_changed();
+      if( !journal.hidden ) {
+        current = journal;
+      }
     } else {
-      list_changed();
       save();
     }
   }
@@ -174,7 +185,7 @@ public class Journals {
 
     Xml.Doc*  doc  = new Xml.Doc( "1.0" );
     Xml.Node* root = new Xml.Node( null, "journals" );
-    var       current_index = 0;
+    var       current_index = -1;
 
     root->set_prop( "version", Journaler.version );
 
@@ -185,7 +196,7 @@ public class Journals {
       root->add_child( _journals.index( i ).save() );
     }
 
-    root->set_prop( "current", current_index.to_string() );
+    root->set_prop( "current",    current_index.to_string() );
     root->set_prop( "start-date", DBEntry.datetime_date( _start_date ) );
 
     doc->set_root_element( root );
@@ -212,7 +223,7 @@ public class Journals {
     }
 
     var c = root->get_prop( "current" );
-    var current_index = 0;
+    var current_index = -1;
     if( c != null ) {
       current_index = int.parse( c );
     }
@@ -239,7 +250,7 @@ public class Journals {
     if( _journals.length == 0 ) {
       add_default_journal();
     } else {
-      _current = _journals.index( current_index );
+      _current = (current_index == -1) ? null : _journals.index( current_index );
     }
 
     current_changed( false );
