@@ -16,7 +16,7 @@ Make memories in life and never forget them with Journaler, a journaling applica
 expressively capture the details and thoughts about your life.  Review past entries in new and interesting ways.
 Stay motivated to keep writing.  Easily export your data when needed.
 
-Features:
+**Features:**
 
 - Support for multiple journals.
 - Application-wide password protection.
