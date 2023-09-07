@@ -47,6 +47,7 @@ public class Journal {
       return( _db.include_journal );
     }
   }
+  public bool hidden { set; get; default = false; }
 
   public signal void save_needed();
 
@@ -132,6 +133,7 @@ public class Journal {
     node->set_prop( "template", _template );
     node->set_prop( "description", _description );
     node->set_prop( "next-id", _next_id.to_string() );
+    node->set_prop( "hidden", hidden.to_string() );
 
     return( node );
 
@@ -158,6 +160,11 @@ public class Journal {
     var i = node->get_prop( "next-id" );
     if( i != null ) {
       _next_id = int.parse( i );
+    }
+
+    var h = node->get_prop( "hidden" );
+    if( h != null ) {
+      hidden = bool.parse( h );
     }
 
     /* If the name was set and the database file exists, create the database */

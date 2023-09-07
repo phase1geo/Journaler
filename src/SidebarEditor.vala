@@ -26,6 +26,7 @@ public class SidebarEditor : Box {
 
   private MainWindow _win;
   private Journals   _journals;
+  private Switch     _hidden;
   private Templates  _templates;
   private Journal    _journal;
   private Entry      _name;
@@ -35,9 +36,11 @@ public class SidebarEditor : Box {
   private Revealer   _del_revealer;
   private Button     _save;
   private string     _orig_name;
+  private bool       _orig_hidden;
   private string     _orig_template;
   private string     _orig_description;
   private bool       _save_name;
+  private bool       _save_hidden;
   private bool       _save_template;
   private bool       _save_description;
 
@@ -61,9 +64,18 @@ public class SidebarEditor : Box {
       update_templates( name, added );
     });
 
+    var grid = new Grid() {
+      column_spacing = 5,
+      row_spacing    = 5
+    };
+
     /* Add the UI elements */
-    add_name();
-    add_templates();
+    add_name( grid );
+    add_hidden( grid );
+    add_templates( grid );
+
+    append( grid );
+
     add_description();
     add_button_bar();
 
@@ -75,9 +87,10 @@ public class SidebarEditor : Box {
   }
 
   /* Add the name elements */
-  private void add_name() {
+  private void add_name( Grid grid ) {
 
     var lbl = new Label( Utils.make_title( _( "Journal Name:" ) ) ) {
+      xalign = (float)0,
       use_markup = true
     };
 
@@ -90,15 +103,34 @@ public class SidebarEditor : Box {
     _name.changed.connect(() => {
       var name = _name.buffer.text;
       _save_name = (name != _orig_name) && (_journals.get_journal_by_name( name ) == null);
-      _save.sensitive = (name != "") && (_save_name || _save_template || _save_description);
+      _save.sensitive = (name != "") && (_save_name || _save_hidden || _save_template || _save_description);
       _win.reset_timer();
     });
 
-    var box = new Box( Orientation.HORIZONTAL, 5 );
-    box.append( lbl );
-    box.append( _name );
+    grid.attach( lbl,   0, 0 );
+    grid.attach( _name, 1, 0 );
 
-    append( box );
+  }
+
+  /* Add the hidden option */
+  private void add_hidden( Grid grid ) {
+
+    var lbl = new Label( Utils.make_title( _( "Hidden:" ) ) ) {
+      xalign = (float)0,
+      use_markup = true
+    };
+
+    _hidden = new Switch() {
+      halign = Align.START
+    };
+    _hidden.activate.connect(() => {
+      _save_hidden    = _hidden.active != _orig_hidden;
+      _save.sensitive = (_name.buffer.text != "") && (_save_name || _save_hidden || _save_template || _save_description);
+      _win.reset_timer();
+    });
+
+    grid.attach( lbl, 0, 1 );
+    grid.attach( _hidden, 1, 1 );
 
   }
 
@@ -108,9 +140,10 @@ public class SidebarEditor : Box {
   }
 
   /* Allows the user to choose a default template to use with the journal when a new entry is added */
-  private void add_templates() {
+  private void add_templates( Grid grid ) {
 
     var lbl = new Label( Utils.make_title( _( "Use Template:" ) ) ) {
+      xalign = (float)0,
       use_markup = true
     };
 
@@ -123,11 +156,8 @@ public class SidebarEditor : Box {
       menu_model = _template_menu
     };
 
-    var box = new Box( Orientation.HORIZONTAL, 5 );
-    box.append( lbl );
-    box.append( _template );
-
-    append( box );
+    grid.attach( lbl, 0, 2 );
+    grid.attach( _template, 1, 2 );
 
   }
 
@@ -150,7 +180,7 @@ public class SidebarEditor : Box {
     };
     _description.buffer.changed.connect(() => {
       _save_description = (_description.buffer.text != _orig_description);
-      _save.sensitive   = (_name.buffer.text != "") && (_save_name || _save_template || _save_description);
+      _save.sensitive   = (_name.buffer.text != "") && (_save_name || _save_hidden || _save_template || _save_description);
       _win.reset_timer();
     });
 
@@ -197,6 +227,7 @@ public class SidebarEditor : Box {
         _journals.add_journal( journal );
       } else {
         _journal.name        = _name.buffer.text;
+        _journal.hidden      = _hidden.get_active();
         _journal.template    = get_template_name();
         _journal.description = _description.buffer.text;
         stdout.printf( "name: %s, template: %s\n", _journal.name, _journal.template );
@@ -254,7 +285,7 @@ public class SidebarEditor : Box {
     _win.reset_timer();
     _template.label = variant.get_string();
     _save_template  = (get_template_name() != _orig_template);
-    _save.sensitive = (_name.buffer.text != "") && (_save_name || _save_template || _save_description);
+    _save.sensitive = (_name.buffer.text != "") && (_save_name || _save_hidden || _save_template || _save_description);
   }
 
   /* Creates a new template */
@@ -270,12 +301,14 @@ public class SidebarEditor : Box {
 
     if( journal == null ) {
       _name.text = "";
+      _hidden.set_active( false );
       _template.label = _( "None" );
       _description.buffer.text = "";
       _save.sensitive = false;
       _del_revealer.reveal_child = false;
     } else {
       _name.text = journal.name;
+      _hidden.active = journal.hidden;
       _template.label = (journal.template == "") ? _( "None" ) : journal.template;
       _description.buffer.text = journal.description;
       _save.sensitive = true;
@@ -283,11 +316,13 @@ public class SidebarEditor : Box {
     }
 
     _orig_name        = _name.text;
+    _orig_hidden      = _hidden.active;
     _orig_template    = _template.label;
     _orig_description = _description.buffer.text;
 
     _save.sensitive   = false;
     _save_name        = false;
+    _save_hidden      = false;
     _save_template    = false;
     _save_description = false;
 
