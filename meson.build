@@ -1,7 +1,7 @@
-  project('com.github.phase1geo.journaler', ['vala', 'c'],
-    meson_version : '>= 0.56.0',
-    version : '0.1',
-    license: 'GPL-3.0'
+project('com.github.phase1geo.journaler', ['vala', 'c'],
+  meson_version : '>= 0.56.0',
+  version : '1.0',
+  license: 'GPL-3.0'
 )
 
 i18n  = import('i18n')
@@ -60,14 +60,14 @@ e = executable('com.github.phase1geo.journaler',
     install : true
 )
 
-d = executable('com.github.phase1geo.journaler.daemon',
-    files('src/Daemon.vala'),
-    dependencies: [
-      dependency('gobject-2.0'),
-      dependency('glib-2.0')
-    ],
-    install : true
-)
+#d = executable('com.github.phase1geo.journaler.daemon',
+#    files('src/Daemon.vala'),
+#    dependencies: [
+#      dependency('gobject-2.0'),
+#      dependency('glib-2.0')
+#    ],
+#    install : true
+#)
 
 meson.add_install_script('meson/post_install.py')
 

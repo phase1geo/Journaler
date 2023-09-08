@@ -661,21 +661,21 @@ public class TextArea : Box {
   /* Adds Markdown bold syntax around selected text */
   private void action_bold_text() {
     _win.reset_timer();
-    MarkdownFuncs.insert_bold_text( _buffer );
+    MarkdownFuncs.insert_bold_text( _text, _buffer );
     _text.grab_focus();
   }
 
   /* Adds Markdown italic syntax around selected text */
   private void action_italicize_text() {
     _win.reset_timer();
-    MarkdownFuncs.insert_italicize_text( _buffer );
+    MarkdownFuncs.insert_italicize_text( _text, _buffer );
     _text.grab_focus();
   }
 
   /* Adds Markdown code syntax around selected text */
   private void action_code_text() {
     _win.reset_timer();
-    MarkdownFuncs.insert_code_text( _buffer );
+    MarkdownFuncs.insert_code_text( _text, _buffer );
     _text.grab_focus();
   }
 
@@ -766,14 +766,14 @@ public class TextArea : Box {
   /* Inserts link syntax around the selected URI or text */
   private void action_link_text() {
     _win.reset_timer();
-    MarkdownFuncs.insert_link_text( _buffer );
+    MarkdownFuncs.insert_link_text( _text, _buffer );
     _text.grab_focus();
   }
 
   /* Inserts image syntax around the selected image URI or text */
   private void action_image_text() {
     _win.reset_timer();
-    MarkdownFuncs.insert_image_text( _buffer, _image_area );
+    MarkdownFuncs.insert_image_text( _text, _buffer, _image_area );
     _text.grab_focus();
   }
 
@@ -789,7 +789,7 @@ public class TextArea : Box {
     var snippet = _templates.get_snippet( name );
     if( snippet != null ) {
       TextIter iter;
-      _buffer.get_iter_at_offset( out iter, _buffer.cursor_position );
+      _buffer.get_iter_at_mark( out iter, _buffer.get_insert() );
       _text.push_snippet( snippet, ref iter );
       _text.grab_focus();
       return( true );

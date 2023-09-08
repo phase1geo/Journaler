@@ -25,6 +25,79 @@ public class MarkdownFuncs {
 
   public static delegate void MarkdownProcessLineFunc( TextBuffer buffer, ref TextIter linestart, TextIter lineend, string text, int index );
 
+  /* Returns the directory containing the templates.snippets file */
+  private static string xml_dir() {
+    return( GLib.Path.build_filename( Environment.get_user_data_dir(), "journaler" ) );
+  }
+
+  /* Add the markdown.snippets file to the user's directory */
+  public static void add_markdown_snippets() {
+
+    var path = GLib.Path.build_filename( xml_dir(), "markdown.snippets" );
+
+    /* If the file already exists, leave it alone */
+    if( FileUtils.test( path, FileTest.EXISTS ) ) {
+      return;
+    }
+
+    var contents = """
+      <?xml version="1.0"?>
+      <snippets _group="journaler-markdown">
+        <snippet _name="md-bold" _description="Insert bold text" trigger="%md-bold%">
+          <text languages="markdown"><![CDATA[**${1}**$0]]></text>
+        </snippet>
+        <snippet _name="md-italic" _description="Insert italicized text" trigger="%md-italic%">
+          <text languages="markdown"><![CDATA[_${1}_$0]]></text>
+        </snippet>
+        <snippet _name="md-monospace" _description="Insert monospaced text" trigger="%md-mono%">
+          <text languages="markdown"><![CDATA[`${1}`$0]]></text>
+        </snippet>
+        <snippet _name="md-link" _description="Insert link text" trigger="%md-link%">
+          <tooltip position="1" text="Linked text goes here"/>
+          <tooltip position="2" text="Link URL goes here"/>
+          <text languages="markdown"><![CDATA[[${1:text}](${2:uri})$0]]></text>
+        </snippet>
+        <snippet _name="md-image" _description="Insert image text" trigger="%md-image%">
+          <tooltip position="1" text="Alternate text goes here"/>
+          <tooltip position="2" text="Image URL goes here"/>
+          <text languages="markdown"><![CDATA[![${1:text}](${2:uri})$0]]></text>
+        </snippet>
+      </snippets>
+      """;
+
+    try {
+      FileUtils.set_contents( path, contents );
+    } catch( FileError e ) {
+      stderr.printf( "ERROR: %s\n", e.message );
+    }
+
+  }
+
+  /* Returns the snippet associated with the given template name */
+  public static GtkSource.Snippet? get_snippet( string trigger ) {
+
+    /* Add the snippets file if it doesn't exist */
+    add_markdown_snippets();
+
+    /* Get the snippet manager */
+    var mgr = GtkSource.SnippetManager.get_default();
+    var search_path = mgr.search_path;
+    search_path += xml_dir();
+    mgr.search_path = search_path;
+
+    var snippet = mgr.get_snippet( "journaler-markdown", null, trigger );
+
+    /* We need to remove the tooltips because there appears to be a bug */
+    if( snippet != null ) {
+      for( int i=0; i<snippet.get_n_chunks(); i++ ) {
+        snippet.get_nth_chunk( i ).set_tooltip_text( "" );
+      }
+    }
+
+    return( snippet );
+
+  }
+
   /*
    If text is currently selected, make sure the selection is adjusted such that the start of
    the selection is not on a whitespace character and the end selection is one character to the
@@ -49,7 +122,7 @@ public class MarkdownFuncs {
   }
 
   /* Adds the given text markup based on whether valid text is selected or not */
-  public static void add_text_markup( TextBuffer buffer, string prefix, string suffix = "" ) {
+  public static void add_text_markup( GtkSource.View view, TextBuffer buffer, string prefix, string suffix = "", string trigger = "" ) {
 
     TextIter sel_start, sel_end;
 
@@ -66,13 +139,17 @@ public class MarkdownFuncs {
     } else {
 
       TextIter cursor;
-
-      var text = prefix + suffix;
-      buffer.insert_at_cursor( text, text.length );
       buffer.get_iter_at_mark( out cursor, buffer.get_insert() );
 
-      cursor.backward_chars( suffix.char_count() );
-      buffer.place_cursor( cursor );
+      var snippet = get_snippet( trigger );
+      if( snippet != null ) {
+        view.push_snippet( snippet, ref cursor );
+      } else {
+        var text = prefix + suffix;
+        buffer.insert( ref cursor, text, text.length );
+        cursor.backward_chars( suffix.char_count() );
+        buffer.place_cursor( cursor );
+      }
 
     }
 
@@ -224,26 +301,26 @@ public class MarkdownFuncs {
   }
 
   /* Adds Markdown bold syntax around selected text */
-  public static void insert_bold_text( TextBuffer buffer ) {
-    add_text_markup( buffer, "**", "**" );
+  public static void insert_bold_text( GtkSource.View view, TextBuffer buffer ) {
+    add_text_markup( view, buffer, "**", "**", "%md-bold%" );
   }
 
   /* Adds Markdown italic syntax around selected text */
-  public static void insert_italicize_text( TextBuffer buffer ) {
-    add_text_markup( buffer, "_", "_" );
+  public static void insert_italicize_text( GtkSource.View view, TextBuffer buffer ) {
+    add_text_markup( view, buffer, "_", "_", "%md-italic%" );
   }
 
   /* Adds Markdown code syntax around selected text */
-  public static void insert_code_text( TextBuffer buffer ) {
+  public static void insert_code_text( GtkSource.View view, TextBuffer buffer ) {
 
     TextIter start, end;
 
     if( buffer.get_selection_bounds( out start, out end ) && start.starts_line() && end.ends_line() ) {
-      add_text_markup( buffer, "```\n", "\n```" );
+      add_text_markup( view, buffer, "```\n", "\n```" );
     } else if( contains_markup( buffer, "`" ) ) {
-      add_text_markup( buffer, "``", "``" );
+      add_text_markup( view, buffer, "``", "``" );
     } else {
-      add_text_markup( buffer, "`", "`" );
+      add_text_markup( view, buffer, "`", "`", "%md-mono%" );
     }
 
   }
@@ -321,7 +398,7 @@ public class MarkdownFuncs {
   }
 
   /* Inserts a link */
-  public static void insert_link_text( TextBuffer buffer ) {
+  public static void insert_link_text( GtkSource.View view, TextBuffer buffer ) {
 
     TextIter start, end;
 
@@ -350,12 +427,22 @@ public class MarkdownFuncs {
       buffer.place_cursor( start ); 
       buffer.end_user_action();
 
+    } else {
+
+      TextIter cursor;
+      buffer.get_iter_at_mark( out cursor, buffer.get_insert() );
+
+      var snippet = get_snippet( "%md-link%" );
+      if( snippet != null ) {
+        view.push_snippet( snippet, ref cursor );
+      }
+
     }
 
   }
 
   /* Inserts a link */
-  public static void insert_image_text( TextBuffer buffer, ImageArea imager ) {
+  public static void insert_image_text( GtkSource.View view, TextBuffer buffer, ImageArea imager ) {
 
     TextIter start, end;
 
@@ -383,6 +470,16 @@ public class MarkdownFuncs {
       start.backward_char();
       buffer.place_cursor( start ); 
       buffer.end_user_action();
+
+    } else {
+
+      TextIter cursor;
+      buffer.get_iter_at_mark( out cursor, buffer.get_insert() );
+
+      var snippet = get_snippet( "%md-image%" );
+      if( snippet != null ) {
+        view.push_snippet( snippet, ref cursor );
+      }
 
     }
 
