@@ -145,11 +145,12 @@ public class DBEntry {
   }
 
   /* Constructor */
-  public DBEntry.for_list( string journal, bool trash, string title, string date ) {
+  public DBEntry.for_list( string journal, bool trash, string title, string date, string text ) {
     this.journal = journal;
     this.trash   = trash;
     this.title   = title;
     this.date    = date;
+    this.text    = text;
   }
 
   /* Constructor */
@@ -493,7 +494,7 @@ public class Database {
       """;
 
     var retval = exec_query( query, (ncols, vals, names) => {
-      var entry = new DBEntry.for_list( vals[EntryPos.JOURNAL], trash, vals[EntryPos.TITLE], vals[EntryPos.DATE] );
+      var entry = new DBEntry.for_list( vals[EntryPos.JOURNAL], trash, vals[EntryPos.TITLE], vals[EntryPos.DATE], "" );
       entries.append_val( entry );
       return( 0 );
     });
@@ -625,7 +626,7 @@ public class Database {
     var retval = exec_query( query, (ncols, vals, names) => {
       var tag = vals[EntryPos.TAG];
       if( (vals[EntryPos.ID] != last_id) && ((tag == null) ? untagged : (tags.find(tag) != null)) ) {
-        var entry = new DBEntry.for_list( vals[EntryPos.JOURNAL], trash, vals[EntryPos.TITLE], vals[EntryPos.DATE] );
+        var entry = new DBEntry.for_list( vals[EntryPos.JOURNAL], trash, vals[EntryPos.TITLE], vals[EntryPos.DATE], ((str == "") ? "" : vals[EntryPos.TEXT]) );
         matched_entries.add( entry );
         last_id = vals[EntryPos.ID];
       }

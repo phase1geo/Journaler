@@ -487,7 +487,9 @@ public class Reviewer : Grid {
     /* Get the list of available journal names and sort them */
     var journals = new List<string>();
     for( int i=0; i<_journals.num_journals(); i++ ) {
-      journals.append( _journals.get_journal( i ).name );
+      if( !_journals.get_journal( i ).hidden ) {
+        journals.append( _journals.get_journal( i ).name );
+      }
     }
 
     var selected = new List<string>();
@@ -522,12 +524,14 @@ public class Reviewer : Grid {
     var all_tags = new List<string>();
     for( int i=0; i<_journals.num_journals(); i++ ) {
       var journal = _journals.get_journal( i );
-      var journal_tags = new Array<string>();
-      if( journal.db.get_all_tags( journal_tags ) ) {
-        for( int j=0; j<journal_tags.length; j++ ) {
-          var tag = journal_tags.index( j );
-          if( all_tags.find( tag ) == null ) {
-            all_tags.append( tag );
+      if( !journal.hidden ) {
+        var journal_tags = new Array<string>();
+        if( journal.db.get_all_tags( journal_tags ) ) {
+          for( int j=0; j<journal_tags.length; j++ ) {
+            var tag = journal_tags.index( j );
+            if( all_tags.find( tag ) == null ) {
+              all_tags.append( tag );
+            }
           }
         }
       }
@@ -663,7 +667,7 @@ public class Reviewer : Grid {
     /* Add the matching entries to the list */
     foreach( var journal_name in journals ) {
       var journal = (journal_name == _journals.trash.name) ? _journals.trash : _journals.get_journal_by_name( journal_name );
-      journal.db.query_entries( (journal_name == _journals.trash.name), tags, start_date, end_date, _search_entry.text, _match_entries );
+      journal.db.query_entries( (journal_name == _journals.trash.name), tags, start_date, end_date, _search_entry.text.strip(), _match_entries );
     }
 
     /* Sort the entries */
@@ -801,6 +805,40 @@ public class Reviewer : Grid {
     do_search();
   }
 
+  /* Retrieves a portion of the matched entry text if the search entry contains any non-whitespace characters */
+  private string get_matched_text( DBEntry entry ) {
+
+    var text          = entry.text.replace( "\n", " " );
+    var text_to_match = _search_entry.text.strip();
+    var index         = text.index_of( text_to_match );
+
+    if( (index == -1) || (text_to_match == "") ) {
+      return( "" );
+    } else {
+      index = text.char_count( index );
+    }
+
+    var pre_chars     = 20;
+    var post_chars    = 60;
+    var start         = index - pre_chars;
+    var end           = index + text_to_match.char_count();
+
+    if( start < 0 ) {
+      pre_chars = index;
+      start     = 0;
+    }
+    if( (end + post_chars) > text.char_count() ) {
+      post_chars = text.char_count() - end;
+    }
+
+    var pre_text   = text.substring( text.index_of_nth_char( start ), (text.index_of_nth_char( pre_chars + start ) - text.index_of_nth_char( start )) );
+    var match_text = "<b>" + text_to_match + "</b>";
+    var post_text  = text.substring( text.index_of_nth_char( end ), (text.index_of_nth_char( post_chars + end ) - text.index_of_nth_char( end )) );
+
+    return( ((start == 0) ? "" : "…") + pre_text + match_text + post_text + "…" );
+
+  }
+
   /* Adds the given match entry to the list of matching entries */
   private void add_match_entry( DBEntry entry ) {
 
@@ -812,6 +850,12 @@ public class Reviewer : Grid {
       ellipsize  = Pango.EllipsizeMode.END
     };
     label.add_css_class( "listbox-head" );
+    var text = new Label( get_matched_text( entry ) ) {
+      halign     = Align.START,
+      hexpand    = true,
+      use_markup = true,
+      ellipsize  = Pango.EllipsizeMode.END
+    };
     var journal = new Label( entry.trash ? _journals.trash.name : entry.journal ) {
       halign  = Align.START,
       hexpand = true
@@ -826,7 +870,7 @@ public class Reviewer : Grid {
     };
     dbox.append( journal );
     dbox.append( date );
-    var box = new Box( Orientation.VERTICAL, 0 ) {
+    var box = new Box( Orientation.VERTICAL, 2 ) {
       halign        = Align.FILL,
       hexpand       = true,
       width_request = 300,
@@ -836,6 +880,9 @@ public class Reviewer : Grid {
       margin_end    = 5
     };
     box.append( label );
+    if( text.label != "" ) {
+      box.append( text );
+    }
     box.append( dbox );
     _match_lb.append( box );
 
