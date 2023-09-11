@@ -115,13 +115,11 @@ public class TagEntry : Box {
       }
     });
 
-    entry_key.key_pressed.connect((keyval, keycode, state) => {
+    entry_key.key_released.connect((keyval, keycode, state) => {
       _win.reset_timer();
-      switch( keyval ) {
-        case Gdk.Key.Escape :  hide_entry();  break;
-        default             :  return( false );
+      if( keyval == Gdk.Key.Escape ) {
+        hide_entry();
       }
-      return( true );
     });
 
     _entry_revealer = new Gtk.Revealer() {
@@ -161,6 +159,7 @@ public class TagEntry : Box {
   public void show_entry() {
     _button_revealer.reveal_child = false;
     _entry_revealer.reveal_child  = true;
+    _entry.text = "";
     _entry.can_focus = true;
     _entry.grab_focus();
   }

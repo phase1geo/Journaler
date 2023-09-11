@@ -215,7 +215,7 @@ public class DBEntry {
 
   /* Returns true if the given tag currently exists */
   public bool contains_tag( string tag ) {
-    return( !_tags.find( tag ).is_empty() );
+    return( _tags.find_custom( tag, strcmp ) != null );
   }
 
   /* Adds the given tag (if it doesn't already exist in the list) */
@@ -229,7 +229,7 @@ public class DBEntry {
   public void replace_tag( string old_tag, string new_tag ) {
     var index = _tags.index( old_tag );
     if( index != -1 ) {
-      _tags.remove( old_tag );
+      _tags.remove_link( _tags.find_custom( old_tag, strcmp ) );
       _tags.insert( new_tag, index );
     }
   }
@@ -237,7 +237,7 @@ public class DBEntry {
   /* Removes the given tag (if it exists in the list) */
   public void remove_tag( string tag ) {
     if( contains_tag( tag ) ) {
-      _tags.remove( tag );
+      _tags.remove_link( _tags.find_custom( tag, strcmp ) );
     }
   }
 
@@ -706,7 +706,7 @@ public class Database {
 
     foreach( var tag in entry.tags ) {
       var tag_query = "INSERT INTO Tag (name) VALUES('%s');".printf( sql_string( tag ) );
-      exec_query( tag_query );
+      var res = exec_query( tag_query );
     }
 
     return( true );
