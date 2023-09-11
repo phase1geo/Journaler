@@ -706,7 +706,7 @@ public class Database {
 
     foreach( var tag in entry.tags ) {
       var tag_query = "INSERT INTO Tag (name) VALUES('%s');".printf( sql_string( tag ) );
-      var res = exec_query( tag_query );
+      exec_query( tag_query );
     }
 
     return( true );

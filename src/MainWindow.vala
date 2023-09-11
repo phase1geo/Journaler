@@ -1092,6 +1092,8 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     if( distraction_free_mode ) {
       action_toggle_distract();
+    } else if( !locked ) {
+      show_pane( "entry-view" );
     }
 
   }
