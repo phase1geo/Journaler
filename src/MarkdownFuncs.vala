@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2018 (https://github.com/phase1geo/Minder)
+* Copyright (c) 2023 (https://github.com/phase1geo/Journaler)
 *
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public
@@ -167,12 +167,12 @@ public class MarkdownFuncs {
     var endrange = buffer.create_mark( "endrange", end, true );
 
     var index = 0;
-    while( start.compare( end ) < 0 ) {
+    while( ((index == 0) && (start.compare( end ) == 0)) || (start.compare( end ) < 0) ) {
       TextIter lineend = start;
       if( !lineend.ends_line() ) {
         lineend.forward_to_line_end();
-        process_line( buffer, ref start, lineend, text, index++ );
       }
+      process_line( buffer, ref start, lineend, text, index++ );
       start.forward_line();
       buffer.get_iter_at_mark( out end, endrange );
     }
@@ -181,6 +181,25 @@ public class MarkdownFuncs {
 
     buffer.end_user_action();
 
+  }
+
+  /* Inserts the given text at the beginning of each empty line that contains a non-empty line below it */
+  public static void insert_at_empty_line( TextBuffer buffer, ref TextIter linestart, TextIter lineend, string text, int index ) {
+    if( buffer.get_text( linestart, lineend, false ).strip() == "" ) {
+      var next_linestart = linestart;
+      next_linestart.forward_line();
+      if( linestart.compare( next_linestart ) == 0 ) {
+        buffer.insert( ref linestart, text, text.length );
+      } else {
+        var next_lineend = next_linestart;
+        if( !next_lineend.ends_line() ) {
+          next_lineend.forward_to_line_end();
+          if( buffer.get_text( next_linestart, next_lineend, false ).strip() != "" ) {
+            buffer.insert( ref linestart, text, text.length );
+          }
+        }
+      }
+    }
   }
 
   /* Inserts the given text prior to the beginning of the line if the line is not empty */
@@ -333,6 +352,17 @@ public class MarkdownFuncs {
     buffer.begin_user_action();
     remove_markup( buffer, "^#{1,6} " );
     add_line_markup( buffer, syntax, insert_line_chars );
+    buffer.end_user_action();
+
+  }
+
+  /* Inserts a horizontal rule */
+  public static void insert_horizontal_rule( TextBuffer buffer ) {
+
+    var syntax = "---\n";
+
+    buffer.begin_user_action();
+    add_line_markup( buffer, syntax, insert_at_empty_line );
     buffer.end_user_action();
 
   }

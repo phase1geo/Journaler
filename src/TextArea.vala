@@ -68,6 +68,7 @@ public class TextArea : Box {
     { "action_h6_text",             action_h6_text },
     { "action_h1_ul_text",          action_h1_ul_text },
     { "action_h2_ul_text",          action_h2_ul_text },
+    { "action_hr",                  action_hr },
     { "action_ordered_list_text",   action_ordered_list_text },
     { "action_unordered_list_text", action_unordered_list_text },
     { "action_task_text",           action_task_text },
@@ -151,6 +152,7 @@ public class TextArea : Box {
     app.set_accels_for_action( "textarea.action_h6_text",             { "<Control>6" } );
     app.set_accels_for_action( "textarea.action_h1_ul_text",          { "<Control>equal" } );
     app.set_accels_for_action( "textarea.action_h2_ul_text",          { "<Control>minus" } );
+    app.set_accels_for_action( "textarea.action_hr",                  { "<Control>h" } );
     app.set_accels_for_action( "textarea.action_ordered_list_text",   { "<Control>numbersign" } );
     app.set_accels_for_action( "textarea.action_unordered_list_text", { "<Control>asterisk" } );
     app.set_accels_for_action( "textarea.action_task_text",           { "<Control>bracketleft" } );
@@ -344,6 +346,7 @@ public class TextArea : Box {
     var h6_shortcut        = new Shortcut( ShortcutTrigger.parse_string( "<Control>6" ),            ShortcutAction.parse_string( "action(textarea.action_h6_text)" ) );
     var h1_ul_shortcut     = new Shortcut( ShortcutTrigger.parse_string( "<Control>equal" ),        ShortcutAction.parse_string( "action(textarea.action_h1_ul_text)" ) );
     var h2_ul_shortcut     = new Shortcut( ShortcutTrigger.parse_string( "<Control>minus" ),        ShortcutAction.parse_string( "action(textarea.action_h2_ul_text)" ) );
+    var hr_shortcut        = new Shortcut( ShortcutTrigger.parse_string( "<Control>h" ),            ShortcutAction.parse_string( "action(textarea.action_hr)" ) );
     var ordered_shortcut   = new Shortcut( ShortcutTrigger.parse_string( "<Control>numbersign" ),   ShortcutAction.parse_string( "action(textarea.action_ordered_list_text)" ) );
     var unordered_shortcut = new Shortcut( ShortcutTrigger.parse_string( "<Control>asterisk" ),     ShortcutAction.parse_string( "action(textarea.action_unordered_list_text)" ) );
     var task_shortcut      = new Shortcut( ShortcutTrigger.parse_string( "<Control>bracketleft" ),  ShortcutAction.parse_string( "action(textarea.action_task_text)" ) );
@@ -378,6 +381,7 @@ public class TextArea : Box {
     _text.add_shortcut( h6_shortcut );
     _text.add_shortcut( h1_ul_shortcut );
     _text.add_shortcut( h2_ul_shortcut );
+    _text.add_shortcut( hr_shortcut );
     _text.add_shortcut( ordered_shortcut );
     _text.add_shortcut( unordered_shortcut );
     _text.add_shortcut( task_shortcut );
@@ -403,6 +407,7 @@ public class TextArea : Box {
 
     var tscroll = new ScrolledWindow() {
       vscrollbar_policy = PolicyType.AUTOMATIC,
+      hscrollbar_policy = PolicyType.NEVER,
       child = _text
     };
     tscroll.scroll_child.connect((t,h) => {
@@ -501,6 +506,9 @@ public class TextArea : Box {
     header_menu.append( "Header 4", "textarea.action_h4_text" );
     header_menu.append( "Header 5", "textarea.action_h5_text" );
     header_menu.append( "Header 6", "textarea.action_h6_text" );
+
+    var hr_menu = new GLib.Menu();
+    hr_menu.append( "Horizontal Rule", "textarea.action_hr" );
 
     var list_menu = new GLib.Menu();
     list_menu.append( "Unordered List", "textarea.action_ordered_list_text" );
@@ -732,6 +740,13 @@ public class TextArea : Box {
   private void action_h2_ul_text() {
     _win.reset_timer();
     MarkdownFuncs.insert_h2_ul_text( _buffer );
+    _text.grab_focus();
+  }
+
+  /* Adds a horizontal rule at the current line */
+  private void action_hr() {
+    _win.reset_timer();
+    MarkdownFuncs.insert_horizontal_rule( _buffer );
     _text.grab_focus();
   }
 
