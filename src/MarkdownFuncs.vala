@@ -62,6 +62,14 @@ public class MarkdownFuncs {
           <tooltip position="2" text="Image URL goes here"/>
           <text languages="markdown"><![CDATA[![${1:text}](${2:uri})$0]]></text>
         </snippet>
+        <snippet _name="md-link-clip" _description="Insert link text from clipboard" trigger="%md-link-clip%">
+          <tooltip position="1" text="Linked text goes here"/>
+          <text languages="markdown"><![CDATA[[${1:text}]($CLIPBOARD)$0]]></text>
+        </snippet>
+        <snippet _name="md-image-clip" _description="Insert image text from clipboard" trigger="%md-image-clip%">
+          <tooltip position="1" text="Alternate text goes here"/>
+          <text languages="markdown"><![CDATA[![${1:text}]($CLIPBOARD)$0]]></text>
+        </snippet>
       </snippets>
       """;
 
@@ -427,6 +435,19 @@ public class MarkdownFuncs {
 
   }
 
+  /* Inserts a snippet */
+  private static bool insert_snippet( GtkSource.View view, TextBuffer buffer, string trigger, string clipboard = "" ) {
+    var snippet = get_snippet( trigger );
+    if( snippet != null ) {
+      TextIter cursor;
+      buffer.get_iter_at_mark( out cursor, buffer.get_insert() );
+      snippet.get_context().set_variable( "CLIPBOARD", clipboard );
+      view.push_snippet( snippet, ref cursor );
+      return( true );
+    }
+    return( false );
+  }
+
   /* Inserts a link */
   public static void insert_link_text( GtkSource.View view, TextBuffer buffer ) {
 
@@ -459,12 +480,26 @@ public class MarkdownFuncs {
 
     } else {
 
-      TextIter cursor;
-      buffer.get_iter_at_mark( out cursor, buffer.get_insert() );
+      var clipboard = Gdk.Display.get_default().get_clipboard();
 
-      var snippet = get_snippet( "%md-link%" );
-      if( snippet != null ) {
-        view.push_snippet( snippet, ref cursor );
+      // Get text from the clipboard and see if it is a link URI
+      if( clipboard.get_formats().contain_gtype( Type.STRING ) ) {
+        clipboard.read_text_async.begin( null, (obj, res) => {
+          try {
+            var text = clipboard.read_text_async.end( res );
+            if( Uri.is_valid( text, UriFlags.NONE ) && insert_snippet( view, buffer, "%md-link-clip%", text ) ) {
+              return;
+            } else {
+              insert_snippet( view, buffer, "%md-link%" );
+            }
+          } catch( UriError e ) {
+            insert_snippet( view, buffer, "%md-link%" );
+          } catch( Error e ) {
+            insert_snippet( view, buffer, "%md-link%" );
+          }
+        });
+      } else {
+        insert_snippet( view, buffer, "%md-link%" );
       }
 
     }
@@ -503,12 +538,26 @@ public class MarkdownFuncs {
 
     } else {
 
-      TextIter cursor;
-      buffer.get_iter_at_mark( out cursor, buffer.get_insert() );
+      var clipboard = Gdk.Display.get_default().get_clipboard();
 
-      var snippet = get_snippet( "%md-image%" );
-      if( snippet != null ) {
-        view.push_snippet( snippet, ref cursor );
+      // Get text from the clipboard and see if it is a link URI
+      if( clipboard.get_formats().contain_gtype( Type.STRING ) ) {
+        clipboard.read_text_async.begin( null, (obj, res) => {
+          try {
+            var text = clipboard.read_text_async.end( res );
+            if( (FileUtils.test( text, FileTest.EXISTS ) || Uri.is_valid( text, UriFlags.NONE )) && imager.is_uri_supported_image( text ) && insert_snippet( view, buffer, "%md-image-clip%", text ) ) {
+              return;
+            } else {
+              insert_snippet( view, buffer, "%md-image%" );
+            }
+          } catch( UriError e ) {
+            insert_snippet( view, buffer, "%md-image%" );
+          } catch( Error e ) {
+            insert_snippet( view, buffer, "%md-image%" );
+          }
+        });
+      } else {
+        insert_snippet( view, buffer, "%md-image%" );
       }
 
     }
