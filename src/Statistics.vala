@@ -78,7 +78,10 @@ public class Statistics : Box {
     // _label.add_css_class( "text-background" );
     _label.add_css_class( "statistics-padding" );
 
-    add_css_class( "text-background" );
+    Idle.add(() => {
+      add_css_class( "text-background" );
+      return( false );
+    });
 
     append( _label );
 
