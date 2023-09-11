@@ -178,6 +178,13 @@
             </child>
             <child>
               <object class="GtkShortcutsShortcut">
+                <property name="title" translatable="yes">Horizontal Rule</property>
+                <property name="accelerator">&lt;ctrl&gt;h</property>
+                <property name="visible">1</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkShortcutsShortcut">
                 <property name="title" translatable="yes">Remove Markdown Syntax</property>
                 <property name="accelerator">&lt;ctrl&gt;&lt;shift&gt;r</property>
                 <property name="visible">1</property>
