@@ -141,6 +141,20 @@ public class Goals {
     }
   }
 
+  /* Allows us to test the achievement system */
+  public void test_achievement( string goal_name, string entry_date ) {
+    if( _hash.has_key( goal_name ) ) {
+      var goal = _hash.get( goal_name );
+      bool achieved;
+      goal.mark_achievement( entry_date, out achieved );
+      if( achieved ) {
+        stdout.printf( "Achieved goal %s (%s)\n", goal.label, entry_date );
+      }
+    } else {
+      stderr.printf( "Key (%s) does not exist\n", goal_name );
+    }
+  }
+
   /* Returns the number of days in a week */
   private int days_in_week( int num_weeks ) {
     return( 7 * num_weeks );

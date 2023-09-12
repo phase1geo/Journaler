@@ -23,7 +23,7 @@ using Gtk;
 
 public class MarkdownFuncs {
 
-  public static delegate void MarkdownProcessLineFunc( TextBuffer buffer, ref TextIter linestart, TextIter lineend, string text, int index );
+  public delegate void MarkdownProcessLineFunc( TextBuffer buffer, ref TextIter linestart, TextIter lineend, string text, int index );
 
   /* Returns the directory containing the templates.snippets file */
   private static string xml_dir() {

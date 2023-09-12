@@ -561,6 +561,11 @@ public class Preferences : Gtk.Dialog {
       var add_btn = new Button.with_label( "Add 300 entries" );
       add_btn.clicked.connect( add_test_entries );
       box.append( add_btn );
+
+      var test_btn = new Button.with_label( "Add test entries" );
+      test_btn.clicked.connect( add_award_test_entries );
+      box.append( test_btn );
+
     }
 
     return( box );
@@ -604,6 +609,40 @@ public class Preferences : Gtk.Dialog {
     }
 
     _journals.current_changed( true );
+
+  }
+
+  private void add_award_test_entries() {
+
+    string[] dates = {
+      "2023-10-01",
+      "2023-10-02",
+      "2023-10-04",
+      "2023-10-09",
+      "2023-10-10",
+      "2023-10-15",
+      "2023-10-19",
+      "2023-10-22",
+      "2023-10-23",
+      "2023-10-29",
+      "2023-10-31",
+      "2023-11-08",
+      "2023-11-10",
+      "2023-11-13",
+      "2023-11-16",
+      "2023-12-17",
+      "2023-12-18",
+      "2023-12-19",
+      "2023-12-20",
+      "2023-12-21",
+      "2023-12-22",
+    };
+
+    var goals = new Goals( _win );
+
+    foreach( var date in dates ) {
+      goals.test_achievement( "minimum-2-5m", date );
+    }
 
   }
 

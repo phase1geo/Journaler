@@ -76,6 +76,13 @@ public class GoalMinimum : Goal {
     return( begin_mon );
   }
 
+  /*
+   USEFUL FOR DEBUGGING
+  private string date_string( Date date ) {
+    return( "%04u-%02u-%02u".printf( date.get_year(), date.get_month(), date.get_day() ) );
+  }
+  */
+
   /* Returns the count action based on the status of the subgoal */
   protected override CountAction get_count_action( Date todays_date, Date last_achieved ) {
 
@@ -96,21 +103,21 @@ public class GoalMinimum : Goal {
      Increment the main counter if we have met the sub-goal.
     */
     if( beginning_of_this.compare( last_achieved ) <= 0 ) {
-      if( ++_sub_count >= _sub_goal ) {
+      if( ++_sub_count == _sub_goal ) {
         return( CountAction.INCREMENT );
       }
 
     /* If we hit the last subgoal and are starting on the new period, either increment or do nothing */
     } else if( (beginning_of_last.compare( last_achieved ) <= 0) && (_sub_count >= _sub_goal) ) {
-      _sub_count = 1;
-      if( ++_sub_count >= _sub_goal ) {
+      _sub_count = 0;
+      if( ++_sub_count == _sub_goal ) {
         return( CountAction.INCREMENT );
       }
 
     /* Otherwise, we need to reset */
     } else {
-      _sub_count = 1;
-      if( ++_sub_count >= _sub_goal ) {
+      _sub_count = 0;
+      if( ++_sub_count == _sub_goal ) {
         return( CountAction.RESET );
       }
       return( CountAction.CLEAR );
