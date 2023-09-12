@@ -527,6 +527,7 @@ public class TextArea : Box {
 
     var format_menu = new GLib.Menu();
     format_menu.append_section( null, formatter_menu );
+    format_menu.append_section( null, hr_menu );
     format_menu.append_section( null, header_ul_menu );
     format_menu.append_section( null, header_menu );
     format_menu.append_section( null, list_menu );
