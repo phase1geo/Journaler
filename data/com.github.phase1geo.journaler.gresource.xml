@@ -3,7 +3,7 @@
   <gresource prefix="/com/github/phase1geo/journaler">
     <file alias="Application.css" compressed="true">Application.css</file>
     <file alias="shortcuts.ui" compressed="true">com.github.phase1geo.journaler.shortcuts.ui</file>
-    <file alias="journaler-logo.svg">icons/scalable/com.github.phase1geo.journaler.svg</file>
+    <file alias="journaler-logo.png">icons/128/com.github.phase1geo.journaler.svg</file>
     <file alias="today.svg">icons/scalable/calendar-go-today.svg</file>
     <file alias="award-achieved.png">icons/128/award-achieved.png</file>
     <file alias="award-unachieved.png">icons/128/award-unachieved.png</file>

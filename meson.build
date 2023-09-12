@@ -1,5 +1,5 @@
 project('com.github.phase1geo.journaler', ['vala', 'c'],
-  meson_version : '>= 0.56.0',
+  meson_version : '>= 0.59.0',
   version : '1.0',
   license: 'GPL-3.0'
 )
@@ -69,5 +69,11 @@ e = executable('com.github.phase1geo.journaler',
 #    install : true
 #)
 
-meson.add_install_script('meson/post_install.py')
+gnome.post_install(
+  glib_compile_schemas: true,
+  gtk_update_icon_cache: true,
+  update_desktop_database: true
+)
+
+# meson.add_install_script('meson/post_install.py')
 
