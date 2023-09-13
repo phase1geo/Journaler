@@ -135,6 +135,8 @@ public class SpellChecker {
   private void insert_text_after( ref TextIter iter, string text ) {
     TextIter start;
     view.buffer.get_iter_at_mark( out start, mark_insert_start );
+    iter = start;
+    iter.forward_chars( text.char_count() );
     check_range( start, iter, false );
     view.buffer.move_mark( mark_insert_end, iter );
   }
