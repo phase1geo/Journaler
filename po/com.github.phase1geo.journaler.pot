@@ -1,14 +1,14 @@
-# Journaler - Journaling application for elementary OS
-# Copyright (C) 2023
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the com.github.phase1geo.journaler package.
-# Trevor Williams <phase1geo@gmail.com>, 2023.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: com.github.phase1geo.journaler\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-09-11 09:55-0500\n"
+"POT-Creation-Date: 2023-09-13 16:28-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -47,7 +47,7 @@ msgstr ""
 msgid "JSON"
 msgstr ""
 
-#: src/exports/ExportXML.vala:30 src/Preferences.vala:657
+#: src/exports/ExportXML.vala:30 src/Preferences.vala:696
 msgid "XML"
 msgstr ""
 
@@ -308,23 +308,23 @@ msgstr ""
 msgid "New Rewards Achieved!"
 msgstr ""
 
-#: src/ImageArea.vala:261 src/Preferences.vala:386
+#: src/ImageArea.vala:265 src/Preferences.vala:386
 msgid "Select an image"
 msgstr ""
 
-#: src/ImageArea.vala:261 src/TextArea.vala:562
+#: src/ImageArea.vala:265 src/TextArea.vala:563
 msgid "Add Image"
 msgstr ""
 
-#: src/ImageArea.vala:265
+#: src/ImageArea.vala:269
 msgid "PNG Images"
 msgstr ""
 
-#: src/ImageArea.vala:348
+#: src/ImageArea.vala:352
 msgid "Enter Description (Optional)"
 msgstr ""
 
-#: src/ImageArea.vala:364 src/MainWindow.vala:779 src/Preferences.vala:73
+#: src/ImageArea.vala:368 src/MainWindow.vala:779 src/Preferences.vala:73
 msgid "Close"
 msgstr ""
 
@@ -398,7 +398,7 @@ msgstr ""
 msgid "Manage Templates"
 msgstr ""
 
-#: src/MainWindow.vala:614 src/SidebarEditor.vala:212 src/Templater.vala:254
+#: src/MainWindow.vala:614 src/SidebarEditor.vala:212 src/Templater.vala:613
 #: src/Utils.vala:297
 msgid "Cancel"
 msgstr ""
@@ -535,89 +535,89 @@ msgstr ""
 msgid "Choose Image"
 msgstr ""
 
-#: src/Preferences.vala:614
+#: src/Preferences.vala:653
 msgid "Export all journals"
 msgstr ""
 
-#: src/Preferences.vala:617
+#: src/Preferences.vala:656
 msgid "Export journal"
 msgstr ""
 
-#: src/Preferences.vala:645
+#: src/Preferences.vala:684
 msgid "Export for the purpose of importing back into Journaler"
 msgstr ""
 
-#: src/Preferences.vala:648
+#: src/Preferences.vala:687
 msgid "Include entry images"
 msgstr ""
 
-#: src/Preferences.vala:655
+#: src/Preferences.vala:694
 msgid "Export Format:"
 msgstr ""
 
-#: src/Preferences.vala:678
+#: src/Preferences.vala:717
 msgid "Export…"
 msgstr ""
 
-#: src/Preferences.vala:714
+#: src/Preferences.vala:753
 msgid "Export Options"
 msgstr ""
 
-#: src/Preferences.vala:732
+#: src/Preferences.vala:771
 msgid ""
 "Import entries into original journals, automatically creating non-existing "
 "journals"
 msgstr ""
 
-#: src/Preferences.vala:736
+#: src/Preferences.vala:775
 msgid "Import all entries into journal"
 msgstr ""
 
-#: src/Preferences.vala:747
+#: src/Preferences.vala:786
 msgid "Create new journal"
 msgstr ""
 
-#: src/Preferences.vala:769
+#: src/Preferences.vala:808
 msgid "Enter new journal name"
 msgstr ""
 
-#: src/Preferences.vala:815
+#: src/Preferences.vala:854
 msgid "Import Options"
 msgstr ""
 
-#: src/Preferences.vala:870
+#: src/Preferences.vala:909
 msgid "Export Data As…"
 msgstr ""
 
-#: src/Preferences.vala:870
+#: src/Preferences.vala:909
 msgid "Export"
 msgstr ""
 
-#: src/Preferences.vala:887
+#: src/Preferences.vala:926
 msgid "Export successful"
 msgstr ""
 
-#: src/Preferences.vala:889
+#: src/Preferences.vala:928
 msgid "Export failed"
 msgstr ""
 
-#: src/Preferences.vala:915
+#: src/Preferences.vala:954
 msgid "new called"
 msgstr ""
 
-#: src/Preferences.vala:939
+#: src/Preferences.vala:978
 msgid "Import Data From…"
 msgstr ""
 
-#: src/Preferences.vala:939
+#: src/Preferences.vala:978
 msgid "Import"
 msgstr ""
 
-#: src/Preferences.vala:958
+#: src/Preferences.vala:997
 msgid "Import successful"
 msgstr ""
 
-#: src/Preferences.vala:960
+#: src/Preferences.vala:999
 msgid "Import failed"
 msgstr ""
 
@@ -891,7 +891,7 @@ msgstr ""
 msgid "Journal Name:"
 msgstr ""
 
-#: src/SidebarEditor.vala:100 src/Templater.vala:79
+#: src/SidebarEditor.vala:100 src/Templater.vala:197
 msgid "Required"
 msgstr ""
 
@@ -913,7 +913,7 @@ msgstr ""
 msgid "Description:"
 msgstr ""
 
-#: src/SidebarEditor.vala:198 src/Templater.vala:241
+#: src/SidebarEditor.vala:198 src/Templater.vala:600
 msgid "Delete"
 msgstr ""
 
@@ -980,19 +980,19 @@ msgstr ""
 msgid "Spell Check"
 msgstr ""
 
-#: src/Statistics.vala:21 src/Statistics.vala:109
+#: src/Statistics.vala:21 src/Statistics.vala:112
 msgid "Characters"
 msgstr ""
 
-#: src/Statistics.vala:22 src/Statistics.vala:110
+#: src/Statistics.vala:22 src/Statistics.vala:113
 msgid "Words"
 msgstr ""
 
-#: src/Statistics.vala:111
+#: src/Statistics.vala:114
 msgid "Goal"
 msgstr ""
 
-#: src/Statistics.vala:112
+#: src/Statistics.vala:115
 msgid "Achieved"
 msgstr ""
 
@@ -1004,32 +1004,104 @@ msgstr ""
 msgid "Add Tag"
 msgstr ""
 
-#: src/Templater.vala:72
+#: src/Templater.vala:48
+msgid "Year, four digits"
+msgstr ""
+
+#: src/Templater.vala:49
+msgid "Year, last two digits"
+msgstr ""
+
+#: src/Templater.vala:50
+msgid "Month, 01-12"
+msgstr ""
+
+#: src/Templater.vala:51
+msgid "Month, full name"
+msgstr ""
+
+#: src/Templater.vala:52
+msgid "Month, abbreviated name"
+msgstr ""
+
+#: src/Templater.vala:53
+msgid "Day of month, 1-31"
+msgstr ""
+
+#: src/Templater.vala:54
+msgid "Day of week, full name"
+msgstr ""
+
+#: src/Templater.vala:55
+msgid "Day of week, abbreviated name"
+msgstr ""
+
+#: src/Templater.vala:56
+msgid "Hour, 24-hour format"
+msgstr ""
+
+#: src/Templater.vala:57
+msgid "Minute, in hour"
+msgstr ""
+
+#: src/Templater.vala:58
+msgid "Second, in minute"
+msgstr ""
+
+#: src/Templater.vala:59
+msgid "Seconds since UNIX epoch"
+msgstr ""
+
+#: src/Templater.vala:60
+msgid "User, login name"
+msgstr ""
+
+#: src/Templater.vala:61
+msgid "User, full name"
+msgstr ""
+
+#: src/Templater.vala:62
+msgid "Contents of current line"
+msgstr ""
+
+#: src/Templater.vala:63
+msgid "Zero-index line number"
+msgstr ""
+
+#: src/Templater.vala:64
+msgid "One-index line number"
+msgstr ""
+
+#: src/Templater.vala:190
 msgid "Template Name:"
 msgstr ""
 
-#: src/Templater.vala:122
+#: src/Templater.vala:240
 msgid "Template Text:"
 msgstr ""
 
-#: src/Templater.vala:178
+#: src/Templater.vala:389
 msgid "Insert Next Tab Position"
 msgstr ""
 
-#: src/Templater.vala:179
+#: src/Templater.vala:390
 msgid "Insert Last Tab Position"
 msgstr ""
 
-#: src/Templater.vala:188
-msgid "Insert Snippet"
+#: src/Templater.vala:413 src/TextArea.vala:539
+msgid "Format Text"
 msgstr ""
 
-#: src/Templater.vala:202
+#: src/Templater.vala:416
+msgid "Insert Snippet Syntax"
+msgstr ""
+
+#: src/Templater.vala:428
 #, c-format
 msgid "Insert %s"
 msgstr ""
 
-#: src/Templater.vala:260
+#: src/Templater.vala:619
 msgid "Save Changes"
 msgstr ""
 
@@ -1041,23 +1113,19 @@ msgstr ""
 msgid "Title (Optional)"
 msgstr ""
 
-#: src/TextArea.vala:538
-msgid "Format Text"
-msgstr ""
-
-#: src/TextArea.vala:555
+#: src/TextArea.vala:556
 msgid "Restore entry"
 msgstr ""
 
-#: src/TextArea.vala:556
+#: src/TextArea.vala:557
 msgid "Delete entry permanently"
 msgstr ""
 
-#: src/TextArea.vala:568
+#: src/TextArea.vala:569
 msgid "Insert Template"
 msgstr ""
 
-#: src/TextArea.vala:572
+#: src/TextArea.vala:573
 msgid "Move entry to trash"
 msgstr ""
 
