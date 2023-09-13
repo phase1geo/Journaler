@@ -241,7 +241,11 @@ public class ImageArea : Box {
   }
 
   /* Adds an image for the given URI if it is unique */
-  public void add_image_from_uri( string uri ) {
+  public void add_image_from_uri( string text ) {
+    var uri = text;
+    if( FileUtils.test( uri, FileTest.EXISTS ) && (Uri.peek_scheme( uri ) == null) ) {
+      uri = "file://" + uri;
+    }
     if( (Uri.peek_scheme( uri ) != null) && is_uri_supported_image( uri ) ) {
       for( int i=0; i<_images.length; i++ ) {
         if( _images.index( i ).uri == uri ) {
