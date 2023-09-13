@@ -1,10 +1,80 @@
 using Gtk;
 
+public enum TemplateVariable {
+  CURRENT_YEAR,
+  CURRENT_YEAR_SHORT,
+  CURRENT_MONTH,
+  CURRENT_MONTH_NAME,
+  CURRENT_MONTH_NAME_SHORT,
+  CURRENT_DATE,
+  CURRENT_DAY_NAME,
+  CURRENT_DAY_NAME_SHORT,
+  CURRENT_HOUR,
+  CURRENT_MINUTE,
+  CURRENT_SECOND,
+  CURRENT_SECONDS_UNIX,
+  NAME_SHORT,
+  NAME,
+  TM_CURRENT_LINE,
+  TM_LINE_INDEX,
+  TM_LINE_NUMBER,
+  NUM;
+
+  public string to_string() {
+    switch( this ) {
+      case CURRENT_YEAR             :  return( "CURRENT_YEAR" );
+      case CURRENT_YEAR_SHORT       :  return( "CURRENT_YEAR_SHORT" );
+      case CURRENT_MONTH            :  return( "CURRENT_MONTH" );
+      case CURRENT_MONTH_NAME       :  return( "CURRENT_MONTH_NAME" );
+      case CURRENT_MONTH_NAME_SHORT :  return( "CURRENT_MONTH_NAME_SHORT" );
+      case CURRENT_DATE             :  return( "CURRENT_DATE" );
+      case CURRENT_DAY_NAME         :  return( "CURRENT_DAY_NAME" );
+      case CURRENT_DAY_NAME_SHORT   :  return( "CURRENT_DAY_NAME_SHORT" );
+      case CURRENT_HOUR             :  return( "CURRENT_HOUR" );
+      case CURRENT_MINUTE           :  return( "CURRENT_MINUTE" );
+      case CURRENT_SECOND           :  return( "CURRENT_SECOND" );
+      case CURRENT_SECONDS_UNIX     :  return( "CURRENT_SECONDS_UNIX" );
+      case NAME_SHORT               :  return( "NAME_SHORT" );
+      case NAME                     :  return( "NAME" );
+      case TM_CURRENT_LINE          :  return( "TM_CURRENT_LINE" );
+      case TM_LINE_INDEX            :  return( "TM_LINE_INDEX" );
+      case TM_LINE_NUMBER           :  return( "TM_LINE_NUMBER" );
+      default                       :  assert_not_reached();
+    }
+  }
+
+  public string label() {
+    switch( this ) {
+      case CURRENT_YEAR             :  return( _( "Year, four digits" ) );
+      case CURRENT_YEAR_SHORT       :  return( _( "Year, last two digits" ) );
+      case CURRENT_MONTH            :  return( _( "Month, 01-12" ) );
+      case CURRENT_MONTH_NAME       :  return( _( "Month, full name" ) );
+      case CURRENT_MONTH_NAME_SHORT :  return( _( "Month, abbreviated name" ) );
+      case CURRENT_DATE             :  return( _( "Day of month, 1-31" ) );
+      case CURRENT_DAY_NAME         :  return( _( "Day of week, full name" ) );
+      case CURRENT_DAY_NAME_SHORT   :  return( _( "Day of week, abbreviated name" ) );
+      case CURRENT_HOUR             :  return( _( "Hour, 24-hour format" ) );
+      case CURRENT_MINUTE           :  return( _( "Minute, in hour" ) );
+      case CURRENT_SECOND           :  return( _( "Second, in minute" ) );
+      case CURRENT_SECONDS_UNIX     :  return( _( "Seconds since UNIX epoch" ) );
+      case NAME_SHORT               :  return( _( "User, login name" ) );
+      case NAME                     :  return( _( "User, full name" ) );
+      case TM_CURRENT_LINE          :  return( _( "Contents of current line" ) );
+      case TM_LINE_INDEX            :  return( _( "Zero-index line number" ) );
+      case TM_LINE_NUMBER           :  return( _( "One-index line number" ) );
+      default                       :  assert_not_reached();
+    }
+
+  }
+
+}
+
 public class Templater : Box {
 
   private Templates        _templates;
   private Template?        _current;
   private MainWindow       _win;
+  private ImageArea        _imager;
   private Entry            _name;
   private GtkSource.View   _text;
   private GtkSource.Buffer _buffer;
@@ -18,14 +88,34 @@ public class Templater : Box {
     { "action_insert_next_tab_position", action_insert_next_tab_position },
     { "action_insert_last_tab_position", action_insert_last_tab_position },
     { "action_insert_variable",          action_insert_variable, "s" },
+    { "action_bold_text",                action_bold_text },
+    { "action_italicize_text",           action_italicize_text },
+    { "action_code_text",                action_code_text },
+    { "action_h1_text",                  action_h1_text },
+    { "action_h2_text",                  action_h2_text },
+    { "action_h3_text",                  action_h3_text },
+    { "action_h4_text",                  action_h4_text },
+    { "action_h5_text",                  action_h5_text },
+    { "action_h6_text",                  action_h6_text },
+    { "action_h1_ul_text",               action_h1_ul_text },
+    { "action_h2_ul_text",               action_h2_ul_text },
+    { "action_hr",                       action_hr },
+    { "action_ordered_list_text",        action_ordered_list_text },
+    { "action_unordered_list_text",      action_unordered_list_text },
+    { "action_task_text",                action_task_text },
+    { "action_task_done_text",           action_task_done_text },
+    { "action_link_text",                action_link_text },
+    { "action_image_text",               action_image_text },
+    { "action_remove_markup",            action_remove_markup },
   };
 
   /* Default constructor */
-  public Templater( MainWindow win, Templates templates ) {
+  public Templater( Gtk.Application app, MainWindow win, ImageArea imager, Templates templates ) {
 
     Object( orientation: Orientation.VERTICAL, spacing: 5 );
 
     _win       = win;
+    _imager    = imager;
     _templates = templates;
     _current   = null;
 
@@ -59,11 +149,39 @@ public class Templater : Box {
     actions.add_action_entries( action_entries, this );
     insert_action_group( "templater", actions );
 
+    /* Add keyboard shortcuts */
+    add_keyboard_shortcuts( app );
+
   }
 
   /* Returns the widget that will receive input focus when this UI is displayed */
   public Widget get_focus_widget() {
     return( _name );
+  }
+
+  /* Add keyboard shortcuts */
+  private void add_keyboard_shortcuts( Gtk.Application app ) {
+
+    app.set_accels_for_action( "templater.action_bold_text",           { "<Control>b" } );
+    app.set_accels_for_action( "templater.action_italicize_text",      { "<Control>i" } );
+    app.set_accels_for_action( "templater.action_code_text",           { "<Control>m" } );
+    app.set_accels_for_action( "templater.action_h1_text",             { "<Control>1" } );
+    app.set_accels_for_action( "templater.action_h2_text",             { "<Control>2" } );
+    app.set_accels_for_action( "templater.action_h3_text",             { "<Control>3" } );
+    app.set_accels_for_action( "templater.action_h4_text",             { "<Control>4" } );
+    app.set_accels_for_action( "templater.action_h5_text",             { "<Control>5" } );
+    app.set_accels_for_action( "templater.action_h6_text",             { "<Control>6" } );
+    app.set_accels_for_action( "templater.action_h1_ul_text",          { "<Control>equal" } );
+    app.set_accels_for_action( "templater.action_h2_ul_text",          { "<Control>minus" } );
+    app.set_accels_for_action( "templater.action_hr",                  { "<Control>h" } );
+    app.set_accels_for_action( "templater.action_ordered_list_text",   { "<Control>numbersign" } );
+    app.set_accels_for_action( "templater.action_unordered_list_text", { "<Control>asterisk" } );
+    app.set_accels_for_action( "templater.action_task_text",           { "<Control>bracketleft" } );
+    app.set_accels_for_action( "templater.action_task_done_text",      { "<Control>bracketright" } );
+    app.set_accels_for_action( "templater.action_link_text",           { "<Control>k" } );
+    app.set_accels_for_action( "templater.action_image_text",          { "<Control><Shift>k" } );
+    app.set_accels_for_action( "templater.action_remove_markup",       { "<Control><Shift>r" } );
+
   }
 
   /* Adds the name frame */
@@ -129,6 +247,27 @@ public class Templater : Box {
     var lang_mgr = GtkSource.LanguageManager.get_default();
     var lang     = lang_mgr.get_language( "markdown" );
 
+    /* Create the list of shortcuts */
+    var bold_shortcut      = new Shortcut( ShortcutTrigger.parse_string( "<Control>b" ),            ShortcutAction.parse_string( "action(templater.action_bold_text)" ) );
+    var italic_shortcut    = new Shortcut( ShortcutTrigger.parse_string( "<Control>i" ),            ShortcutAction.parse_string( "action(templater.action_italicize_text)" ) );
+    var code_shortcut      = new Shortcut( ShortcutTrigger.parse_string( "<Control>m" ),            ShortcutAction.parse_string( "action(templater.action_code_text)" ) );
+    var h1_shortcut        = new Shortcut( ShortcutTrigger.parse_string( "<Control>1" ),            ShortcutAction.parse_string( "action(templater.action_h1_text)" ) );
+    var h2_shortcut        = new Shortcut( ShortcutTrigger.parse_string( "<Control>2" ),            ShortcutAction.parse_string( "action(templater.action_h2_text)" ) );
+    var h3_shortcut        = new Shortcut( ShortcutTrigger.parse_string( "<Control>3" ),            ShortcutAction.parse_string( "action(templater.action_h3_text)" ) );
+    var h4_shortcut        = new Shortcut( ShortcutTrigger.parse_string( "<Control>4" ),            ShortcutAction.parse_string( "action(templater.action_h4_text)" ) );
+    var h5_shortcut        = new Shortcut( ShortcutTrigger.parse_string( "<Control>5" ),            ShortcutAction.parse_string( "action(templater.action_h5_text)" ) );
+    var h6_shortcut        = new Shortcut( ShortcutTrigger.parse_string( "<Control>6" ),            ShortcutAction.parse_string( "action(templater.action_h6_text)" ) );
+    var h1_ul_shortcut     = new Shortcut( ShortcutTrigger.parse_string( "<Control>equal" ),        ShortcutAction.parse_string( "action(templater.action_h1_ul_text)" ) );
+    var h2_ul_shortcut     = new Shortcut( ShortcutTrigger.parse_string( "<Control>minus" ),        ShortcutAction.parse_string( "action(templater.action_h2_ul_text)" ) );
+    var hr_shortcut        = new Shortcut( ShortcutTrigger.parse_string( "<Control>h" ),            ShortcutAction.parse_string( "action(templater.action_hr)" ) );
+    var ordered_shortcut   = new Shortcut( ShortcutTrigger.parse_string( "<Control>numbersign" ),   ShortcutAction.parse_string( "action(templater.action_ordered_list_text)" ) );
+    var unordered_shortcut = new Shortcut( ShortcutTrigger.parse_string( "<Control>asterisk" ),     ShortcutAction.parse_string( "action(templater.action_unordered_list_text)" ) );
+    var task_shortcut      = new Shortcut( ShortcutTrigger.parse_string( "<Control>bracketleft" ),  ShortcutAction.parse_string( "action(templater.action_task_text)" ) );
+    var done_shortcut      = new Shortcut( ShortcutTrigger.parse_string( "<Control>bracketright" ), ShortcutAction.parse_string( "action(templater.action_task_done_text)" ) );
+    var link_shortcut      = new Shortcut( ShortcutTrigger.parse_string( "<Control>k" ),            ShortcutAction.parse_string( "action(templater.action_link_text)" ) );
+    var image_shortcut     = new Shortcut( ShortcutTrigger.parse_string( "<Control><Shift>k" ),     ShortcutAction.parse_string( "action(templater.action_image_text)" ) );
+    var remove_shortcut    = new Shortcut( ShortcutTrigger.parse_string( "<Shift><Control>r" ),     ShortcutAction.parse_string( "action(templater.action_remove_markup)" ) );
+
     /* Create the text entry view */
     var text_focus = new EventControllerFocus();
     _buffer = new GtkSource.Buffer.with_language( lang );
@@ -136,10 +275,30 @@ public class Templater : Box {
       valign     = Align.FILL,
       vexpand    = true,
       wrap_mode  = WrapMode.WORD,
-      extra_menu = create_insertion_menu()
+      extra_menu = create_extra_menu()
     };
     _text.add_controller( text_focus );
     _text.add_css_class( "journal-text" );
+
+    _text.add_shortcut( bold_shortcut );
+    _text.add_shortcut( italic_shortcut );
+    _text.add_shortcut( code_shortcut );
+    _text.add_shortcut( h1_shortcut );
+    _text.add_shortcut( h2_shortcut );
+    _text.add_shortcut( h3_shortcut );
+    _text.add_shortcut( h4_shortcut );
+    _text.add_shortcut( h5_shortcut );
+    _text.add_shortcut( h6_shortcut );
+    _text.add_shortcut( h1_ul_shortcut );
+    _text.add_shortcut( h2_ul_shortcut );
+    _text.add_shortcut( hr_shortcut );
+    _text.add_shortcut( ordered_shortcut );
+    _text.add_shortcut( unordered_shortcut );
+    _text.add_shortcut( task_shortcut );
+    _text.add_shortcut( done_shortcut );
+    _text.add_shortcut( link_shortcut );
+    _text.add_shortcut( image_shortcut );
+    _text.add_shortcut( remove_shortcut );
     
     set_margin();
     set_line_spacing();
@@ -171,26 +330,93 @@ public class Templater : Box {
 
   }
 
-  /* Creates the insertion menu */
+  /* Creates the text formatting submenu */
+  private GLib.Menu create_format_menu() {
+
+    var formatter_menu = new GLib.Menu();
+    formatter_menu.append( "Bold",      "templater.action_bold_text" );
+    formatter_menu.append( "Italicize", "templater.action_italicize_text" );
+    formatter_menu.append( "Monospace", "templater.action_code_text" );
+
+    var header_ul_menu = new GLib.Menu();
+    header_ul_menu.append( "Header 1 Underline", "templater.action_h1_ul_text" );
+    header_ul_menu.append( "Header 2 Underline", "templater.action_h2_ul_text" );
+
+    var header_menu = new GLib.Menu();
+    header_menu.append( "Header 1", "templater.action_h1_text" );
+    header_menu.append( "Header 2", "templater.action_h2_text" );
+    header_menu.append( "Header 3", "templater.action_h3_text" );
+    header_menu.append( "Header 4", "templater.action_h4_text" );
+    header_menu.append( "Header 5", "templater.action_h5_text" );
+    header_menu.append( "Header 6", "templater.action_h6_text" );
+
+    var hr_menu = new GLib.Menu();
+    hr_menu.append( "Horizontal Rule", "templater.action_hr" );
+
+    var list_menu = new GLib.Menu();
+    list_menu.append( "Unordered List", "templater.action_ordered_list_text" );
+    list_menu.append( "Ordered List",   "templater.action_unordered_list_text" );
+
+    var link_menu = new GLib.Menu();
+    link_menu.append( "Link",  "templater.action_link_text" );
+    link_menu.append( "Image", "templater.action_image_text" );
+
+    var task_menu = new GLib.Menu();
+    task_menu.append( "Task",      "templater.action_task_text" );
+    task_menu.append( "Task Done", "templater.action_task_done_text" );
+
+    var deformat_menu = new GLib.Menu();
+    deformat_menu.append( "Remove Formatting", "templater.action_remove_markup" );
+
+    var format_menu = new GLib.Menu();
+    format_menu.append_section( null, formatter_menu );
+    format_menu.append_section( null, hr_menu );
+    format_menu.append_section( null, header_ul_menu );
+    format_menu.append_section( null, header_menu );
+    format_menu.append_section( null, list_menu );
+    format_menu.append_section( null, link_menu );
+    format_menu.append_section( null, task_menu );
+    format_menu.append_section( null, deformat_menu );
+
+    return( format_menu );
+
+  }
+
+  /* Creates the insertion submenu */
   private GLib.Menu create_insertion_menu() {
 
     var tab_menu = new GLib.Menu();
     tab_menu.append( _( "Insert Next Tab Position" ), "templater.action_insert_next_tab_position" );
     tab_menu.append( _( "Insert Last Tab Position" ), "templater.action_insert_last_tab_position" );
 
+    var var_menu = new GLib.Menu();
+    for( int i=0; i<TemplateVariable.NUM; i++ ) {
+      var template_var = (TemplateVariable)i;
+      var_menu.append( template_var.label(), "templater.action_insert_variable('%s')".printf( template_var.to_string() ) );
+    }
+
     _var_menu = new GLib.Menu();
 
-    var submenu = new GLib.Menu();
-    submenu.append_section( null, tab_menu );
-    submenu.append_section( null, _var_menu );
-
     var ins_menu = new GLib.Menu();
-    ins_menu.append_submenu( _( "Insert Snippet" ), submenu );
+    ins_menu.append_section( null, tab_menu );
+    ins_menu.append_section( null, var_menu );
+    ins_menu.append_section( null, _var_menu );
 
-    var menu = new GLib.Menu();
-    menu.append_section( null, ins_menu );
+    return( ins_menu );
 
-    return( menu );
+  }
+
+  /* Returns the extra menu that is appended to the TextView contextual menu */
+  private GLib.Menu create_extra_menu() {
+
+    var format = new GLib.Menu();
+    format.append_submenu( _( "Format Text" ), create_format_menu() );
+
+    var extra = new GLib.Menu();
+    extra.append_submenu( _( "Insert Snippet Syntax" ), create_insertion_menu() );
+    extra.append_section( null, format );
+
+    return( extra );
 
   }
 
@@ -226,6 +452,139 @@ public class Templater : Box {
   private void action_insert_variable( SimpleAction action, Variant? variant ) {
     _win.reset_timer();
     insert_text( "$%s".printf( variant.get_string() ) );
+  }
+
+  /* Adds Markdown bold syntax around selected text */
+  private void action_bold_text() {
+    _win.reset_timer();
+    MarkdownFuncs.insert_bold_text( _text, _buffer );
+    _text.grab_focus();
+  }
+
+  /* Adds Markdown italic syntax around selected text */
+  private void action_italicize_text() {
+    _win.reset_timer();
+    MarkdownFuncs.insert_italicize_text( _text, _buffer );
+    _text.grab_focus();
+  }
+
+  /* Adds Markdown code syntax around selected text */
+  private void action_code_text() {
+    _win.reset_timer();
+    MarkdownFuncs.insert_code_text( _text, _buffer );
+    _text.grab_focus();
+  }
+
+  /* Adds Markdown header syntax around selected text */
+  private void action_h1_text() {
+    _win.reset_timer();
+    MarkdownFuncs.insert_header_text( _buffer, 1 );
+    _text.grab_focus();
+  }
+
+  /* Adds Markdown header syntax around selected text */
+  private void action_h2_text() {
+    _win.reset_timer();
+    MarkdownFuncs.insert_header_text( _buffer, 2 );
+    _text.grab_focus();
+  }
+
+  /* Adds Markdown header syntax around selected text */
+  private void action_h3_text() {
+    _win.reset_timer();
+    MarkdownFuncs.insert_header_text( _buffer, 3 );
+    _text.grab_focus();
+  }
+
+  /* Adds Markdown header syntax around selected text */
+  private void action_h4_text() {
+    _win.reset_timer();
+    MarkdownFuncs.insert_header_text( _buffer, 4 );
+    _text.grab_focus();
+  }
+
+  /* Adds Markdown header syntax around selected text */
+  private void action_h5_text() {
+    _win.reset_timer();
+    MarkdownFuncs.insert_header_text( _buffer, 5 );
+    _text.grab_focus();
+  }
+
+  /* Adds Markdown header syntax around selected text */
+  private void action_h6_text() {
+    _win.reset_timer();
+    MarkdownFuncs.insert_header_text( _buffer, 6 );
+    _text.grab_focus();
+  }
+
+  /* Adds a double underline below each line of selected text, converting them to H1 headers */
+  private void action_h1_ul_text() {
+    _win.reset_timer();
+    MarkdownFuncs.insert_h1_ul_text( _buffer );
+    _text.grab_focus();
+  }
+
+  /* Adds a single underline below each line of selected text, converting them to H2 headers */
+  private void action_h2_ul_text() {
+    _win.reset_timer();
+    MarkdownFuncs.insert_h2_ul_text( _buffer );
+    _text.grab_focus();
+  }
+
+  /* Adds a horizontal rule at the current line */
+  private void action_hr() {
+    _win.reset_timer();
+    MarkdownFuncs.insert_horizontal_rule( _buffer );
+    _text.grab_focus();
+  }
+
+  /* Inserts ordered list numbers at the beginning of each non-empty line */
+  private void action_ordered_list_text() {
+    _win.reset_timer();
+    MarkdownFuncs.insert_ordered_list_text( _buffer );
+    _text.grab_focus();
+  }
+
+  /* Inserts unordered list (-) characters at the beginning of each non-empty line */
+  private void action_unordered_list_text() {
+    _win.reset_timer();
+    MarkdownFuncs.insert_unordered_list_text( _buffer );
+    _text.grab_focus();
+  }
+
+  /* Inserts incomplete task strings at the beginning of each non-empty line */
+  private void action_task_text() {
+    _win.reset_timer();
+    MarkdownFuncs.insert_task_text( _buffer );
+    _text.grab_focus();
+  }
+
+  /* Inserts incomplete task strings at the beginning of each non-empty line */
+  private void action_task_done_text() {
+    _win.reset_timer();
+    MarkdownFuncs.insert_task_done_text( _buffer );
+    _text.grab_focus();
+  }
+
+  /* Inserts link syntax around the selected URI or text */
+  private void action_link_text() {
+    _win.reset_timer();
+    MarkdownFuncs.insert_link_text( _text, _buffer );
+    _text.grab_focus();
+  }
+
+  /* Inserts image syntax around the selected image URI or text */
+  private void action_image_text() {
+    _win.reset_timer();
+    MarkdownFuncs.insert_image_text( _text, _buffer, _imager );
+    _text.grab_focus();
+  }
+
+  /* Removes all markup from the selected area */
+  private void action_remove_markup() {
+    _win.reset_timer();
+    MarkdownFuncs.clear_markup( _buffer );
+    _text.grab_focus();
   }
 
   /* Sets the theme and CSS classes */

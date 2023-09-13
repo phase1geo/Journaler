@@ -322,7 +322,7 @@ public class MainWindow : Gtk.ApplicationWindow {
       vexpand = true
     };
 
-    add_template_view( tbox );
+    add_template_view( app, tbox );
 
     var abox = new Box( Orientation.VERTICAL, 0 ) {
       halign        = Align.FILL,
@@ -731,9 +731,9 @@ public class MainWindow : Gtk.ApplicationWindow {
   }
 
   /* Creates the template editor pane */
-  private void add_template_view( Box box ) {
+  private void add_template_view( Gtk.Application app, Box box ) {
 
-    _templater = new Templater( this, _templates );
+    _templater = new Templater( app, this, _text_area.image_area, _templates );
 
     box.append( _templater );
 
