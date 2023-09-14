@@ -59,6 +59,7 @@ public class TextArea : Box {
     { "action_trash_entry",         action_trash_entry },
     { "action_bold_text",           action_bold_text },
     { "action_italicize_text",      action_italicize_text },
+    { "action_strike_text",         action_strike_text },
     { "action_code_text",           action_code_text },
     { "action_h1_text",             action_h1_text },
     { "action_h2_text",             action_h2_text },
@@ -69,6 +70,7 @@ public class TextArea : Box {
     { "action_h1_ul_text",          action_h1_ul_text },
     { "action_h2_ul_text",          action_h2_ul_text },
     { "action_hr",                  action_hr },
+    { "action_blockquote",          action_blockquote },
     { "action_ordered_list_text",   action_ordered_list_text },
     { "action_unordered_list_text", action_unordered_list_text },
     { "action_task_text",           action_task_text },
@@ -149,6 +151,7 @@ public class TextArea : Box {
 
     app.set_accels_for_action( "textarea.action_bold_text",           { "<Control>b" } );
     app.set_accels_for_action( "textarea.action_italicize_text",      { "<Control>i" } );
+    app.set_accels_for_action( "textarea.action_strike_text",         { "<Control>asciitilde" } );
     app.set_accels_for_action( "textarea.action_code_text",           { "<Control>m" } );
     app.set_accels_for_action( "textarea.action_h1_text",             { "<Control>1" } );
     app.set_accels_for_action( "textarea.action_h2_text",             { "<Control>2" } );
@@ -158,6 +161,7 @@ public class TextArea : Box {
     app.set_accels_for_action( "textarea.action_h6_text",             { "<Control>6" } );
     app.set_accels_for_action( "textarea.action_h1_ul_text",          { "<Control>equal" } );
     app.set_accels_for_action( "textarea.action_h2_ul_text",          { "<Control>minus" } );
+    app.set_accels_for_action( "textarea.action_blockquote",          { "<Control>greater" } );
     app.set_accels_for_action( "textarea.action_hr",                  { "<Control>h" } );
     app.set_accels_for_action( "textarea.action_ordered_list_text",   { "<Control>numbersign" } );
     app.set_accels_for_action( "textarea.action_unordered_list_text", { "<Control>asterisk" } );
@@ -341,25 +345,27 @@ public class TextArea : Box {
     var lang     = lang_mgr.get_language( "markdown" );
 
     /* Create the list of shortcuts */
-    var bold_shortcut      = new Shortcut( ShortcutTrigger.parse_string( "<Control>b" ),            ShortcutAction.parse_string( "action(textarea.action_bold_text)" ) );
-    var italic_shortcut    = new Shortcut( ShortcutTrigger.parse_string( "<Control>i" ),            ShortcutAction.parse_string( "action(textarea.action_italicize_text)" ) ); 
-    var code_shortcut      = new Shortcut( ShortcutTrigger.parse_string( "<Control>m" ),            ShortcutAction.parse_string( "action(textarea.action_code_text)" ) );
-    var h1_shortcut        = new Shortcut( ShortcutTrigger.parse_string( "<Control>1" ),            ShortcutAction.parse_string( "action(textarea.action_h1_text)" ) );
-    var h2_shortcut        = new Shortcut( ShortcutTrigger.parse_string( "<Control>2" ),            ShortcutAction.parse_string( "action(textarea.action_h2_text)" ) );
-    var h3_shortcut        = new Shortcut( ShortcutTrigger.parse_string( "<Control>3" ),            ShortcutAction.parse_string( "action(textarea.action_h3_text)" ) );
-    var h4_shortcut        = new Shortcut( ShortcutTrigger.parse_string( "<Control>4" ),            ShortcutAction.parse_string( "action(textarea.action_h4_text)" ) );
-    var h5_shortcut        = new Shortcut( ShortcutTrigger.parse_string( "<Control>5" ),            ShortcutAction.parse_string( "action(textarea.action_h5_text)" ) );
-    var h6_shortcut        = new Shortcut( ShortcutTrigger.parse_string( "<Control>6" ),            ShortcutAction.parse_string( "action(textarea.action_h6_text)" ) );
-    var h1_ul_shortcut     = new Shortcut( ShortcutTrigger.parse_string( "<Control>equal" ),        ShortcutAction.parse_string( "action(textarea.action_h1_ul_text)" ) );
-    var h2_ul_shortcut     = new Shortcut( ShortcutTrigger.parse_string( "<Control>minus" ),        ShortcutAction.parse_string( "action(textarea.action_h2_ul_text)" ) );
-    var hr_shortcut        = new Shortcut( ShortcutTrigger.parse_string( "<Control>h" ),            ShortcutAction.parse_string( "action(textarea.action_hr)" ) );
-    var ordered_shortcut   = new Shortcut( ShortcutTrigger.parse_string( "<Control>numbersign" ),   ShortcutAction.parse_string( "action(textarea.action_ordered_list_text)" ) );
-    var unordered_shortcut = new Shortcut( ShortcutTrigger.parse_string( "<Control>asterisk" ),     ShortcutAction.parse_string( "action(textarea.action_unordered_list_text)" ) );
-    var task_shortcut      = new Shortcut( ShortcutTrigger.parse_string( "<Control>bracketleft" ),  ShortcutAction.parse_string( "action(textarea.action_task_text)" ) );
-    var done_shortcut      = new Shortcut( ShortcutTrigger.parse_string( "<Control>bracketright" ), ShortcutAction.parse_string( "action(textarea.action_task_done_text)" ) );
-    var link_shortcut      = new Shortcut( ShortcutTrigger.parse_string( "<Control>k" ),            ShortcutAction.parse_string( "action(textarea.action_link_text)" ) );
-    var image_shortcut     = new Shortcut( ShortcutTrigger.parse_string( "<Control><Shift>k" ),     ShortcutAction.parse_string( "action(textarea.action_image_text)" ) );
-    var remove_shortcut    = new Shortcut( ShortcutTrigger.parse_string( "<Shift><Control>r" ),     ShortcutAction.parse_string( "action(textarea.action_remove_markup)" ) );
+    var bold_shortcut       = new Shortcut( ShortcutTrigger.parse_string( "<Control>b" ),            ShortcutAction.parse_string( "action(textarea.action_bold_text)" ) );
+    var italic_shortcut     = new Shortcut( ShortcutTrigger.parse_string( "<Control>i" ),            ShortcutAction.parse_string( "action(textarea.action_italicize_text)" ) ); 
+    var strike_shortcut     = new Shortcut( ShortcutTrigger.parse_string( "<Control>asciitilde" ),   ShortcutAction.parse_string( "action(textarea.action_strike_text)" ) ); 
+    var code_shortcut       = new Shortcut( ShortcutTrigger.parse_string( "<Control>m" ),            ShortcutAction.parse_string( "action(textarea.action_code_text)" ) );
+    var h1_shortcut         = new Shortcut( ShortcutTrigger.parse_string( "<Control>1" ),            ShortcutAction.parse_string( "action(textarea.action_h1_text)" ) );
+    var h2_shortcut         = new Shortcut( ShortcutTrigger.parse_string( "<Control>2" ),            ShortcutAction.parse_string( "action(textarea.action_h2_text)" ) );
+    var h3_shortcut         = new Shortcut( ShortcutTrigger.parse_string( "<Control>3" ),            ShortcutAction.parse_string( "action(textarea.action_h3_text)" ) );
+    var h4_shortcut         = new Shortcut( ShortcutTrigger.parse_string( "<Control>4" ),            ShortcutAction.parse_string( "action(textarea.action_h4_text)" ) );
+    var h5_shortcut         = new Shortcut( ShortcutTrigger.parse_string( "<Control>5" ),            ShortcutAction.parse_string( "action(textarea.action_h5_text)" ) );
+    var h6_shortcut         = new Shortcut( ShortcutTrigger.parse_string( "<Control>6" ),            ShortcutAction.parse_string( "action(textarea.action_h6_text)" ) );
+    var h1_ul_shortcut      = new Shortcut( ShortcutTrigger.parse_string( "<Control>equal" ),        ShortcutAction.parse_string( "action(textarea.action_h1_ul_text)" ) );
+    var h2_ul_shortcut      = new Shortcut( ShortcutTrigger.parse_string( "<Control>minus" ),        ShortcutAction.parse_string( "action(textarea.action_h2_ul_text)" ) );
+    var blockquote_shortcut = new Shortcut( ShortcutTrigger.parse_string( "<Control>greater" ),      ShortcutAction.parse_string( "action(textarea.action_blockquote)" ) );
+    var hr_shortcut         = new Shortcut( ShortcutTrigger.parse_string( "<Control>h" ),            ShortcutAction.parse_string( "action(textarea.action_hr)" ) );
+    var ordered_shortcut    = new Shortcut( ShortcutTrigger.parse_string( "<Control>numbersign" ),   ShortcutAction.parse_string( "action(textarea.action_ordered_list_text)" ) );
+    var unordered_shortcut  = new Shortcut( ShortcutTrigger.parse_string( "<Control>asterisk" ),     ShortcutAction.parse_string( "action(textarea.action_unordered_list_text)" ) );
+    var task_shortcut       = new Shortcut( ShortcutTrigger.parse_string( "<Control>bracketleft" ),  ShortcutAction.parse_string( "action(textarea.action_task_text)" ) );
+    var done_shortcut       = new Shortcut( ShortcutTrigger.parse_string( "<Control>bracketright" ), ShortcutAction.parse_string( "action(textarea.action_task_done_text)" ) );
+    var link_shortcut       = new Shortcut( ShortcutTrigger.parse_string( "<Control>k" ),            ShortcutAction.parse_string( "action(textarea.action_link_text)" ) );
+    var image_shortcut      = new Shortcut( ShortcutTrigger.parse_string( "<Control><Shift>k" ),     ShortcutAction.parse_string( "action(textarea.action_image_text)" ) );
+    var remove_shortcut     = new Shortcut( ShortcutTrigger.parse_string( "<Shift><Control>r" ),     ShortcutAction.parse_string( "action(textarea.action_remove_markup)" ) );
 
     /* Create the text entry view */
     _buffer = new GtkSource.Buffer.with_language( lang );
@@ -378,6 +384,7 @@ public class TextArea : Box {
 
     _text.add_shortcut( bold_shortcut );
     _text.add_shortcut( italic_shortcut );
+    _text.add_shortcut( strike_shortcut );
     _text.add_shortcut( code_shortcut );
     _text.add_shortcut( h1_shortcut );
     _text.add_shortcut( h2_shortcut );
@@ -387,6 +394,7 @@ public class TextArea : Box {
     _text.add_shortcut( h6_shortcut );
     _text.add_shortcut( h1_ul_shortcut );
     _text.add_shortcut( h2_ul_shortcut );
+    _text.add_shortcut( blockquote_shortcut );
     _text.add_shortcut( hr_shortcut );
     _text.add_shortcut( ordered_shortcut );
     _text.add_shortcut( unordered_shortcut );
@@ -497,9 +505,10 @@ public class TextArea : Box {
 
     /* Create extra menu */
     var formatter_menu = new GLib.Menu();
-    formatter_menu.append( "Bold",      "textarea.action_bold_text" );
-    formatter_menu.append( "Italicize", "textarea.action_italicize_text" );
-    formatter_menu.append( "Monospace", "textarea.action_code_text" );
+    formatter_menu.append( "Bold",          "textarea.action_bold_text" );
+    formatter_menu.append( "Italicize",     "textarea.action_italicize_text" );
+    formatter_menu.append( "Strikethrough", "textarea.action_strike_text" );
+    formatter_menu.append( "Monospace",     "textarea.action_code_text" );
 
     var header_ul_menu = new GLib.Menu();
     header_ul_menu.append( "Header 1 Underline", "textarea.action_h1_ul_text" );
@@ -514,6 +523,7 @@ public class TextArea : Box {
     header_menu.append( "Header 6", "textarea.action_h6_text" );
 
     var hr_menu = new GLib.Menu();
+    hr_menu.append( "Blockquote",      "textarea.action_blockquote" );
     hr_menu.append( "Horizontal Rule", "textarea.action_hr" );
 
     var list_menu = new GLib.Menu();
@@ -533,9 +543,9 @@ public class TextArea : Box {
 
     var format_menu = new GLib.Menu();
     format_menu.append_section( null, formatter_menu );
-    format_menu.append_section( null, hr_menu );
     format_menu.append_section( null, header_ul_menu );
     format_menu.append_section( null, header_menu );
+    format_menu.append_section( null, hr_menu );
     format_menu.append_section( null, list_menu );
     format_menu.append_section( null, link_menu );
     format_menu.append_section( null, task_menu );
@@ -687,6 +697,13 @@ public class TextArea : Box {
     _text.grab_focus();
   }
 
+  /* Adds Markdown strikethrough syntax around selected text */
+  private void action_strike_text() {
+    _win.reset_timer();
+    MarkdownFuncs.insert_strikethrough_text( _text, _buffer );
+    _text.grab_focus();
+  }
+
   /* Adds Markdown code syntax around selected text */
   private void action_code_text() {
     _win.reset_timer();
@@ -747,6 +764,13 @@ public class TextArea : Box {
   private void action_h2_ul_text() {
     _win.reset_timer();
     MarkdownFuncs.insert_h2_ul_text( _buffer );
+    _text.grab_focus();
+  }
+
+  /* Adds one level of blockquote at the current line */
+  private void action_blockquote() {
+    _win.reset_timer();
+    MarkdownFuncs.insert_blockquote( _buffer );
     _text.grab_focus();
   }
 

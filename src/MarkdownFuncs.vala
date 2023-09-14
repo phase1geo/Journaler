@@ -52,6 +52,9 @@ public class MarkdownFuncs {
         <snippet _name="md-italic" _description="Insert italicized text" trigger="%md-italic%">
           <text languages="markdown"><![CDATA[_${1}_$0]]></text>
         </snippet>
+        <snippet _name="md-strike" _description="Insert strikethrough text" trigger="%md-strike%">
+          <text languages="markdown"><![CDATA[~~${1}~~$0]]></text>
+        </snippet>
         <snippet _name="md-monospace" _description="Insert monospaced text" trigger="%md-mono%">
           <text languages="markdown"><![CDATA[`${1}`$0]]></text>
         </snippet>
@@ -307,10 +310,10 @@ public class MarkdownFuncs {
             res.erase( (res.len - 1), 1 );
           }
         }
-        for( int i=2; i<mi.get_match_count(); i++ ) {
+        for( int i=3; i<mi.get_match_count(); i++ ) {
           var str = mi.fetch( i );
           if( str != null ) {
-            res = res.append( str + ((i == 2) ? " " : "") );
+            res = res.append( str + ((i == 3) ? " " : "") );
           }
         }
         return( false );
@@ -338,6 +341,11 @@ public class MarkdownFuncs {
   /* Adds Markdown italic syntax around selected text */
   public static void insert_italicize_text( GtkSource.View view, TextBuffer buffer ) {
     add_text_markup( view, buffer, "_", "_", "%md-italic%" );
+  }
+
+  /* Adds Markdown strikethrough syntax around selected text */
+  public static void insert_strikethrough_text( GtkSource.View view, TextBuffer buffer ) {
+    add_text_markup( view, buffer, "~~", "~~", "%md-strike%" );
   }
 
   /* Adds Markdown code syntax around selected text */
@@ -374,6 +382,17 @@ public class MarkdownFuncs {
 
     buffer.begin_user_action();
     add_line_markup( buffer, syntax, insert_at_empty_line );
+    buffer.end_user_action();
+
+  }
+
+  /* Inserts one level of blockquote at every non-blank line */
+  public static void insert_blockquote( TextBuffer buffer ) {
+
+    var syntax = "> ";
+
+    buffer.begin_user_action();
+    add_line_markup( buffer, syntax, insert_line_chars );
     buffer.end_user_action();
 
   }
@@ -571,7 +590,7 @@ public class MarkdownFuncs {
   public static void clear_markup( TextBuffer buffer ) {
 
     /* Remove the markup */
-    remove_markup( buffer, "(^#+\\s+|`+|\\*+|_{1,2}|^-\\s+|^[0-9]+\\.\\s+|\\[[ xX]\\]\\s+|^\\s*[=-]+|!?\\[(.*?)\\]\\s*\\((.*?)\\))" );
+    remove_markup( buffer, "(^#+\\s+|^\\s*(>\\s*)+|`+|\\*+|_{1,2}|~{2}|^-\\s+|^[0-9]+\\.\\s+|\\[[ xX]\\]\\s+|^\\s*[=-]+|!?\\[(.*?)\\]\\s*\\((.*?)\\))" );
 
     /* Deselect text */
     TextIter cursor;
