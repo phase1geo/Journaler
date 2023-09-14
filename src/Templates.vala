@@ -97,6 +97,8 @@ public class Templates {
   /* Saves the current templates in XML format */
   public void save() {
 
+    Utils.create_dir( xml_dir() );
+
     Xml.Doc*  doc  = new Xml.Doc( "1.0" );
     Xml.Node* root = new Xml.Node( null, "snippets" );
 

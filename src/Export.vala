@@ -94,7 +94,7 @@ public class Export {
       }
 
       // Create the directories
-      DirUtils.create_with_parents( Path.build_filename( fname, "images" ), 0700 );
+      Utils.create_dir( Path.build_filename( fname, "images" ) );
 
     }
 

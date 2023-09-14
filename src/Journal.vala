@@ -83,8 +83,8 @@ public class Journal {
 
   /* Make the database and image directories */
   private void make_directories() {
-    DirUtils.create_with_parents( journal_path(), 0755 );
-    DirUtils.create_with_parents( image_path(),   0755 );
+    Utils.create_dir( journal_path() );
+    Utils.create_dir( image_path() );
   }
 
   /* Constructor */

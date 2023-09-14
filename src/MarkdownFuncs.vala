@@ -33,6 +33,9 @@ public class MarkdownFuncs {
   /* Add the markdown.snippets file to the user's directory */
   public static void add_markdown_snippets() {
 
+    /* Make sure that snippets directory exists */
+    Utils.create_dir( xml_dir() );
+
     var path = GLib.Path.build_filename( xml_dir(), "markdown.snippets" );
 
     /* If the file already exists, leave it alone */

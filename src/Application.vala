@@ -64,7 +64,7 @@ public class Journaler : Gtk.Application {
 
     /* Make sure that the user data directory exists */
     var app_dir = GLib.Path.build_filename( Environment.get_user_data_dir(), "journaler" );
-    DirUtils.create_with_parents( app_dir, 0755 );
+    Utils.create_dir( app_dir );
 
     /* Create the main window */
     appwin = new MainWindow( this, settings );
