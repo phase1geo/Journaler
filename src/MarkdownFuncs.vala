@@ -27,7 +27,7 @@ public class MarkdownFuncs {
 
   /* Returns the directory containing the templates.snippets file */
   private static string xml_dir() {
-    return( GLib.Path.build_filename( Environment.get_user_data_dir(), "journaler" ) );
+    return( GLib.Path.build_filename( Environment.get_user_data_dir(), "journaler", "snippets" ) );
   }
 
   /* Add the markdown.snippets file to the user's directory */

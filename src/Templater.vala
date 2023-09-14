@@ -69,6 +69,65 @@ public enum TemplateVariable {
 
 }
 
+public enum TransformFunction {
+  LOWER,
+  UPPER,
+  CAPITALIZE,
+  UNCAPITALIZE,
+  HTML,
+  CAMELIZE,
+  FUNCTIFY,
+  NAMESPACE,
+  CLASS,
+  INSTANCE,
+  SPACE,
+  STRIPSUFFIX,
+  SLASHTODOTS,
+  DESCENDPATH,
+  NUM;
+
+  public string to_string() {
+    switch( this ) {
+      case LOWER        :  return( "lower" );
+      case UPPER        :  return( "upper" );
+      case CAPITALIZE   :  return( "capitalize" );
+      case UNCAPITALIZE :  return( "uncapitalize" );
+      case HTML         :  return( "html" );
+      case CAMELIZE     :  return( "camelize" );
+      case FUNCTIFY     :  return( "functify" );
+      case NAMESPACE    :  return( "namespace" );
+      case CLASS        :  return( "class" );
+      case INSTANCE     :  return( "instance" );
+      case SPACE        :  return( "space" );
+      case STRIPSUFFIX  :  return( "stripsuffix" );
+      case SLASHTODOTS  :  return( "slash_to_dots" );
+      case DESCENDPATH  :  return( "descend_path" );
+      default           :  assert_not_reached();
+    }
+  }
+
+  public string label() {
+    switch( this ) {
+      case LOWER        :  return( _( "Lower-case" ) );
+      case UPPER        :  return( _( "Upper-case" ) );
+      case CAPITALIZE   :  return( _( "Capitalize" ) );
+      case UNCAPITALIZE :  return( _( "Remove capitalization" ) );
+      case HTML         :  return( _( "Convert special HTML characters" ) );
+      case CAMELIZE     :  return( _( "Camel-case" ) );
+      case FUNCTIFY     :  return( _( "Snake-case" ) );
+      case NAMESPACE    :  return( _( "Use namespace name" ) );
+      case CLASS        :  return( _( "Use class name" ) );
+      case INSTANCE     :  return( _( "Use instance name" ) );
+      case SPACE        :  return( _( "Convert all characters to spaces" ) );
+      case STRIPSUFFIX  :  return( _( "Remove the filename suffix" ) );
+      case SLASHTODOTS  :  return( _( "Convert slashes to dots" ) );
+      case DESCENDPATH  :  return( _( "Remove parent directory" ) );
+      default           :  assert_not_reached();
+    }
+  }
+
+}
+
 public class Templater : Box {
 
   private Templates        _templates;
@@ -87,7 +146,7 @@ public class Templater : Box {
   private const GLib.ActionEntry action_entries[] = {
     { "action_insert_next_tab_position", action_insert_next_tab_position },
     { "action_insert_last_tab_position", action_insert_last_tab_position },
-    { "action_insert_variable",          action_insert_variable, "s" },
+    { "action_insert_string",            action_insert_string, "s" },
     { "action_bold_text",                action_bold_text },
     { "action_italicize_text",           action_italicize_text },
     { "action_code_text",                action_code_text },
@@ -392,15 +451,31 @@ public class Templater : Box {
     var var_menu = new GLib.Menu();
     for( int i=0; i<TemplateVariable.NUM; i++ ) {
       var template_var = (TemplateVariable)i;
-      var_menu.append( template_var.label(), "templater.action_insert_variable('%s')".printf( template_var.to_string() ) );
+      var_menu.append( template_var.label(), "templater.action_insert_string('$%s')".printf( template_var.to_string() ) );
     }
 
     _var_menu = new GLib.Menu();
 
+    var vars_submenu = new GLib.Menu();
+    vars_submenu.append_section( null, var_menu );
+    vars_submenu.append_section( null, _var_menu );
+
+    var vars_menu = new GLib.Menu();
+    vars_menu.append_submenu( _( "Insert Variable" ), vars_submenu );
+
+    var transform_submenu = new GLib.Menu();
+    for( int i=0; i<TransformFunction.NUM; i++ ) {
+      var transform_func = (TransformFunction)i;
+      transform_submenu.append( transform_func.label(), "templater.action_insert_string('%s')".printf( transform_func.to_string() ) );
+    }
+
+    var transform_menu = new GLib.Menu();
+    transform_menu.append_submenu( _( "Insert Transform Function" ), transform_submenu );
+
     var ins_menu = new GLib.Menu();
     ins_menu.append_section( null, tab_menu );
-    ins_menu.append_section( null, var_menu );
-    ins_menu.append_section( null, _var_menu );
+    ins_menu.append_section( null, vars_menu );
+    ins_menu.append_section( null, transform_menu );
 
     return( ins_menu );
 
@@ -425,7 +500,7 @@ public class Templater : Box {
 
     for( int i=0; i<_templates.template_vars.num_variables(); i++ ) {
       var variable = _templates.template_vars.get_variable( i );
-      _var_menu.append( _( "Insert %s" ).printf( variable.replace( "_", " " ).down() ), "templater.action_insert_variable('%s')".printf( variable ) );
+      _var_menu.append( _( "Insert %s" ).printf( variable.replace( "_", " " ).down() ), "templater.action_insert_string('$%s')".printf( variable ) );
     }
 
   }
@@ -449,9 +524,9 @@ public class Templater : Box {
   }
 
   /* Inserts the given variable */
-  private void action_insert_variable( SimpleAction action, Variant? variant ) {
+  private void action_insert_string( SimpleAction action, Variant? variant ) {
     _win.reset_timer();
-    insert_text( "$%s".printf( variant.get_string() ) );
+    insert_text( variant.get_string() );
   }
 
   /* Adds Markdown bold syntax around selected text */

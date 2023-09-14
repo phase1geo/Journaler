@@ -26,7 +26,7 @@ public class Templates {
 
   /* Returns the directory containing the templates.snippets file */
   private string xml_dir() {
-    return( GLib.Path.build_filename( Environment.get_user_data_dir(), "journaler" ) );
+    return( GLib.Path.build_filename( Environment.get_user_data_dir(), "journaler", "snippets" ) );
   }
 
   /* Returns the pathname of the templates.snippets file */
