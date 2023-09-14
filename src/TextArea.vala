@@ -99,12 +99,7 @@ public class TextArea : Box {
     _quotes = new Quotes();
 
     /* Update the templates menu */
-    _templates.changed.connect((name, added) => {
-      _templates_menu.remove_all();
-      foreach( var template in _templates.templates ) {
-        _templates_menu.append( template.name, "textarea.action_insert_template('%s')".printf( template.name ) );
-      }
-    });
+    _templates.changed.connect( update_template_menu );
 
     /* Add the UI components */
     add_text_area();
@@ -136,6 +131,17 @@ public class TextArea : Box {
     /* Add keyboard shortcuts */
     add_keyboard_shortcuts( app );
 
+  }
+
+  /* Updates the template menu */
+  private void update_template_menu( string name, bool added ) {
+    Idle.add(() => {
+      _templates_menu.remove_all();
+      foreach( var template in _templates.templates ) {
+        _templates_menu.append( template.name, "textarea.action_insert_template('%s')".printf( template.name ) );
+      }
+      return( false );
+    });
   }
 
   /* Add keyboard shortcuts */
