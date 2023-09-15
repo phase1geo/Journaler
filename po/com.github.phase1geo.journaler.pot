@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: com.github.phase1geo.journaler\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-09-13 22:40-0500\n"
+"POT-Creation-Date: 2023-09-14 20:18-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -312,7 +312,7 @@ msgstr ""
 msgid "Select an image"
 msgstr ""
 
-#: src/ImageArea.vala:265 src/TextArea.vala:569
+#: src/ImageArea.vala:265 src/TextArea.vala:579
 msgid "Add Image"
 msgstr ""
 
@@ -398,7 +398,7 @@ msgstr ""
 msgid "Manage Templates"
 msgstr ""
 
-#: src/MainWindow.vala:614 src/SidebarEditor.vala:212 src/Templater.vala:688
+#: src/MainWindow.vala:614 src/SidebarEditor.vala:212 src/Templater.vala:712
 #: src/Utils.vala:302
 msgid "Cancel"
 msgstr ""
@@ -891,7 +891,7 @@ msgstr ""
 msgid "Journal Name:"
 msgstr ""
 
-#: src/SidebarEditor.vala:100 src/Templater.vala:256
+#: src/SidebarEditor.vala:100 src/Templater.vala:260
 msgid "Required"
 msgstr ""
 
@@ -913,7 +913,7 @@ msgstr ""
 msgid "Description:"
 msgstr ""
 
-#: src/SidebarEditor.vala:198 src/Templater.vala:675
+#: src/SidebarEditor.vala:198 src/Templater.vala:699
 msgid "Delete"
 msgstr ""
 
@@ -1128,44 +1128,44 @@ msgstr ""
 msgid "Remove parent directory"
 msgstr ""
 
-#: src/Templater.vala:249
+#: src/Templater.vala:253
 msgid "Template Name:"
 msgstr ""
 
-#: src/Templater.vala:299
+#: src/Templater.vala:303
 msgid "Template Text:"
 msgstr ""
 
-#: src/Templater.vala:448
+#: src/Templater.vala:458
 msgid "Insert Next Tab Position"
 msgstr ""
 
-#: src/Templater.vala:449
+#: src/Templater.vala:459
 msgid "Insert Last Tab Position"
 msgstr ""
 
-#: src/Templater.vala:464
+#: src/Templater.vala:474
 msgid "Insert Variable"
 msgstr ""
 
-#: src/Templater.vala:473
+#: src/Templater.vala:483
 msgid "Insert Transform Function"
 msgstr ""
 
-#: src/Templater.vala:488 src/TextArea.vala:545
+#: src/Templater.vala:498 src/TextArea.vala:555
 msgid "Format Text"
 msgstr ""
 
-#: src/Templater.vala:491
+#: src/Templater.vala:501
 msgid "Insert Snippet Syntax"
 msgstr ""
 
-#: src/Templater.vala:503
+#: src/Templater.vala:513
 #, c-format
 msgid "Insert %s"
 msgstr ""
 
-#: src/Templater.vala:694
+#: src/Templater.vala:718
 msgid "Save Changes"
 msgstr ""
 
@@ -1173,23 +1173,23 @@ msgstr ""
 msgid "Template"
 msgstr ""
 
-#: src/TextArea.vala:239
+#: src/TextArea.vala:243
 msgid "Title (Optional)"
 msgstr ""
 
-#: src/TextArea.vala:562
+#: src/TextArea.vala:572
 msgid "Restore entry"
 msgstr ""
 
-#: src/TextArea.vala:563
+#: src/TextArea.vala:573
 msgid "Delete entry permanently"
 msgstr ""
 
-#: src/TextArea.vala:575
+#: src/TextArea.vala:585
 msgid "Insert Template"
 msgstr ""
 
-#: src/TextArea.vala:579
+#: src/TextArea.vala:589
 msgid "Move entry to trash"
 msgstr ""
 
@@ -1287,85 +1287,93 @@ msgid "Italicize"
 msgstr ""
 
 #: data/com.github.phase1geo.journaler.shortcuts.ui:174
-msgid "Monospace"
+msgid "Strikethrough"
 msgstr ""
 
 #: data/com.github.phase1geo.journaler.shortcuts.ui:181
-msgid "Horizontal Rule"
+msgid "Monospace"
 msgstr ""
 
 #: data/com.github.phase1geo.journaler.shortcuts.ui:188
+msgid "Horizontal Rule"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:195
 msgid "Remove Markdown Syntax"
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.shortcuts.ui:197
+#: data/com.github.phase1geo.journaler.shortcuts.ui:204
 msgid "Markdown Headers"
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.shortcuts.ui:202
+#: data/com.github.phase1geo.journaler.shortcuts.ui:209
 msgid "Header 1 (Underlined)"
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.shortcuts.ui:209
+#: data/com.github.phase1geo.journaler.shortcuts.ui:216
 msgid "Header 2 (Underlined)"
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.shortcuts.ui:216
+#: data/com.github.phase1geo.journaler.shortcuts.ui:223
 msgid "Header 1"
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.shortcuts.ui:223
+#: data/com.github.phase1geo.journaler.shortcuts.ui:230
 msgid "Header 2"
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.shortcuts.ui:230
+#: data/com.github.phase1geo.journaler.shortcuts.ui:237
 msgid "Header 3"
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.shortcuts.ui:237
+#: data/com.github.phase1geo.journaler.shortcuts.ui:244
 msgid "Header 4"
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.shortcuts.ui:244
+#: data/com.github.phase1geo.journaler.shortcuts.ui:251
 msgid "Header 5"
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.shortcuts.ui:251
+#: data/com.github.phase1geo.journaler.shortcuts.ui:258
 msgid "Header 6"
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.shortcuts.ui:260
+#: data/com.github.phase1geo.journaler.shortcuts.ui:265
+msgid "Blockquote"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:274
 msgid "Markdown Lists"
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.shortcuts.ui:265
+#: data/com.github.phase1geo.journaler.shortcuts.ui:279
 msgid "Ordered List Item"
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.shortcuts.ui:272
+#: data/com.github.phase1geo.journaler.shortcuts.ui:286
 msgid "Unordered List Item"
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.shortcuts.ui:281
+#: data/com.github.phase1geo.journaler.shortcuts.ui:295
 msgid "Markdown Tasks"
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.shortcuts.ui:286
+#: data/com.github.phase1geo.journaler.shortcuts.ui:300
 msgid "Task"
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.shortcuts.ui:293
+#: data/com.github.phase1geo.journaler.shortcuts.ui:307
 msgid "Completed Task"
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.shortcuts.ui:302
+#: data/com.github.phase1geo.journaler.shortcuts.ui:316
 msgid "Markdown Linking"
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.shortcuts.ui:307
+#: data/com.github.phase1geo.journaler.shortcuts.ui:321
 msgid "Link"
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.shortcuts.ui:314
+#: data/com.github.phase1geo.journaler.shortcuts.ui:328
 msgid "Image"
 msgstr ""
