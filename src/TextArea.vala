@@ -636,7 +636,7 @@ public class TextArea : Box {
         load_entry.merge_with_entry( _entry );
         if( journal.move_entry( load_entry, _journals.trash ) ) {
           entry_moved( _entry );
-          stdout.printf( "Entry successfully moved to the trash\n" );
+          Utils.debug_output( "Entry successfully moved to the trash" );
         }
       }
 
@@ -666,7 +666,7 @@ public class TextArea : Box {
     /* Save the current entry to the original journal and then remove it from the trash */
     if( _journals.trash.move_entry( _entry, journal ) ) {
       entry_moved( _entry );
-      stdout.printf( "Entry successfully restored from trash\n" );
+      Utils.debug_output( "Entry successfully restored from trash" );
     }
 
   }
@@ -678,7 +678,7 @@ public class TextArea : Box {
 
     if( _journals.trash.db.remove_entry( _entry ) ) {
       entry_moved( _entry );
-      stdout.printf( "Entry permanently deleted from trash\n" );
+      Utils.debug_output( "Entry permanently deleted from trash" );
     }
 
   }
@@ -953,7 +953,7 @@ public class TextArea : Box {
         _entry_goal_reached = true;
       }
 
-      stdout.printf( "Saved successfully to journal %s\n", _journal.name );
+      Utils.debug_output( "Saved successfully to journal %s".printf( _journal.name ) );
 
     }
 

@@ -408,7 +408,7 @@ public class Database {
 
     // Make sure that the needed tables exist
     if( !create_tables() ) {
-      stdout.printf( "ERROR:  Creating database tables\n" );
+      stderr.printf( "ERROR:  Creating database tables\n" );
       return;
     }
 
@@ -903,7 +903,7 @@ public class Database {
     var err = _db.exec( query, callback, out errmsg );
     if( err != Sqlite.OK ) {
       if( err != ERRCODE_NOT_UNIQUE ) {
-        stdout.printf( "query: %s, err: %d, errmsg: %s\n", query, err, errmsg );
+        stderr.printf( "query: %s, err: %d, errmsg: %s\n", query, err, errmsg );
       }
       return( false );
     }

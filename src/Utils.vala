@@ -30,6 +30,13 @@ public class Utils {
     return( DirUtils.create_with_parents( path, 0755 ) == 0 );
   }
 
+  /* Displays the given message to standard output if we are development mode */
+  public static void debug_output( string msg ) {
+    if( Journaler.settings.get_boolean( "developer-mode" ) ) {
+      stdout.printf( "%s\n", msg );
+    }
+  }
+
   /*
    Returns a regular expression useful for parsing clickable URLs.
   */

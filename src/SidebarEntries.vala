@@ -41,6 +41,7 @@ public class SidebarEntries : Box {
   private GLib.Menu      _journal_burger_menu;
   private GLib.Menu      _hidden_burger_menu;
   private GLib.Menu      _trash_burger_menu;
+  private string         _selected_journal = "";
   private string         _selected_date = "";
   private bool           _show_hidden = false;
 
@@ -371,7 +372,7 @@ public class SidebarEntries : Box {
 
     if( _journals.current != null ) {
       if( !_journals.current.db.get_all_entries( _journals.current.is_trash, _listbox_entries ) ) {
-        stdout.printf( "ERROR:  Unable to get all entries in the journal\n" );
+        stderr.printf( "ERROR:  Unable to get all entries in the journal\n" );
         return;
       }
     }
@@ -494,11 +495,12 @@ public class SidebarEntries : Box {
   /* Displays the entry for the given date */
   public void show_entry_for_date( string journal_name, string date, bool create_if_needed, bool editable, string msg ) {
 
-    if( _selected_date == date ) {
+    if( (_selected_journal == journal_name) && (_selected_date == date) ) {
       return;
     }
 
-    _selected_date = date;
+    _selected_journal = journal_name;
+    _selected_date    = date;
 
     var is_trash  = _journals.current.is_trash;
     var entry     = new DBEntry();
