@@ -32,6 +32,8 @@ public class TextArea : Box {
   private DBEntry?         _entry = null;
   private ImageArea        _image_area;
   private Entry            _title;
+  private Button           _prev;
+  private Button           _next;
   private MenuButton       _burger;
   private Label            _date;
   private TagBox           _tags;
@@ -57,6 +59,8 @@ public class TextArea : Box {
     { "action_restore_entry",       action_restore_entry },
     { "action_delete_entry",        action_delete_entry },
     { "action_trash_entry",         action_trash_entry },
+    { "action_show_previous_entry", action_show_previous_entry },
+    { "action_show_next_entry",     action_show_next_entry },
     { "action_bold_text",           action_bold_text },
     { "action_italicize_text",      action_italicize_text },
     { "action_strike_text",         action_strike_text },
@@ -87,6 +91,8 @@ public class TextArea : Box {
   }
 
   public signal void entry_moved( DBEntry entry );
+  public signal void show_previous_entry();
+  public signal void show_next_entry();
 
   /* Create the main window UI */
   public TextArea( Gtk.Application app, MainWindow win, Journals journals, Templates templates ) {
@@ -149,6 +155,8 @@ public class TextArea : Box {
   /* Add keyboard shortcuts */
   private void add_keyboard_shortcuts( Gtk.Application app ) {
 
+    app.set_accels_for_action( "textarea.action_show_previous_entry", { "<Control>Left" } );
+    app.set_accels_for_action( "textarea.action_show_next_entry",     { "<Control>Right" } );
     app.set_accels_for_action( "textarea.action_bold_text",           { "<Control>b" } );
     app.set_accels_for_action( "textarea.action_italicize_text",      { "<Control>i" } );
     app.set_accels_for_action( "textarea.action_strike_text",         { "<Control>asciitilde" } );
@@ -249,6 +257,20 @@ public class TextArea : Box {
     _title.add_css_class( "text-background" );
     _title.add_css_class( "text-padding" );
 
+    _prev = new Button.from_icon_name( "go-previous-symbolic" ) {
+      halign = Align.END,
+      tooltip_markup = Utils.tooltip_with_accel( _( "View previous entry in sidebar" ), "<Control>Left" )
+    };
+    _prev.clicked.connect( action_show_previous_entry );
+    _prev.hide();
+
+    _next = new Button.from_icon_name( "go-next-symbolic" ) {
+      halign = Align.END,
+      tooltip_markup = Utils.tooltip_with_accel( _( "View next entry in sidebar" ), "<Control>Right" )
+    };
+    _next.clicked.connect( action_show_next_entry );
+    _next.hide();
+
     /* Create the menubutton itself */
     _burger = new MenuButton() {
       icon_name  = "view-more-symbolic",
@@ -260,6 +282,8 @@ public class TextArea : Box {
     tbox.add_css_class( "title-box" );
     tbox.add_css_class( "text-background" );
     tbox.append( _title );
+    tbox.append( _prev );
+    tbox.append( _next );
     tbox.append( _burger );
 
     /* Add the date */
@@ -683,6 +707,18 @@ public class TextArea : Box {
 
   }
 
+  /* Show the previous entry in the sidebar */
+  private void action_show_previous_entry() {
+    _win.reset_timer();
+    show_previous_entry();
+  }
+
+  /* Show the next entry in the sidebar */
+  private void action_show_next_entry() {
+    _win.reset_timer();
+    show_next_entry();
+  }
+
   /* Adds Markdown bold syntax around selected text */
   private void action_bold_text() {
     _win.reset_timer();
@@ -960,7 +996,7 @@ public class TextArea : Box {
   }
 
   /* Sets the entry contents to the given entry, saving the previous contents, if necessary */
-  public void set_buffer( DBEntry? entry, bool editable ) {
+  public void set_buffer( DBEntry? entry, bool editable, SelectedEntryPos pos ) {
 
     /* Save the current buffer before loading a new one */
     save();
@@ -990,6 +1026,18 @@ public class TextArea : Box {
     } else {
       var dt = _entry.datetime();
       _date.label = dt.format( "%A, %B %e, %Y  %I:%M %p" );
+    }
+
+    /* Set the next and previous button state */
+    _prev.set_sensitive( pos.prev_sensitivity() );
+    _next.set_sensitive( pos.next_sensitivity() );
+
+    if( _win.review_mode ) {
+      _prev.show();
+      _next.show();
+    } else {
+      _prev.hide();
+      _next.hide();
     }
 
     /* Set the image */
@@ -1218,11 +1266,6 @@ public class TextArea : Box {
     _allow_viewer_update = true;
     _viewer.load_html( (prefix + html + suffix), "file:///" );
 
-  }
-
-  /* Sets the reviewer mode */
-  public void set_reviewer_mode( bool review_mode ) {
-    set_buffer( null, !review_mode );
   }
 
   /* Sets the distraction free mode to the given value and updates the UI. */

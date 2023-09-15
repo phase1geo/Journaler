@@ -260,9 +260,9 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     /* Create the reviewer UI */
     _reviewer = new Reviewer( this, _journals );
-    _reviewer.show_matched_entry.connect((entry) => {
+    _reviewer.show_matched_entry.connect((entry, pos) => {
       _journals.current = entry.trash ? _journals.trash : _journals.get_journal_by_name( entry.journal );
-      _entries.show_entry_for_date( entry.journal, entry.date, false, false, "from show_matched_entry" );
+      _entries.show_entry_for_date( entry.journal, entry.date, false, false, pos, "from show_matched_entry" );
     });
     _reviewer.close_requested.connect( action_review );
 
@@ -564,6 +564,17 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     _text_area = new TextArea( app, this, _journals, _templates );
 
+    _text_area.show_previous_entry.connect(() => {
+      if( review_mode ) {
+        _reviewer.show_previous_entry();
+      }
+    });
+    _text_area.show_next_entry.connect(() => {
+      if( review_mode ) {
+        _reviewer.show_next_entry();
+      }
+    });
+
     box.append( _text_area );
 
     _stack_focus_widgets.set( "entry-view", _text_area.get_focus_widget() );
@@ -805,8 +816,8 @@ public class MainWindow : Gtk.ApplicationWindow {
       _sidebar_stack.visible_child_name = "editor";
     });
 
-    _entries.show_journal_entry.connect((entry, editable) => {
-      _text_area.set_buffer( entry, editable );
+    _entries.show_journal_entry.connect((entry, editable, pos) => {
+      _text_area.set_buffer( entry, editable, pos );
     });
 
     return( _entries );
@@ -864,9 +875,9 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     if( review_mode ) {
       action_review();
+    } else {
+      _entries.show_entry_for_date( _journals.current.name, DBEntry.todays_date(), true, true, SelectedEntryPos.OTHER, "action_today" );
     }
-
-    _entries.show_entry_for_date( _journals.current.name, DBEntry.todays_date(), true, true, "action_today" );
 
   }
 
@@ -985,17 +996,17 @@ public class MainWindow : Gtk.ApplicationWindow {
     }
 
     if( review_mode ) {
+      review_mode = false;
       _reviewer.on_close();
       _reviewer_revealer.reveal_child = false;
       _sidebar_stack.visible_child_name = "entries";
-      _text_area.set_reviewer_mode( false );
-      review_mode = false;
+      _text_area.set_buffer( null, true, SelectedEntryPos.OTHER );
+      _entries.last_editable = true;
     } else {
+      review_mode = true;
       _reviewer.initialize();
       _reviewer_revealer.reveal_child = true;
       _sidebar_stack.visible_child_name = "review";
-      _text_area.set_reviewer_mode( true );
-      review_mode = true;
     }
 
   }

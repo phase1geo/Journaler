@@ -43,6 +43,7 @@ public class SidebarEntries : Box {
   private GLib.Menu      _trash_burger_menu;
   private string         _selected_journal = "";
   private string         _selected_date = "";
+  private bool           _last_editable = false;
   private bool           _show_hidden = false;
 
   private const GLib.ActionEntry action_entries[] = {
@@ -55,7 +56,13 @@ public class SidebarEntries : Box {
   };
 
   public signal void edit_journal( Journal? journal );
-  public signal void show_journal_entry( DBEntry entry, bool editable );
+  public signal void show_journal_entry( DBEntry entry, bool editable, SelectedEntryPos pos );
+
+  public bool last_editable {
+    set {
+      _last_editable = value;
+    }
+  }
 
   /* Create the main window UI */
   public SidebarEntries( MainWindow win, TextArea text_area, Journals journals, Templates templates ) {
@@ -75,13 +82,13 @@ public class SidebarEntries : Box {
             action_set_enabled( "entries.action_empty_trash", (_listbox_entries.length > 0) );
             if( _listbox_entries.length > 0 ) {
               var listbox_entry = _listbox_entries.index( 0 );
-              show_entry_for_date( listbox_entry.journal, listbox_entry.date, false, true, "constructor A" );
+              show_entry_for_date( listbox_entry.journal, listbox_entry.date, false, true, SelectedEntryPos.OTHER, "constructor A" );
             } else {
-              show_entry_for_date( _journals.current.name, "", false, false, "constructor B" );
+              show_entry_for_date( _journals.current.name, "", false, false, SelectedEntryPos.OTHER, "constructor B" );
             }
           } else {
             _burger_mb.menu_model = _journal_burger_menu;
-            show_entry_for_date( _journals.current.name, DBEntry.todays_date(), true, true, "constructor C" );
+            show_entry_for_date( _journals.current.name, DBEntry.todays_date(), true, true, SelectedEntryPos.OTHER, "constructor C" );
           }
         }
       }
@@ -100,9 +107,9 @@ public class SidebarEntries : Box {
       }
       if( _listbox_entries.length > 0 ) {
         var listbox_entry = _listbox_entries.index( 0 );
-        show_entry_for_date( listbox_entry.journal, listbox_entry.date, false, true, "constructor F" );
+        show_entry_for_date( listbox_entry.journal, listbox_entry.date, false, true, SelectedEntryPos.OTHER, "constructor F" );
       } else {
-        show_entry_for_date( _journals.current.name, "", false, false, "constructor G" );
+        show_entry_for_date( _journals.current.name, "", false, false, SelectedEntryPos.OTHER, "constructor G" );
       }
     });
 
@@ -257,7 +264,7 @@ public class SidebarEntries : Box {
       var index   = row.get_index();
       var journal = _listbox_entries.index( index ).journal;
       var date    = _listbox_entries.index( index ).date;
-      show_entry_for_date( journal, date, false, true, "add_current_list" );
+      show_entry_for_date( journal, date, false, true, SelectedEntryPos.OTHER, "add_current_list" );
     });
 
     _lb_scroll = new ScrolledWindow() {
@@ -301,7 +308,7 @@ public class SidebarEntries : Box {
         _listbox.select_row( _listbox.get_row_at_index( index ) );
       } else {
         _listbox.select_row( null );
-        show_entry_for_date( _journals.current.name, date, false, true, "add_calendar" );
+        show_entry_for_date( _journals.current.name, date, false, true, SelectedEntryPos.OTHER, "add_calendar" );
       }
     });
 
@@ -493,14 +500,17 @@ public class SidebarEntries : Box {
   }
 
   /* Displays the entry for the given date */
-  public void show_entry_for_date( string journal_name, string date, bool create_if_needed, bool editable, string msg ) {
+  public void show_entry_for_date( string journal_name, string date, bool create_if_needed, bool editable, SelectedEntryPos pos, string msg ) {
 
-    if( (_selected_journal == journal_name) && (_selected_date == date) ) {
+    stdout.printf( "In show_entry_for date, editable: %s\n", editable.to_string() );
+
+    if( (_selected_journal == journal_name) && (_selected_date == date) && (_last_editable == editable) ) {
       return;
     }
 
     _selected_journal = journal_name;
     _selected_date    = date;
+    _last_editable    = editable;
 
     var is_trash  = _journals.current.is_trash;
     var entry     = new DBEntry();
@@ -519,7 +529,7 @@ public class SidebarEntries : Box {
     select_entry_only( entry );
 
     /* Indicate that the entry should be displayed */
-    show_journal_entry( entry, editable );
+    show_journal_entry( entry, editable, pos );
 
   }
 

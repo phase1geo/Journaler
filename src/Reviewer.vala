@@ -1,6 +1,31 @@
 using Gtk;
 using Granite;
 
+public enum SelectedEntryPos {
+  FIRST,
+  LAST,
+  OTHER;
+
+  public static SelectedEntryPos parse( int entries, int selected ) {
+    if( selected == 0 ) {
+      return( FIRST );
+    } else if( selected == (entries - 1) ) {
+      return( LAST );
+    } else {
+      return( OTHER );
+    }
+  }
+
+  public bool prev_sensitivity() {
+    return( this != FIRST );
+  }
+
+  public bool next_sensitivity() {
+    return( this != LAST );
+  }
+
+}
+
 public class Reviewer : Grid {
 
   private MainWindow _win;
@@ -32,6 +57,7 @@ public class Reviewer : Grid {
 
   private ListBox                _match_lb;
   private Gee.ArrayList<DBEntry> _match_entries;
+  private int                    _match_index;
   private Button                 _trash_btn;
   private Button                 _restore_btn;
 
@@ -42,7 +68,7 @@ public class Reviewer : Grid {
     { "action_delete_review", action_delete_review, "i" },
   };
 
-  public signal void show_matched_entry( DBEntry entry );
+  public signal void show_matched_entry( DBEntry entry, SelectedEntryPos pos );
   public signal void close_requested();
 
   /* Default constructor */
@@ -690,23 +716,55 @@ public class Reviewer : Grid {
     _restore_btn.sensitive = false;
 
     /* Display the first entry */
+    stdout.printf( "selecting row: 0\n" );
     _match_lb.row_selected( (_match_entries.size == 0) ? null : _match_lb.get_row_at_index( 0 ) );
 
   }
 
   // --------------------------------------------------------------
 
+  /* Displays the entry indicated by _match_index */
+  private void show_match_index_entry() {
+
+    var entry = _match_entries.get( _match_index );
+    show_matched_entry( entry, SelectedEntryPos.parse( _match_entries.size, _match_index ) );
+
+    if( entry.trash ) {
+      _trash_btn.sensitive   = false;
+      _restore_btn.sensitive = true;
+    } else {
+      _trash_btn.sensitive   = true;
+      _restore_btn.sensitive = false;
+    }
+
+  }
+
+  /* Displays the previous entry in the list */
+  public void show_previous_entry() {
+    _match_index--;
+    show_match_index_entry();
+  }
+
+  /* Displays the next entry in the list */
+  public void show_next_entry() {
+    _match_index++;
+    show_match_index_entry();
+  }
+
   /* Displays the given entry in the textarea */
   private void show_entry( ListBoxRow? row ) {
+
+    stdout.printf( "In show_entry\n" );
 
     if( row == null ) {
       return;
     } else {
-      var index    = row.get_index();
-      var entry    = _match_entries.get( index );
+      _match_index = row.get_index();
+      var entry    = _match_entries.get( _match_index );
       var selected = _match_lb.get_selected_rows().length();
-      if( selected == 1 ) {
-        show_matched_entry( entry );
+      stdout.printf( "selected, selected: %u\n", selected );
+      if( selected <= 1 ) {
+        show_matched_entry( entry, SelectedEntryPos.parse( _match_entries.size, _match_index ) );
         _match_lb.grab_focus();
         _trash_btn.sensitive   = false;
         _restore_btn.sensitive = false;
