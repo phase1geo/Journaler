@@ -502,8 +502,6 @@ public class SidebarEntries : Box {
   /* Displays the entry for the given date */
   public void show_entry_for_date( string journal_name, string date, bool create_if_needed, bool editable, SelectedEntryPos pos, string msg ) {
 
-    stdout.printf( "In show_entry_for date, editable: %s\n", editable.to_string() );
-
     if( (_selected_journal == journal_name) && (_selected_date == date) && (_last_editable == editable) ) {
       return;
     }

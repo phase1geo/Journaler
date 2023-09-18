@@ -716,64 +716,49 @@ public class Reviewer : Grid {
     _restore_btn.sensitive = false;
 
     /* Display the first entry */
-    stdout.printf( "selecting row: 0\n" );
-    _match_lb.row_selected( (_match_entries.size == 0) ? null : _match_lb.get_row_at_index( 0 ) );
+    if( _match_entries.size > 0 ) {
+      _match_lb.select_row( _match_lb.get_row_at_index( 0 ) );
+    }
 
   }
 
   // --------------------------------------------------------------
 
-  /* Displays the entry indicated by _match_index */
-  private void show_match_index_entry() {
-
-    var entry = _match_entries.get( _match_index );
-    show_matched_entry( entry, SelectedEntryPos.parse( _match_entries.size, _match_index ) );
-
-    if( entry.trash ) {
-      _trash_btn.sensitive   = false;
-      _restore_btn.sensitive = true;
-    } else {
-      _trash_btn.sensitive   = true;
-      _restore_btn.sensitive = false;
-    }
-
-  }
-
   /* Displays the previous entry in the list */
   public void show_previous_entry() {
-    _match_index--;
-    show_match_index_entry();
+    var index = _match_index;
+    _match_lb.select_row( _match_lb.get_row_at_index( index - 1 ) );
+    _match_lb.unselect_row( _match_lb.get_row_at_index( index ) );
   }
 
   /* Displays the next entry in the list */
   public void show_next_entry() {
-    _match_index++;
-    show_match_index_entry();
+    var index = _match_index;
+    _match_lb.select_row( _match_lb.get_row_at_index( index + 1 ) );
+    _match_lb.unselect_row( _match_lb.get_row_at_index( index ) );
   }
 
   /* Displays the given entry in the textarea */
   private void show_entry( ListBoxRow? row ) {
 
-    stdout.printf( "In show_entry\n" );
+    if( row == null ) return;
 
-    if( row == null ) {
-      return;
+    _match_index = row.get_index();
+
+    var entry    = _match_entries.get( _match_index );
+    var selected = _match_lb.get_selected_rows().length();
+    stdout.printf( "  In show_entry, match_index: %d, selected: %u\n", _match_index, selected );
+    if( selected == 1 ) {
+      show_matched_entry( entry, SelectedEntryPos.parse( _match_entries.size, _match_index ) );
+      _match_lb.grab_focus();
+      _trash_btn.sensitive   = false;
+      _restore_btn.sensitive = false;
+    }
+
+    if( entry.trash ) {
+      _restore_btn.sensitive = true;
     } else {
-      _match_index = row.get_index();
-      var entry    = _match_entries.get( _match_index );
-      var selected = _match_lb.get_selected_rows().length();
-      stdout.printf( "selected, selected: %u\n", selected );
-      if( selected <= 1 ) {
-        show_matched_entry( entry, SelectedEntryPos.parse( _match_entries.size, _match_index ) );
-        _match_lb.grab_focus();
-        _trash_btn.sensitive   = false;
-        _restore_btn.sensitive = false;
-      }
-      if( entry.trash ) {
-        _restore_btn.sensitive = true;
-      } else {
-        _trash_btn.sensitive = true;
-      }
+      _trash_btn.sensitive = true;
     }
 
   }

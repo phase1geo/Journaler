@@ -570,6 +570,7 @@ public class MainWindow : Gtk.ApplicationWindow {
       }
     });
     _text_area.show_next_entry.connect(() => {
+      stdout.printf( "In _text_area.show_next_entry.connect, review_mode: %s\n", review_mode.to_string() );
       if( review_mode ) {
         _reviewer.show_next_entry();
       }

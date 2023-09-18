@@ -36,6 +36,7 @@ public class TextArea : Box {
   private Button           _next;
   private MenuButton       _burger;
   private Label            _date;
+  private Label            _jname;
   private TagBox           _tags;
   private GtkSource.View   _text;
   private GtkSource.Buffer _buffer;
@@ -288,11 +289,32 @@ public class TextArea : Box {
 
     /* Add the date */
     _date = new Label( "" ) {
-      halign = Align.FILL,
-      xalign = (float)0
+      halign = Align.START,
+      hexpand = true
+      // xalign = (float)0
     };
     _date.add_css_class( "date" );
     _date.add_css_class( "text-background" );
+
+    /* Add the journal name */
+    _jname = new Label( "" ) {
+      halign = Align.END,
+      hexpand = true,
+      margin_end = 5
+    };
+    _jname.add_css_class( "text-background" );
+
+    var dbox = new Box( Orientation.HORIZONTAL, 5 ) {
+      halign = Align.FILL,
+      hexpand = true
+    };
+    dbox.append( _date );
+    dbox.append( _jname );
+
+    Idle.add(() => {
+      dbox.add_css_class( "text-background" );
+      return( false );
+    });
 
     /* Add the tags */
     _tags = new TagBox( _win );
@@ -346,7 +368,7 @@ public class TextArea : Box {
     _stats = new Statistics( _text.buffer );
 
     append( tbox );
-    append( _date );
+    append( dbox );
     append( _tags );
     append( sep1 );
     append( _quote_revealer );
@@ -716,6 +738,7 @@ public class TextArea : Box {
   /* Show the next entry in the sidebar */
   private void action_show_next_entry() {
     _win.reset_timer();
+    stdout.printf( "Calling text_area.show_next_entry()\n" );
     show_next_entry();
   }
 
@@ -1028,16 +1051,21 @@ public class TextArea : Box {
       _date.label = dt.format( "%A, %B %e, %Y  %I:%M %p" );
     }
 
+    _jname.label = _journal.name;
+
     /* Set the next and previous button state */
     _prev.set_sensitive( pos.prev_sensitivity() );
     _next.set_sensitive( pos.next_sensitivity() );
 
     if( _win.review_mode ) {
+      _title.text = _entry.gen_title();
       _prev.show();
       _next.show();
+      _jname.show();
     } else {
       _prev.hide();
       _next.hide();
+      _jname.hide();
     }
 
     /* Set the image */
