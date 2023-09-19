@@ -11,8 +11,3 @@ MimeType=application/com.github.phase1geo.journaler;
 X-GNOME-Gettext-Domain=Journaler
 X-GNOME-UsesNotifications=true
 Keywords=Journaling;Diary;Journal
-Actions=NewEntry;
-
-[Desktop Action NewEntry]
-Name=New Entry
-Exec=com.github.phase1geo.journaler -n

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: extra\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-09-18 21:36-0500\n"
+"POT-Creation-Date: 2023-09-18 21:38-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -32,10 +32,6 @@ msgstr ""
 
 #: data/com.github.phase1geo.journaler.desktop.in:14
 msgid "Journaling;Diary;Journal"
-msgstr ""
-
-#: data/com.github.phase1geo.journaler.desktop.in:18
-msgid "New Entry"
 msgstr ""
 
 #: data/com.github.phase1geo.journaler.appdata.xml.in:8
