@@ -113,18 +113,20 @@ public class MainWindow : Gtk.ApplicationWindow {
   private Reviewer                   _reviewer;
 
   private const GLib.ActionEntry[] action_entries = {
-    { "action_today",           action_today },
-    { "action_save",            action_save },
-    { "action_lock",            action_lock },
-    { "action_quit",            action_quit },
-    { "action_new_template",    action_new_template },
-    { "action_edit_template",   action_edit_template, "s" },
-    { "action_review",          action_review },
-    { "action_awards",          action_awards },
-    { "action_shortcuts",       action_shortcuts },
-    { "action_preferences",     action_preferences },
-    { "action_toggle_distract", action_toggle_distract },
-    { "action_escape",          action_escape },
+    { "action_today",               action_today },
+    { "action_save",                action_save },
+    { "action_lock",                action_lock },
+    { "action_quit",                action_quit },
+    { "action_new_template",        action_new_template },
+    { "action_edit_template",       action_edit_template, "s" },
+    { "action_review",              action_review },
+    { "action_awards",              action_awards },
+    { "action_shortcuts",           action_shortcuts },
+    { "action_preferences",         action_preferences },
+    { "action_toggle_distract",     action_toggle_distract },
+    { "action_escape",              action_escape },
+    { "action_show_previous_entry", action_show_previous_entry },
+    { "action_show_next_entry",     action_show_next_entry },
   };
 
   private bool on_elementary = Gtk.Settings.get_default().gtk_icon_theme_name == "elementary";
@@ -564,18 +566,6 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     _text_area = new TextArea( app, this, _journals, _templates );
 
-    _text_area.show_previous_entry.connect(() => {
-      if( review_mode ) {
-        _reviewer.show_previous_entry();
-      }
-    });
-    _text_area.show_next_entry.connect(() => {
-      stdout.printf( "In _text_area.show_next_entry.connect, review_mode: %s\n", review_mode.to_string() );
-      if( review_mode ) {
-        _reviewer.show_next_entry();
-      }
-    });
-
     box.append( _text_area );
 
     _stack_focus_widgets.set( "entry-view", _text_area.get_focus_widget() );
@@ -855,16 +845,18 @@ public class MainWindow : Gtk.ApplicationWindow {
   /* Adds keyboard shortcuts for the menu actions */
   private void add_keyboard_shortcuts( Gtk.Application app ) {
 
-    app.set_accels_for_action( "win.action_today",           { "<Control>t" } );
-    app.set_accels_for_action( "win.action_save",            { "<Control>s" } );
-    app.set_accels_for_action( "win.action_lock",            { "<Control>l" } );
-    app.set_accels_for_action( "win.action_quit",            { "<Control>q" } );
-    app.set_accels_for_action( "win.action_review",          { "<Control>r" } );
-    app.set_accels_for_action( "win.action_awards",          { "<Control>g" } );
-    app.set_accels_for_action( "win.action_shortcuts",       { "<Control>question" } );
-    app.set_accels_for_action( "win.action_preferences",     { "<Control>comma" } );
-    app.set_accels_for_action( "win.action_toggle_distract", { "<Control>d" } );
-    app.set_accels_for_action( "win.action_escape",          { "Escape" } );
+    app.set_accels_for_action( "win.action_today",               { "<Control>t" } );
+    app.set_accels_for_action( "win.action_save",                { "<Control>s" } );
+    app.set_accels_for_action( "win.action_lock",                { "<Control>l" } );
+    app.set_accels_for_action( "win.action_quit",                { "<Control>q" } );
+    app.set_accels_for_action( "win.action_review",              { "<Control>r" } );
+    app.set_accels_for_action( "win.action_awards",              { "<Control>g" } );
+    app.set_accels_for_action( "win.action_shortcuts",           { "<Control>question" } );
+    app.set_accels_for_action( "win.action_preferences",         { "<Control>comma" } );
+    app.set_accels_for_action( "win.action_toggle_distract",     { "<Control>d" } );
+    app.set_accels_for_action( "win.action_escape",              { "Escape" } );
+    app.set_accels_for_action( "win.action_show_previous_entry", { "<Control>Left" } );
+    app.set_accels_for_action( "win.action_show_next_entry",     { "<Control>Right" } );
 
   }
 
@@ -1068,6 +1060,8 @@ public class MainWindow : Gtk.ApplicationWindow {
   /* Toggles distraction-free modes in edit and review modes */
   private void action_toggle_distract() {
 
+    reset_timer();
+
     distraction_free_mode = !distraction_free_mode;
 
     if( _lock_stack.visible_child_name == "entry-view" ) {
@@ -1102,12 +1096,30 @@ public class MainWindow : Gtk.ApplicationWindow {
   /* Handles a press of the escape key */
   private void action_escape() {
 
+    reset_timer();
+
     if( distraction_free_mode ) {
       action_toggle_distract();
     } else if( !locked ) {
       show_pane( "entry-view" );
     }
 
+  }
+
+  /* Shows the previous entry in review mode */
+  private void action_show_previous_entry() {
+    reset_timer();
+    if( review_mode ) {
+      _reviewer.show_previous_entry();
+    }
+  }
+
+  /* Shows the next entry in review mode */
+  private void action_show_next_entry() {
+    reset_timer();
+    if( review_mode ) {
+      _reviewer.show_next_entry();
+    }
   }
 
   /* Generate a notification */

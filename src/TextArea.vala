@@ -60,8 +60,6 @@ public class TextArea : Box {
     { "action_restore_entry",       action_restore_entry },
     { "action_delete_entry",        action_delete_entry },
     { "action_trash_entry",         action_trash_entry },
-    { "action_show_previous_entry", action_show_previous_entry },
-    { "action_show_next_entry",     action_show_next_entry },
     { "action_bold_text",           action_bold_text },
     { "action_italicize_text",      action_italicize_text },
     { "action_strike_text",         action_strike_text },
@@ -156,8 +154,6 @@ public class TextArea : Box {
   /* Add keyboard shortcuts */
   private void add_keyboard_shortcuts( Gtk.Application app ) {
 
-    app.set_accels_for_action( "textarea.action_show_previous_entry", { "<Control>Left" } );
-    app.set_accels_for_action( "textarea.action_show_next_entry",     { "<Control>Right" } );
     app.set_accels_for_action( "textarea.action_bold_text",           { "<Control>b" } );
     app.set_accels_for_action( "textarea.action_italicize_text",      { "<Control>i" } );
     app.set_accels_for_action( "textarea.action_strike_text",         { "<Control>asciitilde" } );
@@ -730,15 +726,13 @@ public class TextArea : Box {
   }
 
   /* Show the previous entry in the sidebar */
-  private void action_show_previous_entry() {
-    _win.reset_timer();
+  public void action_show_previous_entry() {
     show_previous_entry();
   }
 
   /* Show the next entry in the sidebar */
-  private void action_show_next_entry() {
+  public void action_show_next_entry() {
     _win.reset_timer();
-    stdout.printf( "Calling text_area.show_next_entry()\n" );
     show_next_entry();
   }
 

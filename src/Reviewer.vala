@@ -56,6 +56,7 @@ public class Reviewer : Grid {
   private GLib.Menu   _saved_delete_menu;
 
   private ListBox                _match_lb;
+  private ScrolledWindow         _lb_scroll;
   private Gee.ArrayList<DBEntry> _match_entries;
   private int                    _match_index;
   private Button                 _trash_btn;
@@ -727,15 +728,15 @@ public class Reviewer : Grid {
   /* Displays the previous entry in the list */
   public void show_previous_entry() {
     var index = _match_index;
+    _match_lb.selection_mode = SelectionMode.SINGLE;
     _match_lb.select_row( _match_lb.get_row_at_index( index - 1 ) );
-    _match_lb.unselect_row( _match_lb.get_row_at_index( index ) );
   }
 
   /* Displays the next entry in the list */
   public void show_next_entry() {
     var index = _match_index;
+    _match_lb.selection_mode = SelectionMode.SINGLE;
     _match_lb.select_row( _match_lb.get_row_at_index( index + 1 ) );
-    _match_lb.unselect_row( _match_lb.get_row_at_index( index ) );
   }
 
   /* Displays the given entry in the textarea */
@@ -747,12 +748,12 @@ public class Reviewer : Grid {
 
     var entry    = _match_entries.get( _match_index );
     var selected = _match_lb.get_selected_rows().length();
-    stdout.printf( "  In show_entry, match_index: %d, selected: %u\n", _match_index, selected );
     if( selected == 1 ) {
       show_matched_entry( entry, SelectedEntryPos.parse( _match_entries.size, _match_index ) );
       _match_lb.grab_focus();
       _trash_btn.sensitive   = false;
       _restore_btn.sensitive = false;
+      show_row( row );
     }
 
     if( entry.trash ) {
@@ -760,6 +761,32 @@ public class Reviewer : Grid {
     } else {
       _trash_btn.sensitive = true;
     }
+
+    _match_lb.selection_mode = SelectionMode.MULTIPLE;
+
+  }
+
+  /* Makes sure that the specified row is within view in the viewport */
+  private void show_row( ListBoxRow row ) {
+
+    /* Adjust the lb_scroll viewport so that that current selected row is in view */
+    double wleft, wtop, wbottom;
+    row.translate_coordinates( _match_lb, 0, 0, out wleft, out wtop );
+    wbottom = wtop + row.get_allocated_height();
+
+    var top    = _lb_scroll.vadjustment.value;
+    var bottom = top + _lb_scroll.vadjustment.page_size;
+
+    Idle.add(() => {
+      if( wtop < top ) {
+        _lb_scroll.vadjustment.value = wtop;
+      } else if( wbottom > bottom ) {
+        _lb_scroll.vadjustment.value = wbottom - _lb_scroll.vadjustment.page_size;
+      } else {
+        _lb_scroll.vadjustment.value = top;
+      }
+      return( false );
+    });
 
   }
 
@@ -778,7 +805,7 @@ public class Reviewer : Grid {
       show_entry( row );
     });
 
-    var lb_scroll = new ScrolledWindow() {
+    _lb_scroll = new ScrolledWindow() {
       hscrollbar_policy = PolicyType.NEVER,
       vscrollbar_policy = PolicyType.AUTOMATIC,
       halign            = Align.FILL,
@@ -787,9 +814,9 @@ public class Reviewer : Grid {
       vexpand           = true,
       child             = _match_lb
     };
-    lb_scroll.scroll_child.connect((t,h) => {
+    _lb_scroll.scroll_child.connect((t,h) => {
       _win.reset_timer();
-      return( true );
+      return( false );
     });
 
     _restore_btn = new Button.with_label( _( "Restore" ) );
@@ -813,7 +840,7 @@ public class Reviewer : Grid {
       margin_top    = 5,
       margin_bottom = 5
     };
-    box.append( lb_scroll );
+    box.append( _lb_scroll );
     box.append( bbox );
 
     return( box );
