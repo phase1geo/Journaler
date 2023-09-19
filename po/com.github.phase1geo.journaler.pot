@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: com.github.phase1geo.journaler\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-09-18 21:11-0500\n"
+"POT-Creation-Date: 2023-09-18 21:29-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -31,15 +31,15 @@ msgstr ""
 msgid "Run '%s --help' to see valid options\n"
 msgstr ""
 
-#: src/Database.vala:603 src/Reviewer.vala:582
+#: src/Database.vala:624 src/Reviewer.vala:603
 msgid "Untagged"
 msgstr ""
 
-#: src/DateSelector.vala:26
+#: src/DateSelector.vala:47
 msgid "Reset date to default"
 msgstr ""
 
-#: src/DateSelector.vala:27
+#: src/DateSelector.vala:48
 msgid "Select date with date picker"
 msgstr ""
 
@@ -47,268 +47,268 @@ msgstr ""
 msgid "JSON"
 msgstr ""
 
-#: src/exports/ExportXML.vala:30 src/Preferences.vala:696
+#: src/exports/ExportXML.vala:30 src/Preferences.vala:717
 msgid "XML"
 msgstr ""
 
-#: src/Goals.vala:14
+#: src/Goals.vala:35
 msgid "First entry"
 msgstr ""
 
-#: src/Goals.vala:15
+#: src/Goals.vala:36
 msgid "Two days in a Row"
 msgstr ""
 
-#: src/Goals.vala:16
+#: src/Goals.vala:37
 msgid "Three days in a Row"
 msgstr ""
 
-#: src/Goals.vala:17
+#: src/Goals.vala:38
 msgid "Five days in a Row"
 msgstr ""
 
-#: src/Goals.vala:18
+#: src/Goals.vala:39
 msgid "One Week in a Row"
 msgstr ""
 
-#: src/Goals.vala:19
+#: src/Goals.vala:40
 msgid "Two Weeks in a Row"
 msgstr ""
 
-#: src/Goals.vala:20
+#: src/Goals.vala:41
 msgid "One month in a Row"
 msgstr ""
 
-#: src/Goals.vala:21
+#: src/Goals.vala:42
 msgid "Two months in a Row"
 msgstr ""
 
-#: src/Goals.vala:22
+#: src/Goals.vala:43
 msgid "Six months in a Row"
 msgstr ""
 
-#: src/Goals.vala:23
+#: src/Goals.vala:44
 msgid "One year in a Row"
 msgstr ""
 
-#: src/Goals.vala:24
+#: src/Goals.vala:45
 msgid "Two years in a Row"
 msgstr ""
 
-#: src/Goals.vala:25
+#: src/Goals.vala:46
 msgid "Five years in a Row"
 msgstr ""
 
-#: src/Goals.vala:27
+#: src/Goals.vala:48
 msgid "10 entries"
 msgstr ""
 
-#: src/Goals.vala:28
+#: src/Goals.vala:49
 msgid "20 entries"
 msgstr ""
 
-#: src/Goals.vala:29
+#: src/Goals.vala:50
 msgid "50 entries"
 msgstr ""
 
-#: src/Goals.vala:30
+#: src/Goals.vala:51
 msgid "100 entries"
 msgstr ""
 
-#: src/Goals.vala:31
+#: src/Goals.vala:52
 msgid "200 entries"
 msgstr ""
 
-#: src/Goals.vala:32
+#: src/Goals.vala:53
 msgid "500 entries"
 msgstr ""
 
-#: src/Goals.vala:33
+#: src/Goals.vala:54
 msgid "1000 entries"
 msgstr ""
 
-#: src/Goals.vala:35
+#: src/Goals.vala:56
 msgid "1 day per week for 1 month"
 msgstr ""
 
-#: src/Goals.vala:36
+#: src/Goals.vala:57
 msgid "1 day per week for 2 months"
 msgstr ""
 
-#: src/Goals.vala:37
+#: src/Goals.vala:58
 msgid "1 day per week for 3 months"
 msgstr ""
 
-#: src/Goals.vala:38
+#: src/Goals.vala:59
 msgid "1 day per week for 6 months"
 msgstr ""
 
-#: src/Goals.vala:39
+#: src/Goals.vala:60
 msgid "1 day per week for 9 months"
 msgstr ""
 
-#: src/Goals.vala:40
+#: src/Goals.vala:61
 msgid "1 day per week for 12 months"
 msgstr ""
 
-#: src/Goals.vala:42
+#: src/Goals.vala:63
 msgid "2 days per week for 1 month"
 msgstr ""
 
-#: src/Goals.vala:43
+#: src/Goals.vala:64
 msgid "2 days per week for 2 months"
 msgstr ""
 
-#: src/Goals.vala:44
+#: src/Goals.vala:65
 msgid "2 days per week for 3 months"
 msgstr ""
 
-#: src/Goals.vala:45
+#: src/Goals.vala:66
 msgid "2 days per week for 6 months"
 msgstr ""
 
-#: src/Goals.vala:46
+#: src/Goals.vala:67
 msgid "2 days per week for 9 months"
 msgstr ""
 
-#: src/Goals.vala:47
+#: src/Goals.vala:68
 msgid "2 days per week for 12 months"
 msgstr ""
 
-#: src/Goals.vala:49
+#: src/Goals.vala:70
 msgid "3 days per week for 1 month"
 msgstr ""
 
-#: src/Goals.vala:50
+#: src/Goals.vala:71
 msgid "3 days per week for 2 months"
 msgstr ""
 
-#: src/Goals.vala:51
+#: src/Goals.vala:72
 msgid "3 days per week for 3 months"
 msgstr ""
 
-#: src/Goals.vala:52
+#: src/Goals.vala:73
 msgid "3 days per week for 6 months"
 msgstr ""
 
-#: src/Goals.vala:53
+#: src/Goals.vala:74
 msgid "3 days per week for 9 months"
 msgstr ""
 
-#: src/Goals.vala:54
+#: src/Goals.vala:75
 msgid "3 days per week for 12 months"
 msgstr ""
 
-#: src/Goals.vala:56
+#: src/Goals.vala:77
 msgid "5 days per week for 1 month"
 msgstr ""
 
-#: src/Goals.vala:57
+#: src/Goals.vala:78
 msgid "5 days per week for 2 months"
 msgstr ""
 
-#: src/Goals.vala:58
+#: src/Goals.vala:79
 msgid "5 days per week for 3 months"
 msgstr ""
 
-#: src/Goals.vala:59
+#: src/Goals.vala:80
 msgid "5 days per week for 6 months"
 msgstr ""
 
-#: src/Goals.vala:60
+#: src/Goals.vala:81
 msgid "5 days per week for 9 months"
 msgstr ""
 
-#: src/Goals.vala:61
+#: src/Goals.vala:82
 msgid "5 days per week for 12 months"
 msgstr ""
 
-#: src/Goals.vala:63
+#: src/Goals.vala:84
 msgid "5 days per month for 1 month"
 msgstr ""
 
-#: src/Goals.vala:64
+#: src/Goals.vala:85
 msgid "5 days per month for 2 months"
 msgstr ""
 
-#: src/Goals.vala:65
+#: src/Goals.vala:86
 msgid "5 days per month for 3 months"
 msgstr ""
 
-#: src/Goals.vala:66
+#: src/Goals.vala:87
 msgid "5 days per month for 6 months"
 msgstr ""
 
-#: src/Goals.vala:67
+#: src/Goals.vala:88
 msgid "5 days per month for 9 months"
 msgstr ""
 
-#: src/Goals.vala:68
+#: src/Goals.vala:89
 msgid "5 days per month for 12 months"
 msgstr ""
 
-#: src/Goals.vala:70
+#: src/Goals.vala:91
 msgid "10 days per month for 1 month"
 msgstr ""
 
-#: src/Goals.vala:71
+#: src/Goals.vala:92
 msgid "10 days per month for 2 months"
 msgstr ""
 
-#: src/Goals.vala:72
+#: src/Goals.vala:93
 msgid "10 days per month for 3 months"
 msgstr ""
 
-#: src/Goals.vala:73
+#: src/Goals.vala:94
 msgid "10 days per month for 6 months"
 msgstr ""
 
-#: src/Goals.vala:74
+#: src/Goals.vala:95
 msgid "10 days per month for 9 months"
 msgstr ""
 
-#: src/Goals.vala:75
+#: src/Goals.vala:96
 msgid "10 days per month for 12 months"
 msgstr ""
 
-#: src/Goals.vala:77
+#: src/Goals.vala:98
 msgid "20 days per month for 1 month"
 msgstr ""
 
-#: src/Goals.vala:78
+#: src/Goals.vala:99
 msgid "20 days per month for 2 months"
 msgstr ""
 
-#: src/Goals.vala:79
+#: src/Goals.vala:100
 msgid "20 days per month for 3 months"
 msgstr ""
 
-#: src/Goals.vala:80
+#: src/Goals.vala:101
 msgid "20 days per month for 6 months"
 msgstr ""
 
-#: src/Goals.vala:81
+#: src/Goals.vala:102
 msgid "20 days per month for 9 months"
 msgstr ""
 
-#: src/Goals.vala:82
+#: src/Goals.vala:103
 msgid "20 days per month for 12 months"
 msgstr ""
 
-#: src/Goals.vala:117
+#: src/Goals.vala:138
 #, c-format
 msgid "Achieved %d out of %d awards"
 msgstr ""
 
-#: src/Goals.vala:137
+#: src/Goals.vala:158
 msgid "New Reward Achieved!"
 msgstr ""
 
-#: src/Goals.vala:139
+#: src/Goals.vala:160
 msgid "New Rewards Achieved!"
 msgstr ""
 
-#: src/ImageArea.vala:265 src/Preferences.vala:386
+#: src/ImageArea.vala:265 src/Preferences.vala:407
 msgid "Select an image"
 msgstr ""
 
@@ -324,15 +324,15 @@ msgstr ""
 msgid "Enter Description (Optional)"
 msgstr ""
 
-#: src/ImageArea.vala:368 src/MainWindow.vala:782 src/Preferences.vala:73
+#: src/ImageArea.vala:368 src/MainWindow.vala:782 src/Preferences.vala:94
 msgid "Close"
 msgstr ""
 
-#: src/Journals.vala:73
+#: src/Journals.vala:94
 msgid "Journal"
 msgstr ""
 
-#: src/Journal.vala:77
+#: src/Journal.vala:98
 msgid "Trash"
 msgstr ""
 
@@ -398,7 +398,7 @@ msgstr ""
 msgid "Manage Templates"
 msgstr ""
 
-#: src/MainWindow.vala:617 src/SidebarEditor.vala:212 src/Templater.vala:712
+#: src/MainWindow.vala:617 src/SidebarEditor.vala:212 src/Templater.vala:733
 #: src/Utils.vala:309
 msgid "Cancel"
 msgstr ""
@@ -421,53 +421,53 @@ msgstr ""
 msgid "Status: %s"
 msgstr ""
 
-#: src/Preferences.vala:40
+#: src/Preferences.vala:61
 msgid "Preferences"
 msgstr ""
 
-#: src/Preferences.vala:55 data/com.github.phase1geo.journaler.shortcuts.ui:11
+#: src/Preferences.vala:76 data/com.github.phase1geo.journaler.shortcuts.ui:11
 #: data/com.github.phase1geo.journaler.shortcuts.ui:15
 #: data/com.github.phase1geo.journaler.shortcuts.ui:92
 msgid "General"
 msgstr ""
 
-#: src/Preferences.vala:56
+#: src/Preferences.vala:77
 msgid "Editor"
 msgstr ""
 
-#: src/Preferences.vala:57
+#: src/Preferences.vala:78
 msgid "Login Screen"
 msgstr ""
 
-#: src/Preferences.vala:58
+#: src/Preferences.vala:79
 msgid "News Feeds"
 msgstr ""
 
-#: src/Preferences.vala:59
+#: src/Preferences.vala:80
 msgid "Advanced"
 msgstr ""
 
-#: src/Preferences.vala:105
+#: src/Preferences.vala:126
 msgid "Automatically lock application"
 msgstr ""
 
-#: src/Preferences.vala:112
+#: src/Preferences.vala:133
 msgid "Default Entry Title"
 msgstr ""
 
-#: src/Preferences.vala:113
+#: src/Preferences.vala:134
 msgid "Prefix"
 msgstr ""
 
-#: src/Preferences.vala:118
+#: src/Preferences.vala:139
 msgid "Suffix"
 msgstr ""
 
-#: src/Preferences.vala:123
+#: src/Preferences.vala:144
 msgid "Preview:"
 msgstr ""
 
-#: src/Preferences.vala:131
+#: src/Preferences.vala:152
 msgid ""
 "This option is only available once the user has created a password.\n"
 "\n"
@@ -475,415 +475,415 @@ msgid ""
 "Lock icon in the headerbar, and create your password."
 msgstr ""
 
-#: src/Preferences.vala:185
+#: src/Preferences.vala:206
 msgid "Default Theme"
 msgstr ""
 
-#: src/Preferences.vala:189
+#: src/Preferences.vala:210
 msgid "Font Size"
 msgstr ""
 
-#: src/Preferences.vala:193
+#: src/Preferences.vala:214
 msgid "Margin"
 msgstr ""
 
-#: src/Preferences.vala:197
+#: src/Preferences.vala:218
 msgid "Line Spacing"
 msgstr ""
 
-#: src/Preferences.vala:201
+#: src/Preferences.vala:222
 msgid "Enable spell checker"
 msgstr ""
 
-#: src/Preferences.vala:208
+#: src/Preferences.vala:229
 msgid "Enable daily quotations"
 msgstr ""
 
-#: src/Preferences.vala:212
+#: src/Preferences.vala:233
 msgid "Dismiss daily quotation when writing"
 msgstr ""
 
-#: src/Preferences.vala:219
+#: src/Preferences.vala:240
 msgid "Writing Goal"
 msgstr ""
 
-#: src/Preferences.vala:223
+#: src/Preferences.vala:244
 msgid "Goal Count"
 msgstr ""
 
-#: src/Preferences.vala:263
+#: src/Preferences.vala:284
 msgid "Name"
 msgstr ""
 
-#: src/Preferences.vala:269
+#: src/Preferences.vala:290
 msgid "Feed URL"
 msgstr ""
 
-#: src/Preferences.vala:321
+#: src/Preferences.vala:342
 msgid "Select a Login Screen Background"
 msgstr ""
 
-#: src/Preferences.vala:348
+#: src/Preferences.vala:369
 msgid "Enter image filename or URL"
 msgstr ""
 
-#: src/Preferences.vala:351
+#: src/Preferences.vala:372
 msgid "Browse…"
 msgstr ""
 
-#: src/Preferences.vala:386
+#: src/Preferences.vala:407
 msgid "Choose Image"
 msgstr ""
 
-#: src/Preferences.vala:653
+#: src/Preferences.vala:674
 msgid "Export all journals"
 msgstr ""
 
-#: src/Preferences.vala:656
+#: src/Preferences.vala:677
 msgid "Export journal"
 msgstr ""
 
-#: src/Preferences.vala:684
+#: src/Preferences.vala:705
 msgid "Export for the purpose of importing back into Journaler"
 msgstr ""
 
-#: src/Preferences.vala:687
+#: src/Preferences.vala:708
 msgid "Include entry images"
 msgstr ""
 
-#: src/Preferences.vala:694
+#: src/Preferences.vala:715
 msgid "Export Format:"
 msgstr ""
 
-#: src/Preferences.vala:717
+#: src/Preferences.vala:738
 msgid "Export…"
 msgstr ""
 
-#: src/Preferences.vala:753
+#: src/Preferences.vala:774
 msgid "Export Options"
 msgstr ""
 
-#: src/Preferences.vala:771
+#: src/Preferences.vala:792
 msgid ""
 "Import entries into original journals, automatically creating non-existing "
 "journals"
 msgstr ""
 
-#: src/Preferences.vala:775
+#: src/Preferences.vala:796
 msgid "Import all entries into journal"
 msgstr ""
 
-#: src/Preferences.vala:786
+#: src/Preferences.vala:807
 msgid "Create new journal"
 msgstr ""
 
-#: src/Preferences.vala:808
+#: src/Preferences.vala:829
 msgid "Enter new journal name"
 msgstr ""
 
-#: src/Preferences.vala:854
+#: src/Preferences.vala:875
 msgid "Import Options"
 msgstr ""
 
-#: src/Preferences.vala:909
+#: src/Preferences.vala:930
 msgid "Export Data As…"
 msgstr ""
 
-#: src/Preferences.vala:909
+#: src/Preferences.vala:930
 msgid "Export"
 msgstr ""
 
-#: src/Preferences.vala:926
+#: src/Preferences.vala:947
 msgid "Export successful"
 msgstr ""
 
-#: src/Preferences.vala:928
+#: src/Preferences.vala:949
 msgid "Export failed"
 msgstr ""
 
-#: src/Preferences.vala:954
+#: src/Preferences.vala:975
 msgid "new called"
 msgstr ""
 
-#: src/Preferences.vala:978
+#: src/Preferences.vala:999
 msgid "Import Data From…"
 msgstr ""
 
-#: src/Preferences.vala:978
+#: src/Preferences.vala:999
 msgid "Import"
 msgstr ""
 
-#: src/Preferences.vala:997
+#: src/Preferences.vala:1018
 msgid "Import successful"
 msgstr ""
 
-#: src/Preferences.vala:999
+#: src/Preferences.vala:1020
 msgid "Import failed"
 msgstr ""
 
-#: src/Quotes.vala:40
+#: src/Quotes.vala:61
 msgid "Anonymous"
 msgstr ""
 
-#: src/Quotes.vala:59
+#: src/Quotes.vala:80
 msgid ""
 "Journal writing, when it becomes a ritual for transformation, is not only "
 "life-changing but life-expanding."
 msgstr ""
 
-#: src/Quotes.vala:60
+#: src/Quotes.vala:81
 msgid "Tell me about your day."
 msgstr ""
 
-#: src/Quotes.vala:61
+#: src/Quotes.vala:82
 msgid "Tell me what happened today."
 msgstr ""
 
-#: src/Quotes.vala:62
+#: src/Quotes.vala:83
 msgid "I want to know all about what happened to you today."
 msgstr ""
 
-#: src/Quotes.vala:63
+#: src/Quotes.vala:84
 msgid "Sometimes the only paper will listen to you."
 msgstr ""
 
-#: src/Quotes.vala:64
+#: src/Quotes.vala:85
 msgid ""
 "Start writing, no matter what. The water does not flow until the faucet is "
 "turned on."
 msgstr ""
 
-#: src/Quotes.vala:65
+#: src/Quotes.vala:86
 msgid ""
 "I can shake off everything as I write; my sorrows disappear, my courage is "
 "reborn."
 msgstr ""
 
-#: src/Quotes.vala:66
+#: src/Quotes.vala:87
 msgid ""
 "Preserve your memories, keep them well, what you forget you can never retell."
 msgstr ""
 
-#: src/Quotes.vala:67
+#: src/Quotes.vala:88
 msgid ""
 "Write about what really interests you, whether it is real things or "
 "imaginary things, and nothing else."
 msgstr ""
 
-#: src/Quotes.vala:68
+#: src/Quotes.vala:89
 msgid ""
 "I believe myself that a good writer doesn’t really need to be told anything "
 "except to keep at it."
 msgstr ""
 
-#: src/Quotes.vala:69
+#: src/Quotes.vala:90
 msgid "Writing is medicine."
 msgstr ""
 
-#: src/Quotes.vala:70
+#: src/Quotes.vala:91
 msgid "I like to reserve the right to write about whatever I like."
 msgstr ""
 
-#: src/Quotes.vala:71
+#: src/Quotes.vala:92
 msgid "I write because I don’t know what I think until I read what I say."
 msgstr ""
 
-#: src/Quotes.vala:72
+#: src/Quotes.vala:93
 msgid ""
 "Journaling is like whispering to one’s self and listening at the same time."
 msgstr ""
 
-#: src/Quotes.vala:73
+#: src/Quotes.vala:94
 msgid "Journal writing is a voyage to the interior."
 msgstr ""
 
-#: src/Quotes.vala:74
+#: src/Quotes.vala:95
 msgid "What would you write if you weren’t afraid?"
 msgstr ""
 
-#: src/Quotes.vala:75
+#: src/Quotes.vala:96
 msgid "There is no greater agony than bearing an untold story inside you."
 msgstr ""
 
-#: src/Quotes.vala:76
+#: src/Quotes.vala:97
 msgid "A journal is your completely unaltered voice."
 msgstr ""
 
-#: src/Quotes.vala:77
+#: src/Quotes.vala:98
 msgid ""
 "Journaling helps you to remember how strong you truly are within yourself."
 msgstr ""
 
-#: src/Quotes.vala:78
+#: src/Quotes.vala:99
 msgid "People who keep journals have life twice."
 msgstr ""
 
-#: src/Quotes.vala:79
+#: src/Quotes.vala:100
 msgid ""
 "Journal writing gives us insights into who we are, who we were, and who we "
 "can become."
 msgstr ""
 
-#: src/Quotes.vala:80
+#: src/Quotes.vala:101
 msgid "You can always edit a bad page. You can’t edit a blank page."
 msgstr ""
 
-#: src/Quotes.vala:81
+#: src/Quotes.vala:102
 msgid "It ain’t whatcha write, it’s the way atcha write it."
 msgstr ""
 
-#: src/Quotes.vala:82
+#: src/Quotes.vala:103
 msgid "If a nation loses its storytellers, it loses its childhood."
 msgstr ""
 
-#: src/Quotes.vala:83
+#: src/Quotes.vala:104
 msgid ""
 "Documenting little details of your everyday life becomes a celebration of "
 "who you are."
 msgstr ""
 
-#: src/Quotes.vala:84
+#: src/Quotes.vala:105
 msgid "Turning your journal time into a mini-ritual gives it importance."
 msgstr ""
 
-#: src/Quotes.vala:85
+#: src/Quotes.vala:106
 msgid "Your journal is your private sanctuary, your safe haven."
 msgstr ""
 
-#: src/Quotes.vala:126
+#: src/Quotes.vala:147
 msgid ""
 "Add one or more <quote author=\"author-name\">quotation</quote> here to add "
 "quotes to the system"
 msgstr ""
 
-#: src/Reviewer.vala:113
+#: src/Reviewer.vala:134
 msgid "Journals:"
 msgstr ""
 
-#: src/Reviewer.vala:119 src/Reviewer.vala:205
+#: src/Reviewer.vala:140 src/Reviewer.vala:226
 msgid "Select All"
 msgstr ""
 
-#: src/Reviewer.vala:128 src/Reviewer.vala:214
+#: src/Reviewer.vala:149 src/Reviewer.vala:235
 msgid "Clear All"
 msgstr ""
 
-#: src/Reviewer.vala:199
+#: src/Reviewer.vala:220
 msgid "Tags:"
 msgstr ""
 
-#: src/Reviewer.vala:260
+#: src/Reviewer.vala:281
 msgid "Date Range:"
 msgstr ""
 
-#: src/Reviewer.vala:309
+#: src/Reviewer.vala:330
 msgid "Search entry title and text"
 msgstr ""
 
-#: src/Reviewer.vala:326
+#: src/Reviewer.vala:347
 msgid "Save exact dates"
 msgstr ""
 
-#: src/Reviewer.vala:327
+#: src/Reviewer.vala:348
 msgid "Save relative to exact start date"
 msgstr ""
 
-#: src/Reviewer.vala:328
+#: src/Reviewer.vala:349
 msgid "Save relative to current date"
 msgstr ""
 
-#: src/Reviewer.vala:331
+#: src/Reviewer.vala:352
 msgid "Save search"
 msgstr ""
 
-#: src/Reviewer.vala:334
+#: src/Reviewer.vala:355
 msgid "Delete saved search"
 msgstr ""
 
-#: src/Reviewer.vala:337
+#: src/Reviewer.vala:358
 msgid "Show all entries"
 msgstr ""
 
-#: src/Reviewer.vala:662
+#: src/Reviewer.vala:683
 msgid "All Journals"
 msgstr ""
 
-#: src/Reviewer.vala:662
+#: src/Reviewer.vala:683
 msgid "No Journals"
 msgstr ""
 
-#: src/Reviewer.vala:666
+#: src/Reviewer.vala:687
 msgid "All Tags"
 msgstr ""
 
-#: src/Reviewer.vala:666
+#: src/Reviewer.vala:687
 msgid "No Tags"
 msgstr ""
 
-#: src/Reviewer.vala:822
+#: src/Reviewer.vala:843
 msgid "Restore"
 msgstr ""
 
-#: src/Reviewer.vala:825
+#: src/Reviewer.vala:846
 msgid "Move To Trash"
 msgstr ""
 
-#: src/SavedReview.vala:59
+#: src/SavedReview.vala:80
 #, c-format
 msgid " from %s to"
 msgstr ""
 
-#: src/SavedReview.vala:111
+#: src/SavedReview.vala:132
 msgid "today"
 msgstr ""
 
-#: src/SavedReview.vala:112
+#: src/SavedReview.vala:133
 msgid "day"
 msgstr ""
 
-#: src/SavedReview.vala:112
+#: src/SavedReview.vala:133
 msgid "days"
 msgstr ""
 
-#: src/SavedReview.vala:113
+#: src/SavedReview.vala:134
 msgid "month"
 msgstr ""
 
-#: src/SavedReview.vala:113
+#: src/SavedReview.vala:134
 msgid "months"
 msgstr ""
 
-#: src/SavedReview.vala:114
+#: src/SavedReview.vala:135
 msgid "year"
 msgstr ""
 
-#: src/SavedReview.vala:114
+#: src/SavedReview.vala:135
 msgid "years"
 msgstr ""
 
-#: src/SavedReview.vala:191
+#: src/SavedReview.vala:212
 #, c-format
 msgid " %d %s before"
 msgstr ""
 
-#: src/SavedReview.vala:197
+#: src/SavedReview.vala:218
 #, c-format
 msgid " %d %s ago"
 msgstr ""
 
-#: src/SavedReview.vala:332
+#: src/SavedReview.vala:353
 msgid "All journals"
 msgstr ""
 
-#: src/SavedReview.vala:332
+#: src/SavedReview.vala:353
 msgid "No journals"
 msgstr ""
 
-#: src/SavedReview.vala:333
+#: src/SavedReview.vala:354
 msgid "All tags"
 msgstr ""
 
-#: src/SavedReview.vala:333
+#: src/SavedReview.vala:354
 msgid "No tags"
 msgstr ""
 
@@ -891,7 +891,7 @@ msgstr ""
 msgid "Journal Name:"
 msgstr ""
 
-#: src/SidebarEditor.vala:100 src/Templater.vala:260
+#: src/SidebarEditor.vala:100 src/Templater.vala:281
 msgid "Required"
 msgstr ""
 
@@ -901,7 +901,7 @@ msgstr ""
 
 #: src/SidebarEditor.vala:139 src/SidebarEditor.vala:155
 #: src/SidebarEditor.vala:266 src/SidebarEditor.vala:310
-#: src/SidebarEditor.vala:317 src/Statistics.vala:20
+#: src/SidebarEditor.vala:317 src/Statistics.vala:41
 msgid "None"
 msgstr ""
 
@@ -913,7 +913,7 @@ msgstr ""
 msgid "Description:"
 msgstr ""
 
-#: src/SidebarEditor.vala:198 src/Templater.vala:699
+#: src/SidebarEditor.vala:198 src/Templater.vala:720
 msgid "Delete"
 msgstr ""
 
@@ -959,217 +959,217 @@ msgstr ""
 msgid "No journal selected"
 msgstr ""
 
-#: src/SpellChecker.vala:213
+#: src/SpellChecker.vala:234
 msgid "No suggestions"
 msgstr ""
 
-#: src/SpellChecker.vala:225
+#: src/SpellChecker.vala:246
 msgid "More Suggestions"
 msgstr ""
 
-#: src/SpellChecker.vala:230
+#: src/SpellChecker.vala:251
 #, c-format
 msgid "Add \"%s\" to Dictionary"
 msgstr ""
 
-#: src/SpellChecker.vala:231
+#: src/SpellChecker.vala:252
 msgid "Ignore All"
 msgstr ""
 
-#: src/SpellChecker.vala:238
+#: src/SpellChecker.vala:259
 msgid "Spell Check"
 msgstr ""
 
-#: src/Statistics.vala:21 src/Statistics.vala:112
+#: src/Statistics.vala:42 src/Statistics.vala:133
 msgid "Characters"
 msgstr ""
 
-#: src/Statistics.vala:22 src/Statistics.vala:113
+#: src/Statistics.vala:43 src/Statistics.vala:134
 msgid "Words"
 msgstr ""
 
-#: src/Statistics.vala:114
+#: src/Statistics.vala:135
 msgid "Goal"
 msgstr ""
 
-#: src/Statistics.vala:115
+#: src/Statistics.vala:136
 msgid "Achieved"
 msgstr ""
 
-#: src/TagBox.vala:60
+#: src/TagBox.vala:81
 msgid "Click to add tag…"
 msgstr ""
 
-#: src/TagEntry.vala:35
+#: src/TagEntry.vala:56
 msgid "Add Tag"
 msgstr ""
 
-#: src/Templater.vala:48
+#: src/Templater.vala:69
 msgid "Year, four digits"
 msgstr ""
 
-#: src/Templater.vala:49
+#: src/Templater.vala:70
 msgid "Year, last two digits"
 msgstr ""
 
-#: src/Templater.vala:50
+#: src/Templater.vala:71
 msgid "Month, 01-12"
 msgstr ""
 
-#: src/Templater.vala:51
+#: src/Templater.vala:72
 msgid "Month, full name"
 msgstr ""
 
-#: src/Templater.vala:52
+#: src/Templater.vala:73
 msgid "Month, abbreviated name"
 msgstr ""
 
-#: src/Templater.vala:53
+#: src/Templater.vala:74
 msgid "Day of month, 1-31"
 msgstr ""
 
-#: src/Templater.vala:54
+#: src/Templater.vala:75
 msgid "Day of week, full name"
 msgstr ""
 
-#: src/Templater.vala:55
+#: src/Templater.vala:76
 msgid "Day of week, abbreviated name"
 msgstr ""
 
-#: src/Templater.vala:56
+#: src/Templater.vala:77
 msgid "Hour, 24-hour format"
 msgstr ""
 
-#: src/Templater.vala:57
+#: src/Templater.vala:78
 msgid "Minute, in hour"
 msgstr ""
 
-#: src/Templater.vala:58
+#: src/Templater.vala:79
 msgid "Second, in minute"
 msgstr ""
 
-#: src/Templater.vala:59
+#: src/Templater.vala:80
 msgid "Seconds since UNIX epoch"
 msgstr ""
 
-#: src/Templater.vala:60
+#: src/Templater.vala:81
 msgid "User, login name"
 msgstr ""
 
-#: src/Templater.vala:61
+#: src/Templater.vala:82
 msgid "User, full name"
 msgstr ""
 
-#: src/Templater.vala:62
+#: src/Templater.vala:83
 msgid "Contents of current line"
 msgstr ""
 
-#: src/Templater.vala:63
+#: src/Templater.vala:84
 msgid "Zero-index line number"
 msgstr ""
 
-#: src/Templater.vala:64
+#: src/Templater.vala:85
 msgid "One-index line number"
 msgstr ""
 
-#: src/Templater.vala:111
+#: src/Templater.vala:132
 msgid "Lower-case"
 msgstr ""
 
-#: src/Templater.vala:112
+#: src/Templater.vala:133
 msgid "Upper-case"
 msgstr ""
 
-#: src/Templater.vala:113
+#: src/Templater.vala:134
 msgid "Capitalize"
 msgstr ""
 
-#: src/Templater.vala:114
+#: src/Templater.vala:135
 msgid "Remove capitalization"
 msgstr ""
 
-#: src/Templater.vala:115
+#: src/Templater.vala:136
 msgid "Convert special HTML characters"
 msgstr ""
 
-#: src/Templater.vala:116
+#: src/Templater.vala:137
 msgid "Camel-case"
 msgstr ""
 
-#: src/Templater.vala:117
+#: src/Templater.vala:138
 msgid "Snake-case"
 msgstr ""
 
-#: src/Templater.vala:118
+#: src/Templater.vala:139
 msgid "Use namespace name"
 msgstr ""
 
-#: src/Templater.vala:119
+#: src/Templater.vala:140
 msgid "Use class name"
 msgstr ""
 
-#: src/Templater.vala:120
+#: src/Templater.vala:141
 msgid "Use instance name"
 msgstr ""
 
-#: src/Templater.vala:121
+#: src/Templater.vala:142
 msgid "Convert all characters to spaces"
 msgstr ""
 
-#: src/Templater.vala:122
+#: src/Templater.vala:143
 msgid "Remove the filename suffix"
 msgstr ""
 
-#: src/Templater.vala:123
+#: src/Templater.vala:144
 msgid "Convert slashes to dots"
 msgstr ""
 
-#: src/Templater.vala:124
+#: src/Templater.vala:145
 msgid "Remove parent directory"
 msgstr ""
 
-#: src/Templater.vala:253
+#: src/Templater.vala:274
 msgid "Template Name:"
 msgstr ""
 
-#: src/Templater.vala:303
+#: src/Templater.vala:324
 msgid "Template Text:"
 msgstr ""
 
-#: src/Templater.vala:458
+#: src/Templater.vala:479
 msgid "Insert Next Tab Position"
 msgstr ""
 
-#: src/Templater.vala:459
+#: src/Templater.vala:480
 msgid "Insert Last Tab Position"
 msgstr ""
 
-#: src/Templater.vala:474
+#: src/Templater.vala:495
 msgid "Insert Variable"
 msgstr ""
 
-#: src/Templater.vala:483
+#: src/Templater.vala:504
 msgid "Insert Transform Function"
 msgstr ""
 
-#: src/Templater.vala:498 src/TextArea.vala:597
+#: src/Templater.vala:519 src/TextArea.vala:597
 msgid "Format Text"
 msgstr ""
 
-#: src/Templater.vala:501
+#: src/Templater.vala:522
 msgid "Insert Snippet Syntax"
 msgstr ""
 
-#: src/Templater.vala:513
+#: src/Templater.vala:534
 #, c-format
 msgid "Insert %s"
 msgstr ""
 
-#: src/Templater.vala:718
+#: src/Templater.vala:739
 msgid "Save Changes"
 msgstr ""
 
-#: src/Template.vala:3
+#: src/Template.vala:24
 msgid "Template"
 msgstr ""
 
