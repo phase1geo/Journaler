@@ -28,8 +28,7 @@ Stay motivated to keep writing.  Easily export your data when needed.
 - Tagging support.
 - Expressive and robust journal entry review features.
 - Fullscreen distraction-free writing and review mode.
-- Template support.
-- Weather, location, and RSS feed support for extra help in remembering the day.
+- Template support. <!-- - Weather, location, and RSS feed support for extra help in remembering the day. -->
 - Motivation support with entry length goals, awards, inspirational quotes, and customizations.
 - Built-in entry trash support.
 - Import from XML.
