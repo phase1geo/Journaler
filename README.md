@@ -1,4 +1,7 @@
-# Journaler
+<h1 align="center">Journaler</h1>
+<p align="center">
+  <img src="https://raw.githubusercontent.com/phase1geo/Journaler/master/data/icons/scalable/com.github.phase1geo.journaler.svg" width="256"/>
+</p>
 
 <p align="center">
   <a href="https://appcenter.elementary.io/com.github.phase1geo.journaler">
