@@ -53,12 +53,11 @@
     <value key="x-appcenter-color-primary">#b15210</value>
     <value key="x-appcenter-color-primary-text">rgb(255, 255, 255)</value>
     <value key="x-appcenter-suggested-price">10</value>
-    <value key="x-appcenter-stripe"/>
   </custom>
   <content_rating type="oars-1.1">
   </content_rating>
   <releases>
-    <release version="1.0.0" date="2023-08-14">
+    <release version="1.0.0" date="2023-08-20">
       <description>
         <p>Initial release</p>
       </description>
