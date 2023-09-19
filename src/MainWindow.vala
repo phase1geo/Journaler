@@ -381,6 +381,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     /* Handle any request to close the window */
     close_request.connect(() => {
       action_save();
+      _journals.purge_empty_entries();
       return( false );
     });
 
