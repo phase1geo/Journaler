@@ -226,11 +226,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     add_keyboard_shortcuts( app );
 
     /* Create title toolbar */
-    var today_img = new Image.from_resource( "/com/github/phase1geo/journaler/today.svg" );
-    var today_btn = new Button() {
-      has_frame = false,
-      child = today_img
-    };
+    var today_btn = new Button.from_icon_name( get_header_icon_name( "today" ) );
     today_btn.set_tooltip_markup( Utils.tooltip_with_accel( _( "Go To Today" ), "<Control>t" ) );
     today_btn.clicked.connect( action_today );
     _header_buttons.append( today_btn );
@@ -839,8 +835,12 @@ public class MainWindow : Gtk.ApplicationWindow {
   }
 
   /* Returns the name of the icon to use for a headerbar icon */
-  private string get_header_icon_name( string icon_name ) {
-    return( "%s%s".printf( icon_name, (on_elementary ? "" : "-symbolic") ) );
+  private string get_header_icon_name( string icon_name, string? symbolic = null ) {
+    if( symbolic == null ) {
+      return( "%s%s".printf( icon_name, (on_elementary ? "" : "-symbolic") ) );
+    } else {
+      return( on_elementary ? icon_name : symbolic );
+    }
   }
 
   /* Adds keyboard shortcuts for the menu actions */

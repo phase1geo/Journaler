@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: com.github.phase1geo.journaler\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-09-18 21:38-0500\n"
+"POT-Creation-Date: 2023-09-19 10:46-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -324,7 +324,7 @@ msgstr ""
 msgid "Enter Description (Optional)"
 msgstr ""
 
-#: src/ImageArea.vala:368 src/MainWindow.vala:782 src/Preferences.vala:94
+#: src/ImageArea.vala:368 src/MainWindow.vala:778 src/Preferences.vala:94
 msgid "Close"
 msgstr ""
 
@@ -366,44 +366,44 @@ msgstr ""
 msgid "Journaler"
 msgstr ""
 
-#: src/MainWindow.vala:234
+#: src/MainWindow.vala:230
 msgid "Go To Today"
 msgstr ""
 
-#: src/MainWindow.vala:251
+#: src/MainWindow.vala:247
 msgid "Review Entries"
 msgstr ""
 
-#: src/MainWindow.vala:258
+#: src/MainWindow.vala:254
 msgid "Lock Journaler"
 msgstr ""
 
-#: src/MainWindow.vala:467 src/SidebarEditor.vala:274
+#: src/MainWindow.vala:463 src/SidebarEditor.vala:274
 msgid "Create New Template"
 msgstr ""
 
-#: src/MainWindow.vala:474
+#: src/MainWindow.vala:470
 msgid "View Awards"
 msgstr ""
 
-#: src/MainWindow.vala:477
+#: src/MainWindow.vala:473
 msgid "Shortcut Cheatsheet"
 msgstr ""
 
-#: src/MainWindow.vala:478
+#: src/MainWindow.vala:474
 msgid "Preferences…"
 msgstr ""
 
-#: src/MainWindow.vala:481
+#: src/MainWindow.vala:477
 msgid "Manage Templates"
 msgstr ""
 
-#: src/MainWindow.vala:617 src/SidebarEditor.vala:212 src/Templater.vala:733
+#: src/MainWindow.vala:613 src/SidebarEditor.vala:212 src/Templater.vala:733
 #: src/Utils.vala:309
 msgid "Cancel"
 msgstr ""
 
-#: src/MainWindow.vala:625
+#: src/MainWindow.vala:621
 msgid "Set Password"
 msgstr ""
 
@@ -1384,4 +1384,20 @@ msgstr ""
 
 #: data/com.github.phase1geo.journaler.shortcuts.ui:328
 msgid "Image"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:340
+msgid "Reviewing"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:344
+msgid "Navigation"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:349
+msgid "Previous Entry"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.shortcuts.ui:356
+msgid "Next Entry"
 msgstr ""

@@ -76,7 +76,7 @@ public class Preferences : Gtk.Dialog {
     stack.add_titled( create_general(),    "general",  _( "General" ) );
     stack.add_titled( create_editor(),     "editor",   _( "Editor" ) );
     stack.add_titled( create_login(),      "login",    _( "Login Screen" ) );
-    stack.add_titled( create_news_feeds(), "feeds",    _( "News Feeds" ) );
+    // stack.add_titled( create_news_feeds(), "feeds",    _( "News Feeds" ) );
     stack.add_titled( create_advanced(),   "advanced", _( "Advanced" ) );
 
     var switcher = new StackSwitcher() {

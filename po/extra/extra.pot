@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: extra\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-09-18 21:38-0500\n"
+"POT-Creation-Date: 2023-09-19 10:46-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -84,44 +84,38 @@ msgstr ""
 
 #: data/com.github.phase1geo.journaler.appdata.xml.in:25
 msgid ""
-"Weather, location, and RSS feed support for extra help in remembering the "
-"day."
-msgstr ""
-
-#: data/com.github.phase1geo.journaler.appdata.xml.in:26
-msgid ""
 "Motivation support with entry length goals, awards, inspirational quotes, "
 "and customizations."
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:27
+#: data/com.github.phase1geo.journaler.appdata.xml.in:26
 msgid "Built-in entry trash support."
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:28
+#: data/com.github.phase1geo.journaler.appdata.xml.in:27
 msgid "Import from XML"
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:29
+#: data/com.github.phase1geo.journaler.appdata.xml.in:28
 msgid "Export to XML and JSON."
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:37
+#: data/com.github.phase1geo.journaler.appdata.xml.in:36
 msgid "Entry Panel"
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:41
+#: data/com.github.phase1geo.journaler.appdata.xml.in:40
 msgid "Review Panel"
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:45
+#: data/com.github.phase1geo.journaler.appdata.xml.in:44
 msgid "Awards Panel"
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:49
+#: data/com.github.phase1geo.journaler.appdata.xml.in:48
 msgid "Trevor Williams"
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:62
+#: data/com.github.phase1geo.journaler.appdata.xml.in:60
 msgid "Initial release"
 msgstr ""

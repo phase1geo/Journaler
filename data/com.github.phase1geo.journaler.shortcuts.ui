@@ -334,5 +334,33 @@
         </child>
       </object>
     </child>
+    <child>
+      <object class="GtkShortcutsSection">
+        <property name="section-name">reviewing</property>
+        <property name="title" translatable="yes">Reviewing</property>
+        <property name="visible">1</property>
+        <child>
+          <object class="GtkShortcutsGroup">
+            <property name="title" translatable="yes">Navigation</property>
+            <property name="view">navigation</property>
+            <property name="visible">1</property>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="title" translatable="yes">Previous Entry</property>
+                <property name="accelerator">&lt;ctrl&gt;Left</property>
+                <property name="visible">1</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="title" translatable="yes">Next Entry</property>
+                <property name="accelerator">&lt;ctrl&gt;Right</property>
+                <property name="visible">1</property>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
   </object>
 </interface>
