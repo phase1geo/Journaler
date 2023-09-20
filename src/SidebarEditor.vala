@@ -26,6 +26,7 @@ public class SidebarEditor : Box {
 
   private MainWindow _win;
   private Journals   _journals;
+  private Label      _hidden_lbl;
   private Switch     _hidden;
   private Templates  _templates;
   private Journal    _journal;
@@ -115,7 +116,7 @@ public class SidebarEditor : Box {
   /* Add the hidden option */
   private void add_hidden( Grid grid ) {
 
-    var lbl = new Label( Utils.make_title( _( "Hidden:" ) ) ) {
+    _hidden_lbl = new Label( Utils.make_title( _( "Hidden:" ) ) ) {
       xalign = (float)0,
       use_markup = true
     };
@@ -129,7 +130,7 @@ public class SidebarEditor : Box {
       _win.reset_timer();
     });
 
-    grid.attach( lbl, 0, 1 );
+    grid.attach( _hidden_lbl, 0, 1 );
     grid.attach( _hidden, 1, 1 );
 
   }
@@ -306,7 +307,9 @@ public class SidebarEditor : Box {
 
     if( journal == null ) {
       _name.text = "";
-      _hidden.set_active( false );
+      _hidden.active = false;
+      _hidden_lbl.hide();
+      _hidden.hide();
       _template.label = _( "None" );
       _description.buffer.text = "";
       _save.sensitive = false;
@@ -314,6 +317,8 @@ public class SidebarEditor : Box {
     } else {
       _name.text = journal.name;
       _hidden.active = journal.hidden;
+      _hidden_lbl.show();
+      _hidden.show();
       _template.label = (journal.template == "") ? _( "None" ) : journal.template;
       _description.buffer.text = journal.description;
       _save.sensitive = true;
