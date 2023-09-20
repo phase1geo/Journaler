@@ -226,7 +226,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     add_keyboard_shortcuts( app );
 
     /* Create title toolbar */
-    var today_btn = new Button.from_icon_name( get_header_icon_name( "today" ) );
+    var today_btn = new Button.from_icon_name( get_header_icon_name( "today", "x-office-calendar-symbolic" ) );
     today_btn.set_tooltip_markup( Utils.tooltip_with_accel( _( "Go To Today" ), "<Control>t" ) );
     today_btn.clicked.connect( action_today );
     _header_buttons.append( today_btn );
