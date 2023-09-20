@@ -414,7 +414,7 @@ public class Preferences : Gtk.Dialog {
             pentry.activate();
           }
         }
-        dialog.close();
+        dialog.destroy();
       });
       dialog.show();
     });
@@ -950,7 +950,7 @@ public class Preferences : Gtk.Dialog {
           }
         }
       }
-      dialog.close();
+      dialog.destroy();
     });
 
     dialog.show();
@@ -1021,7 +1021,7 @@ public class Preferences : Gtk.Dialog {
           }
         }
       }
-      dialog.close();
+      dialog.destroy();
     });
 
     dialog.show();

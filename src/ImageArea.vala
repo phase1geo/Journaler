@@ -279,7 +279,7 @@ public class ImageArea : Box {
           add_image_from_uri( file.get_uri() );
         }
       }
-      dialog.close();
+      dialog.destroy();
     });
 
     dialog.show();
