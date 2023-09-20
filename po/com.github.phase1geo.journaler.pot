@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: com.github.phase1geo.journaler\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-09-19 20:47-0500\n"
+"POT-Creation-Date: 2023-09-19 21:10-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -31,7 +31,7 @@ msgstr ""
 msgid "Run '%s --help' to see valid options\n"
 msgstr ""
 
-#: src/Database.vala:624 src/Reviewer.vala:603
+#: src/Database.vala:624 src/Reviewer.vala:604
 msgid "Untagged"
 msgstr ""
 
@@ -800,27 +800,31 @@ msgstr ""
 msgid "Show all entries"
 msgstr ""
 
-#: src/Reviewer.vala:683
+#: src/Reviewer.vala:365
+msgid "Save Review Criteria"
+msgstr ""
+
+#: src/Reviewer.vala:684
 msgid "All Journals"
 msgstr ""
 
-#: src/Reviewer.vala:683
+#: src/Reviewer.vala:684
 msgid "No Journals"
 msgstr ""
 
-#: src/Reviewer.vala:687
+#: src/Reviewer.vala:688
 msgid "All Tags"
 msgstr ""
 
-#: src/Reviewer.vala:687
+#: src/Reviewer.vala:688
 msgid "No Tags"
 msgstr ""
 
-#: src/Reviewer.vala:843
+#: src/Reviewer.vala:844
 msgid "Restore"
 msgstr ""
 
-#: src/Reviewer.vala:846
+#: src/Reviewer.vala:847
 msgid "Move To Trash"
 msgstr ""
 

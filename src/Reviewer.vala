@@ -361,8 +361,9 @@ public class Reviewer : Grid {
     menu.append_section( null, del_entry );
 
     _search_save = new MenuButton() {
-      icon_name  = "folder-symbolic",
-      menu_model = menu
+      icon_name    = "folder-symbolic",
+      tooltip_text = _( "Save Review Criteria" ),
+      menu_model   = menu
     };
 
     attach( _search_save, 3, 1 );
