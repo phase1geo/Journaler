@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: com.github.phase1geo.journaler\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-09-19 10:46-0500\n"
+"POT-Creation-Date: 2023-09-19 20:47-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -378,7 +378,7 @@ msgstr ""
 msgid "Lock Journaler"
 msgstr ""
 
-#: src/MainWindow.vala:463 src/SidebarEditor.vala:274
+#: src/MainWindow.vala:463 src/SidebarEditor.vala:275
 msgid "Create New Template"
 msgstr ""
 
@@ -398,7 +398,7 @@ msgstr ""
 msgid "Manage Templates"
 msgstr ""
 
-#: src/MainWindow.vala:613 src/SidebarEditor.vala:212 src/Templater.vala:733
+#: src/MainWindow.vala:613 src/SidebarEditor.vala:213 src/Templater.vala:733
 #: src/Utils.vala:309
 msgid "Cancel"
 msgstr ""
@@ -437,10 +437,6 @@ msgstr ""
 
 #: src/Preferences.vala:78
 msgid "Login Screen"
-msgstr ""
-
-#: src/Preferences.vala:79
-msgid "News Feeds"
 msgstr ""
 
 #: src/Preferences.vala:80
@@ -887,37 +883,37 @@ msgstr ""
 msgid "No tags"
 msgstr ""
 
-#: src/SidebarEditor.vala:92
+#: src/SidebarEditor.vala:93
 msgid "Journal Name:"
 msgstr ""
 
-#: src/SidebarEditor.vala:100 src/Templater.vala:281
+#: src/SidebarEditor.vala:101 src/Templater.vala:281
 msgid "Required"
 msgstr ""
 
-#: src/SidebarEditor.vala:118
+#: src/SidebarEditor.vala:119
 msgid "Hidden:"
 msgstr ""
 
-#: src/SidebarEditor.vala:139 src/SidebarEditor.vala:155
-#: src/SidebarEditor.vala:266 src/SidebarEditor.vala:310
-#: src/SidebarEditor.vala:317 src/Statistics.vala:41
+#: src/SidebarEditor.vala:140 src/SidebarEditor.vala:156
+#: src/SidebarEditor.vala:267 src/SidebarEditor.vala:313
+#: src/SidebarEditor.vala:322 src/Statistics.vala:41
 msgid "None"
 msgstr ""
 
-#: src/SidebarEditor.vala:145
+#: src/SidebarEditor.vala:146
 msgid "Use Template:"
 msgstr ""
 
-#: src/SidebarEditor.vala:168
+#: src/SidebarEditor.vala:169
 msgid "Description:"
 msgstr ""
 
-#: src/SidebarEditor.vala:198 src/Templater.vala:720
+#: src/SidebarEditor.vala:199 src/Templater.vala:720
 msgid "Delete"
 msgstr ""
 
-#: src/SidebarEditor.vala:219
+#: src/SidebarEditor.vala:220
 msgid "Save"
 msgstr ""
 
