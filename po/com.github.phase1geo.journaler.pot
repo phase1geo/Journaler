@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: com.github.phase1geo.journaler\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-09-20 21:28-0500\n"
+"POT-Creation-Date: 2023-09-20 22:29-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -308,23 +308,23 @@ msgstr ""
 msgid "New Rewards Achieved!"
 msgstr ""
 
-#: src/ImageArea.vala:265 src/Preferences.vala:407
+#: src/ImageArea.vala:270 src/Preferences.vala:407
 msgid "Select an image"
 msgstr ""
 
-#: src/ImageArea.vala:265 src/TextArea.vala:621
+#: src/ImageArea.vala:270 src/TextArea.vala:621
 msgid "Add Image"
 msgstr ""
 
-#: src/ImageArea.vala:269
+#: src/ImageArea.vala:274
 msgid "PNG Images"
 msgstr ""
 
-#: src/ImageArea.vala:352
+#: src/ImageArea.vala:357
 msgid "Enter Description (Optional)"
 msgstr ""
 
-#: src/ImageArea.vala:368 src/MainWindow.vala:778 src/Preferences.vala:94
+#: src/ImageArea.vala:373 src/MainWindow.vala:778 src/Preferences.vala:94
 msgid "Close"
 msgstr ""
 
