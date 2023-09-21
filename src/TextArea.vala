@@ -1297,7 +1297,9 @@ public class TextArea : Box {
       if( !_text.editable ) {
         _stats.hide();
       }
-      _image_area.hide();
+      if( !_image_area.empty ) {
+        _image_area.hide();
+      }
       if( _win.review_mode ) {
         show_review();
       }
@@ -1315,7 +1317,9 @@ public class TextArea : Box {
       });
     } else {
       _stats.show();
-      _image_area.show();
+      if( !_image_area.empty ) {
+        _image_area.show();
+      }
       if( _win.review_mode ) {
         show_review();
       }

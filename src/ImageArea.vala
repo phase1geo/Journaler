@@ -39,6 +39,11 @@ public class ImageArea : Box {
   private DBImage _viewer_image;
 
   public bool editable { get; set; default = true; }
+  public bool empty {
+    get {
+      return( _images.length == 0 );
+    }
+  }
 
   /* Create the main window UI */
   public ImageArea( MainWindow win ) {
