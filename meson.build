@@ -1,6 +1,6 @@
 project('com.github.phase1geo.journaler', ['vala', 'c'],
   meson_version : '>= 0.59.0',
-  version : '1.0.1',
+  version : '1.0.2',
   license: 'GPL-3.0'
 )
 

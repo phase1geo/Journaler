@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: extra\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-09-20 21:17-0500\n"
+"POT-Creation-Date: 2023-09-20 21:28-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -117,9 +117,15 @@ msgid "Trevor Williams"
 msgstr ""
 
 #: data/com.github.phase1geo.journaler.appdata.xml.in:61
-msgid "Adding Stripe key to appdata.xml file"
+msgid ""
+"Updating versioning information to 1.0.2 to satisfy AppCenter review "
+"requirements."
 msgstr ""
 
 #: data/com.github.phase1geo.journaler.appdata.xml.in:66
+msgid "Adding Stripe key to appdata.xml file"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.appdata.xml.in:71
 msgid "Initial release"
 msgstr ""
