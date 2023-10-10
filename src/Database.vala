@@ -891,9 +891,10 @@ public class Database {
   }
 
   /* Removes all entries that contain empty text strings.  This may only be useful for debugging. */
-  public bool purge_empty_entries() {
+  public bool purge_empty_entries( bool include_today = true ) {
 
-    var entry_query = "DELETE FROM Entry WHERE txt = '' RETURNING id;";
+    var add_date    = include_today ? "" : "AND date != '%s'".printf( DBEntry.todays_date() );
+    var entry_query = "DELETE FROM Entry WHERE txt = '' %s RETURNING id;".printf( add_date );
 
     int[] entry_ids = {};
     var res = exec_query( entry_query, (ncols, vals, names) => {

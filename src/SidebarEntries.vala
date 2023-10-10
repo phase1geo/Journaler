@@ -308,7 +308,7 @@ public class SidebarEntries : Box {
         _listbox.select_row( _listbox.get_row_at_index( index ) );
       } else {
         _listbox.select_row( null );
-        show_entry_for_date( _journals.current.name, date, false, true, SelectedEntryPos.OTHER, "add_calendar" );
+        show_entry_for_date( _journals.current.name, date, (strcmp( date, DBEntry.todays_date() ) < 1), true, SelectedEntryPos.OTHER, "add_calendar" );
       }
     });
 
@@ -515,11 +515,14 @@ public class SidebarEntries : Box {
     entry.journal = journal_name;
     entry.date    = date;
 
+    /* Purge the empty entries but not today */
+    var purged = _journals.current.db.purge_empty_entries( false );
+
     /* Attempt to load the entry */
     var load_result = _journals.current.db.load_entry( entry, (!is_trash && create_if_needed) );
 
     /* If we created a new entry, update the list contents */
-    if( load_result == DBLoadResult.CREATED ) {
+    if( purged || (load_result == DBLoadResult.CREATED) ) {
       populate( true );
     }
 

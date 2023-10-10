@@ -33,6 +33,9 @@ public class Journals {
     }
     set {
       if( _current != value ) {
+        if( _current != null ) {
+          _current.db.purge_empty_entries();
+        }
         _current = value;
         current_changed( false );
         save();
