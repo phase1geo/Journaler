@@ -108,7 +108,7 @@ public class ImageArea : Box {
   /* Returns true if the given URI is a supported image based on its extension */
   public bool is_uri_supported_image( string uri ) {
     string[] parts = uri.split( "." );
-    return( _extensions.has_key( parts[parts.length - 1] ) );
+    return( _extensions.has_key( parts[parts.length - 1].down() ) );
   }
 
   /* Retrieves an image object used for saving to database */
@@ -271,9 +271,9 @@ public class ImageArea : Box {
 
     /* Add filters */
     var filter = new FileFilter() {
-      name = _( "PNG Images" )
+      name = _( "Image Files" )
     };
-    filter.add_suffix( "png" );
+    filter.add_pixbuf_formats();
     dialog.add_filter( filter );
 
     dialog.response.connect((id) => {
