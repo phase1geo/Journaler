@@ -146,11 +146,24 @@ public class Journal {
     return( FileUtils.unlink( db_path() ) == 0 );
   }
 
-  /* Moves the given entry from this journal to the given to_journal */
-  public bool move_entry( DBEntry entry, Journal to_journal ) {
-    return( to_journal.db.create_entry( entry ) &&
-            to_journal.db.save_entry( this, entry ) &&
-            db.remove_entry( entry ) );
+  /* Moves the given entry from this journal to the given to_journal, merging if necessary */
+  public bool move_entry( DBEntry entry, Journal to_journal, string? to_date = null ) {
+
+    var load_entry     = new DBEntry();
+    load_entry.journal = entry.journal;
+    load_entry.date    = to_date ?? entry.date;
+
+    var load_result = to_journal.db.load_entry( load_entry, true );
+
+    stdout.printf( "moving entry, date: %s, to_journal: %s, load_result: %s\n", load_entry.date, to_journal.name, load_result.to_string() );
+
+    if( load_result != DBLoadResult.FAILED ) {
+      load_entry.merge_with_entry( entry );
+      return( to_journal.db.save_entry( this, load_entry ) && db.remove_entry( entry ) );
+    }
+
+    return( false );
+
   }
 
   /* Saves this journal in XML format */

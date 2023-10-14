@@ -187,12 +187,38 @@ public class DBEntry {
   /* Merges an entry into this one */
   public void merge_with_entry( DBEntry entry ) {
 
+    var other_title = entry.title;
+    var other_text  = entry.text;
+    var other_time  = entry.time;
+
+    /* If the current time is earlier, we will append the entry to this one */
+    if( before( entry.time, time ) ) {
+      other_title = title;
+      other_text  = text;
+      other_time  = time;
+      title = entry.title;
+      text  = entry.text;
+      time  = entry.time;
+    }
+
+    var append_text = "---\n%s\n\n".printf( other_time );
+
+    /* If the titles do not match, use the more specific one.  If they are both customized, we put the entry parameter title in text */
+    if( title != other_title ) {
+      if( title == "" ) {
+        title = other_title;
+      } else if( other_title != "" ) {
+        append_text += "# %s\n\n".printf( other_title );
+      }
+    }
+
     /* If the text does not match, append the text of the entry to the end of our text, placing a horizontal separator line */
-    if( text != entry.text ) {
+    if( text != other_text ) {
       if( text == "" ) {
-        text = entry.text;
-      } else if( entry.text != "" ) {
-        text += "\n\n---\n\n%s".printf( entry.text );
+        text = other_text;
+      } else if( other_text != "" ) {
+        append_text += other_text;
+        text = append_text;
       }
     }
 
@@ -366,7 +392,12 @@ public class DBEntry {
   public static string datetime_time( DateTime dt ) {
     return( "%02d:%02d".printf( dt.get_hour(), dt.get_minute() ) );
   }
- 
+
+  /* Returns true if date/time a comes before date/time b */
+  public static bool before( string a, string b ) {
+    return( strcmp( a, b ) < 0 );
+  }
+  
   /* Compares two DBEntries for sorting purposes (by date) */
   public static int compare( void* x, void* y ) {
     DBEntry** x1 = (DBEntry**)x;
