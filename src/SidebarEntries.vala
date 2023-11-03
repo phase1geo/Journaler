@@ -101,7 +101,6 @@ public class SidebarEntries : Box {
     });
 
     text_area.entry_moved.connect((entry) => {
-      stdout.printf( "entry_moved, entry: %s\n", entry.to_string() );
       populate( entry );
       if( _journals.current.is_trash ) {
         _burger_mb.menu_model = _trash_burger_menu;
@@ -462,11 +461,9 @@ public class SidebarEntries : Box {
     }
 
     if( select_entry != null ) {
-      stdout.printf( "Re-select entry, date: %s, time: %s\n", select_entry.date, select_entry.time );
       var index = get_listbox_index_for_date_time( select_entry.date, select_entry.time );
       if( index != -1 ) {
         _ignore_select = true;
-        stdout.printf( "  index: %d\n", index );
         _listbox.select_row( _listbox.get_row_at_index( index ) );
         _ignore_select = false;
       }
@@ -524,8 +521,6 @@ public class SidebarEntries : Box {
 
   /* Displays the entry for the given date */
   public void show_entry_for_date( string journal_name, string date, string time, bool create_if_needed, bool editable, SelectedEntryPos pos, string msg ) {
-
-    stdout.printf( "In show_entry_for_date, date: %s, time: %s, selected_date: %s, selected_time: %s, msg: %s\n", date, time, _selected_date, _selected_time, msg );
 
     if( (_selected_journal == journal_name) && (_selected_date == date) && (_selected_time == time) && (_last_editable == editable) ) {
       return;

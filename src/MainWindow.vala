@@ -412,8 +412,6 @@ public class MainWindow : Gtk.ApplicationWindow {
   */
   public void reset_timer() {
 
-    // stdout.printf( "In reset_timer\n" );
-
     /* Clear the counter and the timer */
     if( _auto_lock_id > 0 ) {
       Source.remove( _auto_lock_id );

@@ -304,11 +304,9 @@ public class TextArea : Box {
     };
     _date.add_css_class( "text-background" );
     _date.activate.connect(() => {
-      stdout.printf( "HERE???\n" );
       _cal.year  = _entry.get_year();
       _cal.month = _entry.get_month() - 1;
       _cal.day   = (int)_entry.get_day();
-      stdout.printf( "Activating date menubutton, year: %d, month: %d, day: %d\n", _cal.year, _cal.month, _cal.day );
     });
 
     _time = new Label( "" ) {
@@ -448,10 +446,13 @@ public class TextArea : Box {
 
     menu.remove_all();
 
+    var move_menu = new GLib.Menu();
+    menu.append_section( _( "Move to journal" ), move_menu );
+
     for( int i=0; i<_journals.num_journals(); i++ ) {
       var journal = _journals.get_journal( i );
       if( !journal.hidden ) {
-        menu.append( journal.name, "textarea.action_change_journal('%s')".printf( journal.name ) );
+        move_menu.append( journal.name, "textarea.action_change_journal('%s')".printf( journal.name ) );
       }
     }
 
