@@ -260,7 +260,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     _reviewer = new Reviewer( this, _journals );
     _reviewer.show_matched_entry.connect((entry, pos) => {
       _journals.current = entry.trash ? _journals.trash : _journals.get_journal_by_name( entry.journal );
-      _entries.show_entry_for_date( entry.journal, entry.date, false, false, pos, "from show_matched_entry" );
+      _entries.show_entry_for_date( entry.journal, entry.date, entry.time, false, false, pos, "from show_matched_entry" );
     });
     _reviewer.close_requested.connect( action_review );
 
@@ -411,8 +411,6 @@ public class MainWindow : Gtk.ApplicationWindow {
    timer to be reset.
   */
   public void reset_timer() {
-
-    // stdout.printf( "In reset_timer\n" );
 
     /* Clear the counter and the timer */
     if( _auto_lock_id > 0 ) {
@@ -870,7 +868,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     if( review_mode ) {
       action_review();
     } else {
-      _entries.show_entry_for_date( _journals.current.name, DBEntry.todays_date(), true, true, SelectedEntryPos.OTHER, "action_today" );
+      _entries.show_entry_for_date( _journals.current.name, DBEntry.todays_date(), "", true, true, SelectedEntryPos.OTHER, "action_today" );
     }
 
   }

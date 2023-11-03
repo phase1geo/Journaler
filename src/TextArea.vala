@@ -35,8 +35,12 @@ public class TextArea : Box {
   private Button           _prev;
   private Button           _next;
   private MenuButton       _burger;
-  private Label            _date;
-  private Label            _jname;
+  private MenuButton       _date;
+  private Popover          _date_popover;
+  private bool             _date_changed;
+  private Label            _time;
+  private MenuButton       _jname;
+  private Calendar         _cal;
   private TagBox           _tags;
   private GtkSource.View   _text;
   private GtkSource.Buffer _buffer;
@@ -55,11 +59,11 @@ public class TextArea : Box {
 
   private const GLib.ActionEntry action_entries[] = {
     { "action_add_entry_image",     action_add_entry_image },
-    { "action_remove_entry_image",  action_remove_entry_image },
     { "action_insert_template",     action_insert_template, "s" },
     { "action_restore_entry",       action_restore_entry },
     { "action_delete_entry",        action_delete_entry },
     { "action_trash_entry",         action_trash_entry },
+    { "action_change_journal",      action_change_journal, "s" },
     { "action_bold_text",           action_bold_text },
     { "action_italicize_text",      action_italicize_text },
     { "action_strike_text",         action_strike_text },
@@ -99,8 +103,9 @@ public class TextArea : Box {
     Object( orientation: Orientation.VERTICAL, spacing: 0 );
 
     _win       = win;
-    _journals  = journals;
     _templates = templates;
+    _journals  = journals;
+    _journals.list_changed.connect( journals_changed );
 
     /* Create the list of quotes to use */
     _quotes = new Quotes();
@@ -190,6 +195,8 @@ public class TextArea : Box {
 
     var margin = Journaler.settings.get_int( "editor-margin" );
 
+    _title.margin_start = margin;
+    _date.margin_start  = margin;
     _text.top_margin    = margin / 2;
     _text.left_margin   = margin;
     _text.right_margin  = margin;
@@ -283,20 +290,48 @@ public class TextArea : Box {
     tbox.append( _next );
     tbox.append( _burger );
 
-    /* Add the date */
-    _date = new Label( "" ) {
-      halign = Align.START,
-      hexpand = true
-      // xalign = (float)0
+    _date_popover = new Popover() {
+      child = create_date_picker()
     };
-    _date.add_css_class( "date" );
+
+    /* Add the date */
+    _date = new MenuButton() {
+      halign       = Align.START,
+      // hexpand      = true,
+      margin_start = Journaler.settings.get_int( "editor-margin" ),
+      margin_top   = 5,
+      label        = "",
+      popover      = _date_popover,
+      has_frame    = false,
+      direction    = ArrowType.NONE
+    };
     _date.add_css_class( "text-background" );
+    _date.activate.connect(() => {
+      _cal.year  = _entry.get_year();
+      _cal.month = _entry.get_month() - 1;
+      _cal.day   = (int)_entry.get_day();
+    });
+
+    _time = new Label( "" ) {
+      halign  = Align.START,
+      hexpand = true,
+      margin_top = 5
+    };
+
+    var dtbox = new Box( Orientation.HORIZONTAL, 5 );
+    dtbox.append( _date );
+    dtbox.append( _time );
 
     /* Add the journal name */
-    _jname = new Label( "" ) {
+    _jname = new MenuButton() {
       halign = Align.END,
       hexpand = true,
-      margin_end = 5
+      margin_top = 5,
+      margin_end = 5,
+      label = "",
+      menu_model = new GLib.Menu(),
+      has_frame = false,
+      direction = ArrowType.NONE
     };
     _jname.add_css_class( "text-background" );
 
@@ -304,7 +339,7 @@ public class TextArea : Box {
       halign = Align.FILL,
       hexpand = true
     };
-    dbox.append( _date );
+    dbox.append( dtbox );
     dbox.append( _jname );
 
     Idle.add(() => {
@@ -373,6 +408,77 @@ public class TextArea : Box {
     append( _stats );
 
     initialize_spell_checker();
+
+  }
+
+  /* Creates the date picker which will allow the user to adjust the date of the entry */
+  private Box create_date_picker() {
+
+    var title = new Label( Utils.make_title( _( "Change date" ) ) ) {
+      halign = Align.START,
+      hexpand = true,
+      use_markup = true
+    };
+
+    _cal = new Calendar() {
+      show_heading = true
+    };
+    _cal.day_selected.connect(() => {
+      var dt    = _cal.get_date();
+      var date  = DBEntry.datetime_date( dt );
+      var today = DBEntry.todays_date();
+      if( !DBEntry.before( today, date ) && (_entry.date != date) ) {
+        if( _journal.move_entry( _entry, _journal, date ) ) {
+          _entry.date = date;
+          entry_moved( _entry );
+          Utils.debug_output( "Entry successfully changed to date %s".printf( _entry.date ) );
+        }
+        _date.label = dt.format( "%A, %B %e, %Y" );
+        _date_popover.popdown();
+      }
+    });
+
+    var box = new Box( Orientation.VERTICAL, 10 ) {
+      margin_start  = 5,
+      margin_end    = 5,
+      margin_top    = 5,
+      margin_bottom = 5
+    };
+    box.append( title );
+    box.append( _cal );
+
+    return( box );
+
+  }
+
+  /* Called whenever the journals change */
+  private void journals_changed() {
+
+    var menu = (GLib.Menu)_jname.menu_model;
+
+    menu.remove_all();
+
+    var move_menu = new GLib.Menu();
+    menu.append_section( _( "Move to journal" ), move_menu );
+
+    for( int i=0; i<_journals.num_journals(); i++ ) {
+      var journal = _journals.get_journal( i );
+      if( !journal.hidden ) {
+        move_menu.append( journal.name, "textarea.action_change_journal('%s')".printf( journal.name ) );
+      }
+    }
+
+  }
+
+  /* Moves this journal entry to the given journal */
+  private void action_change_journal( SimpleAction action, Variant? variant ) {
+
+    var to_journal = _journals.get_journal_by_name( variant.get_string() );
+    if( _journal.move_entry( _entry, to_journal ) ) {
+      _entry.journal = to_journal.name;
+      entry_moved( _entry );
+      Utils.debug_output( "Entry successfully moved to journal %s".printf( to_journal.name ) );
+    }
 
   }
 
@@ -646,11 +752,6 @@ public class TextArea : Box {
     _image_area.add_new_image();
   }
 
-  /* Removes the image associated with the current entry */
-  private void action_remove_entry_image() {
-    _win.reset_timer();
-  }
-
   /* Inserts the given template text at the current insertion cursor location */
   private void action_insert_template( SimpleAction action, Variant? variant ) {
     _win.reset_timer();
@@ -668,18 +769,9 @@ public class TextArea : Box {
       /* Save the current entry so that we have _entry up-to-date */
       save();
 
-      var load_entry     = new DBEntry();
-      load_entry.journal = _entry.journal;
-      load_entry.date    = _entry.date;
-
-      var load_result = _journals.trash.db.load_entry( load_entry, true );
-
-      if( load_result != DBLoadResult.FAILED ) {
-        load_entry.merge_with_entry( _entry );
-        if( journal.move_entry( load_entry, _journals.trash ) ) {
-          entry_moved( _entry );
-          Utils.debug_output( "Entry successfully moved to the trash" );
-        }
+      if( journal.move_entry( _entry, _journals.trash ) ) {
+        entry_moved( _entry );
+        Utils.debug_output( "Entry successfully moved to the trash" );
       }
 
     }
@@ -956,6 +1048,9 @@ public class TextArea : Box {
       .image-button {
         opacity: 0.7;
       }
+      .no-relief {
+        border-width: 0px;
+      }
     """.printf( font_size, font_size, margin, margin, style.get_style( "text" ).background, (margin - 4) );
     provider.load_from_data( css_data.data );
     StyleContext.add_provider_for_display( get_display(), provider, STYLE_PROVIDER_PRIORITY_APPLICATION );
@@ -981,7 +1076,7 @@ public class TextArea : Box {
   public void save( bool image_changed = false ) {
 
     /* If the text area is not editable or has not changed, there's no need to save */
-    if( (_journal == null) || (_entry == null) || (!title_changed() && !_image_area.changed() && !text_changed()) ) {
+    if( (_journal == null) || (_entry == null) || (!title_changed() && !_date_changed && !_image_area.changed() && !text_changed()) ) {
       return;
     }
 
@@ -999,6 +1094,7 @@ public class TextArea : Box {
 
       _entry = entry;
       _text.buffer.set_modified( false );
+      _date_changed = false;
 
       /* Update the goals */
       if( _stats.goal_reached() && !_entry_goal_reached ) {
@@ -1040,12 +1136,20 @@ public class TextArea : Box {
     /* Set the date */
     if( _entry.date == "" ) {
       _date.label = "";
+      _time.label = "";
     } else {
       var dt = _entry.datetime();
-      _date.label = dt.format( "%A, %B %e, %Y  %I:%M %p" );
+      _date.label = dt.format( "%A, %B %e, %Y" );
+      _time.label = dt.format( "%I:%M %p" );
+      _cal.year   = _entry.get_year();
+      _cal.month  = _entry.get_month() - 1;
+      _cal.day    = (int)_entry.get_day();
     }
+    _date.set_sensitive( enable_ui );
+    _date_changed = false;
 
     _jname.label = _journal.name;
+    _jname.set_sensitive( enable_ui );
 
     /* Set the next and previous button state */
     _prev.set_sensitive( pos.prev_sensitivity() );
@@ -1055,11 +1159,11 @@ public class TextArea : Box {
       _title.text = _entry.gen_title();
       _prev.show();
       _next.show();
-      _jname.show();
+      // _jname.show();
     } else {
       _prev.hide();
       _next.hide();
-      _jname.hide();
+      // _jname.hide();
     }
 
     /* Set the image */
