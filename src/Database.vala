@@ -55,6 +55,14 @@ public class DBImage {
     this.description = description;
   }
 
+  /* Copy constructor */
+  public DBImage.copy( DBImage other ) {
+    this.id          = other.id;
+    this.uri         = other.uri;
+    this.extension   = other.extension;
+    this.description = other.description;
+  }
+
   /* Returns the relative image filename.  Call image_path to get the absolute filepath. */
   public string image_file() {
     return( "image-%06d.%s".printf( id, extension ) );
@@ -102,6 +110,33 @@ public class DBImage {
       return( true );
     }
     return( false );
+  }
+
+  /* Copies the stored image from one journal to another */
+  public bool copy_file( Journal from_journal, Journal to_journal ) {
+
+    if( id == -1 ) return( false );
+
+    var from    = File.new_for_path( image_path( from_journal ) );  
+    var prev_id = id;
+
+    id = to_journal.new_image_id();
+
+    var to = File.new_for_path( image_path( to_journal ) );
+
+    try {
+      if( from.copy( to, FileCopyFlags.OVERWRITE ) ) {
+        this.state = ChangeState.NEW;
+        return( true );
+      }
+    } catch( Error e ) {
+      stderr.printf( "ERROR: %s\n", e.message );
+    }
+
+    this.id = prev_id;
+
+    return( false );
+
   }
 
   /*
@@ -162,15 +197,17 @@ public class DBEntry {
     this.title   = title;
     this.text    = text;
     this.date    = todays_date();
+    this.time    = todays_time();
     store_tag_list( tag_list );
   }
 
   /* Constructor */
-  public DBEntry.for_list( string journal, bool trash, string title, string date, string text ) {
+  public DBEntry.for_list( string journal, bool trash, string title, string date, string time, string text ) {
     this.journal = journal;
     this.trash   = trash;
     this.title   = title;
     this.date    = date;
+    this.time    = time;
     this.text    = text;
   }
 
@@ -184,57 +221,21 @@ public class DBEntry {
     store_tag_list( tag_list );
   }
 
-  /* Merges an entry into this one */
-  public void merge_with_entry( DBEntry entry ) {
-
-    var other_title = entry.title;
-    var other_text  = entry.text;
-    var other_time  = entry.time;
-
-    /* If the current time is earlier, we will append the entry to this one */
-    if( before( entry.time, time ) ) {
-      other_title = title;
-      other_text  = text;
-      other_time  = time;
-      title = entry.title;
-      text  = entry.text;
-      time  = entry.time;
+  /* Copy constructor */
+  public DBEntry.copy( DBEntry other ) {
+    this.journal = other.journal;
+    this.trash   = other.trash;
+    this.title   = other.title;
+    this.text    = other.text;
+    this.date    = other.date;
+    this.time    = other.time;
+    foreach( var tag in other.tags ) {
+      _tags.append( tag );
     }
-
-    var append_text = "---\n%s\n\n".printf( other_time );
-
-    /* If the titles do not match, use the more specific one.  If they are both customized, we put the entry parameter title in text */
-    if( title != other_title ) {
-      if( title == "" ) {
-        title = other_title;
-      } else if( other_title != "" ) {
-        append_text += "# %s\n\n".printf( other_title );
-      }
-    }
-
-    /* If the text does not match, append the text of the entry to the end of our text, placing a horizontal separator line */
-    if( text != other_text ) {
-      if( text == "" ) {
-        text = other_text;
-      } else if( other_text != "" ) {
-        append_text += other_text;
-        text = append_text;
-      }
-    }
-
-    /* If this entry doesn't contain an image but the other one does, use the other entry's image data */
-    foreach( var image in entry.images ) {
+    foreach( var img  in other.images ) {
+      var image = new DBImage.copy( img );
       _images.append( image );
-      images_changed = true;
     }
-
-    /* Let's merge the tags */
-    foreach( var tag in entry._tags ) {
-      if( !contains_tag( tag ) ) {
-        add_tag( tag );
-      }
-    }
-
   }
 
   /*
@@ -253,10 +254,24 @@ public class DBEntry {
     _images.append( image );
   }
 
+  /* Copies all of the existing images from one journal to another */
+  public void copy_images( Journal from_journal, Journal to_journal ) {
+    foreach( var image in _images ) {
+      image.copy_file( from_journal, to_journal );
+    }
+  }
+
   /* Removes the given image */
   public void remove_image( Journal journal, DBImage image ) {
     if( image.remove_file( journal ) ) {
       _images.remove( image );
+    }
+  }
+
+  /* Removes all images associated with this entry */
+  public void mark_images_for_removal() {
+    foreach( var image in _images ) {
+      image.state = ChangeState.DELETED;
     }
   }
 
@@ -542,11 +557,11 @@ public class Database {
       FROM
         Entry
         LEFT JOIN Journal ON Journal.id = Entry.journal_id
-      ORDER BY Entry.date DESC;
+      ORDER BY Entry.date DESC, Entry.time DESC;
       """;
 
     var retval = exec_query( query, (ncols, vals, names) => {
-      var entry = new DBEntry.for_list( vals[EntryPos.JOURNAL], trash, vals[EntryPos.TITLE], vals[EntryPos.DATE], "" );
+      var entry = new DBEntry.for_list( vals[EntryPos.JOURNAL], trash, vals[EntryPos.TITLE], vals[EntryPos.DATE], vals[EntryPos.TIME], "" );
       entries.append_val( entry );
       return( 0 );
     });
@@ -611,6 +626,14 @@ public class Database {
 
     assert( journal_id != -1 );
 
+    /*
+     If the lookup time was clear, it means that we couldn't find an entry where the time was DONT_CARE.
+     If we are creating entry whose date does not match then, set the time to the current time for saving.
+    */
+    if( entry.time == "" ) {
+      entry.time = DBEntry.todays_time();
+    }
+
     /* Insert the entry */
     var entry_query = """
         INSERT INTO Entry (title, txt, date, time, journal_id)
@@ -671,14 +694,14 @@ public class Database {
         LEFT JOIN TagMap  ON TagMap.entry_id = Entry.id
         LEFT JOIN Tag     ON TagMap.tag_id = Tag.id
       %s
-      ORDER BY Entry.date;
+      ORDER BY Entry.date, Entry.time;
     """.printf( (where.length == 0) ? "" : "WHERE %s".printf( string.joinv( " AND ", where ) ) );
 
     var last_id = "";
     var retval = exec_query( query, (ncols, vals, names) => {
       var tag = vals[EntryPos.TAG];
       if( (vals[EntryPos.ID] != last_id) && ((tag == null) ? untagged : (tags.find(tag) != null)) ) {
-        var entry = new DBEntry.for_list( vals[EntryPos.JOURNAL], trash, vals[EntryPos.TITLE], vals[EntryPos.DATE], ((str == "") ? "" : vals[EntryPos.TEXT]) );
+        var entry = new DBEntry.for_list( vals[EntryPos.JOURNAL], trash, vals[EntryPos.TITLE], vals[EntryPos.DATE], vals[EntryPos.TIME], ((str == "") ? "" : vals[EntryPos.TEXT]) );
         matched_entries.add( entry );
         last_id = vals[EntryPos.ID];
       }
@@ -694,6 +717,8 @@ public class Database {
 
     var entry_id = -1;
 
+    var where_time = (entry.time == "") ? "" : " AND Entry.time = '%s'".printf( entry.time );
+
     var entry_query = """
       SELECT
         Entry.*
@@ -701,16 +726,18 @@ public class Database {
         Entry
         LEFT JOIN Journal ON Journal.id = Entry.journal_id
       WHERE
-        Entry.date = '%s' AND Journal.name = '%s'
-      ORDER BY Entry.date;
-    """.printf( entry.date, sql_string( entry.journal ) );
+        Entry.date = '%s' %s AND Journal.name = '%s'
+      ORDER BY Entry.date, Entry.time;
+    """.printf( entry.date, where_time, sql_string( entry.journal ) );
 
     exec_query( entry_query, (ncols, vals, names) => {
-      entry.loaded = true;
-      entry_id     = int.parse( vals[EntryPos.ID] );
-      entry.title  = vals[EntryPos.TITLE];
-      entry.text   = vals[EntryPos.TEXT];
-      entry.time   = vals[EntryPos.TIME];
+      if( !entry.loaded ) {
+        entry.loaded = true;
+        entry_id     = int.parse( vals[EntryPos.ID] );
+        entry.title  = vals[EntryPos.TITLE];
+        entry.text   = vals[EntryPos.TEXT];
+        entry.time   = vals[EntryPos.TIME];
+      }
       return( 0 );
     });
 
@@ -809,9 +836,9 @@ public class Database {
     var entry_query = """ 
       UPDATE Entry
       SET title = '%s', txt = '%s'
-      WHERE date = '%s'
+      WHERE date = '%s' AND time = '%s'
       RETURNING id;
-      """.printf( sql_string( entry.title ), sql_string( entry.text ), entry.date );
+      """.printf( sql_string( entry.title ), sql_string( entry.text ), entry.date, entry.time );
 
     var entry_id = -1;
     var res = exec_query( entry_query, (ncols, vals, names) => {
@@ -897,7 +924,7 @@ public class Database {
   /* Removes the entry that matches the given entry  */
   public bool remove_entry( DBEntry entry ) {
 
-    var entry_query = "DELETE FROM Entry WHERE date = '%s' RETURNING id;".printf( entry.date );
+    var entry_query = "DELETE FROM Entry WHERE date = '%s' AND time = '%s' RETURNING id;".printf( entry.date, entry.time );
 
     var entry_id = -1;
     var res = exec_query( entry_query, (ncols, vals, names) => {

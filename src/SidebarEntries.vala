@@ -42,9 +42,10 @@ public class SidebarEntries : Box {
   private GLib.Menu      _hidden_burger_menu;
   private GLib.Menu      _trash_burger_menu;
   private string         _selected_journal = "";
-  private string         _selected_date = "";
-  private bool           _last_editable = false;
-  private bool           _show_hidden = false;
+  private string         _selected_date    = "";
+  private string         _selected_time    = "";
+  private bool           _last_editable    = false;
+  private bool           _show_hidden      = false;
 
   private const GLib.ActionEntry action_entries[] = {
     { "action_select_trash",         action_select_trash },
@@ -74,21 +75,23 @@ public class SidebarEntries : Box {
 
     _journals = journals;
     _journals.current_changed.connect((refresh) => {
-      populate( refresh );
-      if( !refresh ) {
+      if( refresh ) {
+        populate( get_selected_entry() );
+      } else {
+        populate( null );
         if( _journals.current != null ) {
           if( _journals.current.is_trash ) {
             _burger_mb.menu_model = _trash_burger_menu;
             action_set_enabled( "entries.action_empty_trash", (_listbox_entries.length > 0) );
             if( _listbox_entries.length > 0 ) {
               var listbox_entry = _listbox_entries.index( 0 );
-              show_entry_for_date( listbox_entry.journal, listbox_entry.date, false, true, SelectedEntryPos.OTHER, "constructor A" );
+              show_entry_for_date( listbox_entry.journal, listbox_entry.date, listbox_entry.time, false, true, SelectedEntryPos.OTHER, "constructor A" );
             } else {
-              show_entry_for_date( _journals.current.name, "", false, false, SelectedEntryPos.OTHER, "constructor B" );
+              show_entry_for_date( _journals.current.name, "", "", false, false, SelectedEntryPos.OTHER, "constructor B" );
             }
           } else {
             _burger_mb.menu_model = _journal_burger_menu;
-            show_entry_for_date( _journals.current.name, DBEntry.todays_date(), true, true, SelectedEntryPos.OTHER, "constructor C" );
+            show_entry_for_date( _journals.current.name, DBEntry.todays_date(), "", true, true, SelectedEntryPos.OTHER, "constructor C" );
           }
         }
       }
@@ -98,18 +101,21 @@ public class SidebarEntries : Box {
     });
 
     text_area.entry_moved.connect((entry) => {
-      populate( true );
+      stdout.printf( "entry_moved, entry: %s\n", entry.to_string() );
+      populate( entry );
       if( _journals.current.is_trash ) {
         _burger_mb.menu_model = _trash_burger_menu;
         action_set_enabled( "entries.action_empty_trash", (_listbox_entries.length > 0) );
       } else {
         _burger_mb.menu_model = _journal_burger_menu;
       }
-      if( _listbox_entries.length > 0 ) {
-        var listbox_entry = _listbox_entries.index( 0 );
-        show_entry_for_date( listbox_entry.journal, listbox_entry.date, false, true, SelectedEntryPos.OTHER, "constructor F" );
-      } else {
-        show_entry_for_date( _journals.current.name, "", false, false, SelectedEntryPos.OTHER, "constructor G" );
+      if( entry.journal != _journals.current.name ) {
+        if( _listbox_entries.length > 0 ) {
+          var listbox_entry = _listbox_entries.index( 0 );
+          show_entry_for_date( listbox_entry.journal, listbox_entry.date, listbox_entry.time, false, true, SelectedEntryPos.OTHER, "constructor F" );
+        } else {
+          show_entry_for_date( _journals.current.name, "", "", false, false, SelectedEntryPos.OTHER, "constructor G" );
+        }
       }
     });
 
@@ -129,7 +135,12 @@ public class SidebarEntries : Box {
     foreach( var key in keys ) {
       Journaler.settings.changed[key].connect(() => {
         var selected = _listbox.get_selected_row();
-        populate_listbox( true, ((selected == null) ? "" : _listbox_entries.index( selected.get_index() ).date) );
+        if( selected != null ) {
+          var entry = _listbox_entries.index( selected.get_index() );
+          populate_listbox( entry );
+        } else {
+          populate_listbox( null );
+        }
       });
     }
 
@@ -264,7 +275,8 @@ public class SidebarEntries : Box {
       var index   = row.get_index();
       var journal = _listbox_entries.index( index ).journal;
       var date    = _listbox_entries.index( index ).date;
-      show_entry_for_date( journal, date, false, true, SelectedEntryPos.OTHER, "add_current_list" );
+      var time    = _listbox_entries.index( index ).time;
+      show_entry_for_date( journal, date, time, false, true, SelectedEntryPos.OTHER, "add_current_list" );
     });
 
     _lb_scroll = new ScrolledWindow() {
@@ -303,12 +315,12 @@ public class SidebarEntries : Box {
       _win.reset_timer();
       var dt = _cal.get_date();
       var date = DBEntry.datetime_date( dt );
-      var index = get_listbox_index_for_date( date );
+      var index = get_listbox_index_for_date_time( date, "" );
       if( index != -1 ) {
         _listbox.select_row( _listbox.get_row_at_index( index ) );
       } else {
         _listbox.select_row( null );
-        show_entry_for_date( _journals.current.name, date, (strcmp( date, DBEntry.todays_date() ) < 1), true, SelectedEntryPos.OTHER, "add_calendar" );
+        show_entry_for_date( _journals.current.name, date, "", (strcmp( date, DBEntry.todays_date() ) < 1), true, SelectedEntryPos.OTHER, "add_calendar" );
       }
     });
 
@@ -363,17 +375,26 @@ public class SidebarEntries : Box {
 
   }
 
-  /* Populates the sidebar with information from the database */
-  private void populate( bool refresh ) {
-
-    var display_date = "";
-    _journal_mb.label = (_journals.current == null) ? _( "No journal selected" ) : _journals.current.name;
+  /* Returns the currently selected entry in the listbox (if one can be found); otherwise, returns null */
+  private DBEntry? get_selected_entry() {
 
     if( _listbox_entries.length > 0 ) {
       var selected = _listbox.get_selected_row();
       if( selected != null ) {
-        display_date = _listbox_entries.index( selected.get_index() ).date;
+        return( _listbox_entries.index( selected.get_index() ) );
       }
+    }
+
+    return( null );
+
+  }
+
+  /* Populates the sidebar with information from the database */
+  private void populate( DBEntry? select_entry ) {
+
+    _journal_mb.label = (_journals.current == null) ? _( "No journal selected" ) : _journals.current.name;
+
+    if( _listbox_entries.length > 0 ) {
       _listbox_entries.remove_range( 0, _listbox_entries.length );
     }
 
@@ -384,13 +405,13 @@ public class SidebarEntries : Box {
       }
     }
 
-    populate_listbox( refresh, display_date );
+    populate_listbox( select_entry );
     populate_calendar();
 
   }
 
   /* Populates the all entries listbox with date from the database */
-  private void populate_listbox( bool refresh, string display_date ) {
+  private void populate_listbox( DBEntry? select_entry ) {
 
     var vpos = _lb_scroll.vadjustment.get_value();
 
@@ -411,7 +432,7 @@ public class SidebarEntries : Box {
         ellipsize  = Pango.EllipsizeMode.END
       };
       label.add_css_class( "listbox-head" );
-      var date = new Label( entry.date ) {
+      var date = new Label( entry.date + ", " + entry.time ) {
         halign  = Align.END,
         hexpand = true
       };
@@ -440,10 +461,12 @@ public class SidebarEntries : Box {
       _listbox.append( box );
     }
 
-    if( refresh ) {
-      var index = get_listbox_index_for_date( display_date );
+    if( select_entry != null ) {
+      stdout.printf( "Re-select entry, date: %s, time: %s\n", select_entry.date, select_entry.time );
+      var index = get_listbox_index_for_date_time( select_entry.date, select_entry.time );
       if( index != -1 ) {
         _ignore_select = true;
+        stdout.printf( "  index: %d\n", index );
         _listbox.select_row( _listbox.get_row_at_index( index ) );
         _ignore_select = false;
       }
@@ -476,9 +499,9 @@ public class SidebarEntries : Box {
   }
 
   /* Retrieves the index of the listbox that contains the given date */
-  private int get_listbox_index_for_date( string date ) {
+  private int get_listbox_index_for_date_time( string date, string time ) {
     for( int i=0; i<_listbox_entries.length; i++ ) {
-      if( _listbox_entries.index( i ).date == date ) {
+      if( (_listbox_entries.index( i ).date == date) && ((time == "") || (_listbox_entries.index( i ).time == time)) ) {
         return( i );
       }
     }
@@ -490,7 +513,7 @@ public class SidebarEntries : Box {
    is useful for updating UI state only.
   */
   private void select_entry_only( DBEntry entry ) {
-    var index = get_listbox_index_for_date( entry.date );
+    var index = get_listbox_index_for_date_time( entry.date, entry.time );
     if( index != -1 ) {
       _ignore_select = true;
       _listbox.select_row( _listbox.get_row_at_index( index ) );
@@ -500,20 +523,24 @@ public class SidebarEntries : Box {
   }
 
   /* Displays the entry for the given date */
-  public void show_entry_for_date( string journal_name, string date, bool create_if_needed, bool editable, SelectedEntryPos pos, string msg ) {
+  public void show_entry_for_date( string journal_name, string date, string time, bool create_if_needed, bool editable, SelectedEntryPos pos, string msg ) {
 
-    if( (_selected_journal == journal_name) && (_selected_date == date) && (_last_editable == editable) ) {
+    stdout.printf( "In show_entry_for_date, date: %s, time: %s, selected_date: %s, selected_time: %s, msg: %s\n", date, time, _selected_date, _selected_time, msg );
+
+    if( (_selected_journal == journal_name) && (_selected_date == date) && (_selected_time == time) && (_last_editable == editable) ) {
       return;
     }
 
     _selected_journal = journal_name;
     _selected_date    = date;
+    _selected_time    = time;
     _last_editable    = editable;
 
     var is_trash  = _journals.current.is_trash;
     var entry     = new DBEntry();
     entry.journal = journal_name;
     entry.date    = date;
+    entry.time    = time;
 
     /* Purge the empty entries but not today */
     var purged = _journals.current.db.purge_empty_entries( false );
@@ -523,7 +550,7 @@ public class SidebarEntries : Box {
 
     /* If we created a new entry, update the list contents */
     if( purged || (load_result == DBLoadResult.CREATED) ) {
-      populate( true );
+      populate( entry );
     }
 
     /* Make sure that the date is selected in the listbox */

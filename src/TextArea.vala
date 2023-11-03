@@ -59,7 +59,6 @@ public class TextArea : Box {
 
   private const GLib.ActionEntry action_entries[] = {
     { "action_add_entry_image",     action_add_entry_image },
-    { "action_remove_entry_image",  action_remove_entry_image },
     { "action_insert_template",     action_insert_template, "s" },
     { "action_restore_entry",       action_restore_entry },
     { "action_delete_entry",        action_delete_entry },
@@ -305,8 +304,11 @@ public class TextArea : Box {
     };
     _date.add_css_class( "text-background" );
     _date.activate.connect(() => {
+      stdout.printf( "HERE???\n" );
       _cal.year  = _entry.get_year();
       _cal.month = _entry.get_month() - 1;
+      _cal.day   = (int)_entry.get_day();
+      stdout.printf( "Activating date menubutton, year: %d, month: %d, day: %d\n", _cal.year, _cal.month, _cal.day );
     });
 
     _time = new Label( "" ) {
@@ -460,6 +462,7 @@ public class TextArea : Box {
 
     var to_journal = _journals.get_journal_by_name( variant.get_string() );
     if( _journal.move_entry( _entry, to_journal ) ) {
+      _entry.journal = to_journal.name;
       entry_moved( _entry );
       Utils.debug_output( "Entry successfully moved to journal %s".printf( to_journal.name ) );
     }
@@ -734,11 +737,6 @@ public class TextArea : Box {
   private void action_add_entry_image() {
     _win.reset_timer();
     _image_area.add_new_image();
-  }
-
-  /* Removes the image associated with the current entry */
-  private void action_remove_entry_image() {
-    _win.reset_timer();
   }
 
   /* Inserts the given template text at the current insertion cursor location */
@@ -1132,10 +1130,13 @@ public class TextArea : Box {
       _time.label = dt.format( "%I:%M %p" );
       _cal.year   = _entry.get_year();
       _cal.month  = _entry.get_month() - 1;
+      _cal.day    = (int)_entry.get_day();
     }
+    _date.set_sensitive( enable_ui );
     _date_changed = false;
 
     _jname.label = _journal.name;
+    _jname.set_sensitive( enable_ui );
 
     /* Set the next and previous button state */
     _prev.set_sensitive( pos.prev_sensitivity() );

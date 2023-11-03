@@ -37,6 +37,7 @@ public class Journals {
           _current.db.purge_empty_entries();
         }
         _current = value;
+        stdout.printf( "current journal changed\n" );
         current_changed( false );
         save();
       }

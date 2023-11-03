@@ -239,14 +239,7 @@ public class ExportXML : Export {
       }
     }
 
-    var load_entry  = new DBEntry();
-    load_entry.date = entry.date;
-
-    var load_result = journal.db.load_entry( load_entry, true );
-    if( load_result == DBLoadResult.LOADED ) {
-      load_entry.merge_with_entry( entry );
-      journal.db.save_entry( journal, load_entry );
-    } else if( load_result == DBLoadResult.CREATED ) {
+    if( journal.db.create_entry( entry ) ) {
       journal.db.save_entry( journal, entry );
     }
 

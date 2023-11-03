@@ -952,7 +952,7 @@ public class Reviewer : Grid {
       halign  = Align.START,
       hexpand = true
     };
-    var date = new Label( entry.date ) {
+    var date = new Label( entry.date + ", " + entry.time ) {
       halign  = Align.END,
       hexpand = true
     };
