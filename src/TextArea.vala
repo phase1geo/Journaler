@@ -195,6 +195,8 @@ public class TextArea : Box {
 
     var margin = Journaler.settings.get_int( "editor-margin" );
 
+    _title.margin_start = margin;
+    _date.margin_start  = margin;
     _text.top_margin    = margin / 2;
     _text.left_margin   = margin;
     _text.right_margin  = margin;
@@ -332,7 +334,8 @@ public class TextArea : Box {
 
     var dbox = new Box( Orientation.HORIZONTAL, 5 ) {
       halign = Align.FILL,
-      hexpand = true
+      hexpand = true,
+      margin_top = 5
     };
     dbox.append( dtbox );
     dbox.append( _jname );
@@ -409,6 +412,12 @@ public class TextArea : Box {
   /* Creates the date picker which will allow the user to adjust the date of the entry */
   private Box create_date_picker() {
 
+    var title = new Label( Utils.make_title( _( "Change date" ) ) ) {
+      halign = Align.START,
+      hexpand = true,
+      use_markup = true
+    };
+
     _cal = new Calendar() {
       show_heading = true
     };
@@ -427,12 +436,13 @@ public class TextArea : Box {
       }
     });
 
-    var box = new Box( Orientation.VERTICAL, 5 ) {
+    var box = new Box( Orientation.VERTICAL, 10 ) {
       margin_start  = 5,
       margin_end    = 5,
       margin_top    = 5,
       margin_bottom = 5
     };
+    box.append( title );
     box.append( _cal );
 
     return( box );
@@ -1314,6 +1324,17 @@ public class TextArea : Box {
 
   /* Adds CSS to the HTML */
   private void show_review() {
+
+    1316  88 #define MKD_NOPANTS 0x00000004  /* don't run smartypants() */
+1317 100 #define MKD_TOC   0x00001000  /* do table-of-contents processing */
+1318 101 #define MKD_1_COMPAT  0x00002000  /* compatibility with MarkdownTest_1.0 */
+1319 102 #define MKD_AUTOLINK  0x00004000  /* make http://foo.com link even without <>s */
+1320 109 #define MKD_EXTRA_FOOTNOTE 0x00200000 /* enable markdown extra-style footnotes */
+1321 110 #define MKD_NOSTYLE 0x00400000  /* don't extract <style> blocks */
+1322 112 #define MKD_DLEXTRA 0x01000000  /* enable extra-style definition lists */
+1323 113 #define MKD_FENCEDCODE  0x02000000  /* enabled fenced code blocks */
+1324 114 #define MKD_IDANCHOR  0x04000000  /* use id= anchors for TOC links */
+1325 117 #define MKD_LATEX 0x40000000  /* handle embedded LaTeX escapes */
 
     var html  = "";
     var flags = 0x47607004;
