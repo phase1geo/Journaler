@@ -299,6 +299,7 @@ public class TextArea : Box {
       halign       = Align.START,
       // hexpand      = true,
       margin_start = Journaler.settings.get_int( "editor-margin" ),
+      margin_top   = 5,
       label        = "",
       popover      = _date_popover,
       has_frame    = false,
@@ -313,7 +314,8 @@ public class TextArea : Box {
 
     _time = new Label( "" ) {
       halign  = Align.START,
-      hexpand = true
+      hexpand = true,
+      margin_top = 5
     };
 
     var dtbox = new Box( Orientation.HORIZONTAL, 5 );
@@ -324,6 +326,7 @@ public class TextArea : Box {
     _jname = new MenuButton() {
       halign = Align.END,
       hexpand = true,
+      margin_top = 5,
       margin_end = 5,
       label = "",
       menu_model = new GLib.Menu(),
@@ -334,8 +337,7 @@ public class TextArea : Box {
 
     var dbox = new Box( Orientation.HORIZONTAL, 5 ) {
       halign = Align.FILL,
-      hexpand = true,
-      margin_top = 5
+      hexpand = true
     };
     dbox.append( dtbox );
     dbox.append( _jname );
