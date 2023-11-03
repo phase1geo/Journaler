@@ -78,6 +78,7 @@ public class Reviewer : Grid {
 
   private ListBox                _match_lb;
   private ScrolledWindow         _lb_scroll;
+  private Label                  _lb_status;
   private Gee.ArrayList<DBEntry> _match_entries;
   private int                    _match_index;
   private Button                 _trash_btn;
@@ -743,6 +744,8 @@ public class Reviewer : Grid {
       _match_lb.select_row( _match_lb.get_row_at_index( 0 ) );
     }
 
+    _lb_status.label = _match_entries.size.to_string();
+
   }
 
   // --------------------------------------------------------------
@@ -834,7 +837,9 @@ public class Reviewer : Grid {
       hexpand           = true,
       hexpand_set       = true,
       vexpand           = true,
-      child             = _match_lb
+      child             = _match_lb,
+      margin_start      = 5,
+      margin_end        = 5
     };
     _lb_scroll.scroll_child.connect((t,h) => {
       _win.reset_timer();
@@ -848,22 +853,41 @@ public class Reviewer : Grid {
     _trash_btn.clicked.connect( move_to_trash );
 
     var bbox = new Box( Orientation.HORIZONTAL, 5 ) {
-      homogeneous = true,
-      halign      = Align.FILL,
-      hexpand     = true,
-      valign      = Align.END
+      homogeneous  = true,
+      halign       = Align.FILL,
+      hexpand      = true,
+      valign       = Align.END,
+      margin_start = 5,
+      margin_end   = 5
     };
     bbox.append( _trash_btn );
     bbox.append( _restore_btn );
 
+    var status = new Label( Utils.make_title( _( "Shown Entries:" ) ) ) {
+      use_markup = true
+    };
+    _lb_status = new Label( "" );
+
+    var sep = new Separator( Orientation.HORIZONTAL ) {
+      hexpand = true
+    };
+
+    var sbox = new Box( Orientation.HORIZONTAL, 5 ) {
+      halign       = Align.CENTER,
+      margin_start = 5,
+      margin_end   = 5
+    };
+    sbox.append( status );
+    sbox.append( _lb_status );
+
     var box = new Box( Orientation.VERTICAL, 5 ) {
-      margin_start  = 5,
-      margin_end    = 5,
       margin_top    = 5,
       margin_bottom = 5
     };
     box.append( _lb_scroll );
     box.append( bbox );
+    box.append( sep );
+    box.append( sbox );
 
     return( box );
 

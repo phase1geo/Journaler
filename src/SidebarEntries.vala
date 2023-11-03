@@ -35,7 +35,10 @@ public class SidebarEntries : Box {
   private GLib.Menu      _hidden_menu;
   private ListBox        _listbox;
   private ScrolledWindow _lb_scroll;
+  private Label          _lb_status;
   private Calendar       _cal;
+  private Label          _cal_status;
+  private Label          _streak;
   private bool           _ignore_select = false;
   private MenuButton     _burger_mb;
   private GLib.Menu      _journal_burger_menu;
@@ -68,7 +71,7 @@ public class SidebarEntries : Box {
   /* Create the main window UI */
   public SidebarEntries( MainWindow win, TextArea text_area, Journals journals, Templates templates ) {
 
-    Object( orientation: Orientation.VERTICAL, spacing: 5, margin_start: 5, margin_end: 5, margin_top: 5, margin_bottom: 5 );
+    Object( orientation: Orientation.VERTICAL, spacing: 5, margin_top: 5, margin_bottom: 5 );
 
     _win       = win;
     _templates = templates;
@@ -124,6 +127,7 @@ public class SidebarEntries : Box {
     add_journals();
     add_current_list();
     add_calendar();
+    add_status();
 
     /* Add the menu actions */
     var actions = new SimpleActionGroup();
@@ -185,7 +189,10 @@ public class SidebarEntries : Box {
       menu_model = _journal_burger_menu
     };
 
-    var box = new Box( Orientation.HORIZONTAL, 5 );
+    var box = new Box( Orientation.HORIZONTAL, 5 ) {
+      margin_start = 5,
+      margin_end = 5
+    };
     box.append( _journal_mb );
     box.append( _burger_mb );
 
@@ -285,14 +292,21 @@ public class SidebarEntries : Box {
       hexpand           = true,
       hexpand_set       = true,
       vexpand           = true,
-      child             = _listbox
+      child             = _listbox,
+      margin_start      = 5,
+      margin_end        = 5
     };
     _lb_scroll.scroll_child.connect((t,h) => {
       _win.reset_timer();
       return( true );
     });
 
+    var sep = new Separator( Orientation.HORIZONTAL ) {
+      hexpand = true
+    };
+
     append( _lb_scroll );
+    append( sep );
 
   }
 
@@ -304,7 +318,9 @@ public class SidebarEntries : Box {
     _cal = new Calendar() {
       show_heading = true,
       year         = today.get_year(),
-      month        = today.get_month() - 1
+      month        = today.get_month() - 1,
+      margin_start = 5,
+      margin_end   = 5
     };
 
     _cal.day_selected.connect(() => {
@@ -340,12 +356,63 @@ public class SidebarEntries : Box {
       populate_calendar();
     });
 
+    var sep = new Separator( Orientation.HORIZONTAL ) {
+      hexpand = true
+    };
+
     append( _cal );
+    append( sep );
 
     _win.themes.theme_changed.connect((name) => {
       _cal.remove_css_class( _win.themes.dark_mode ? "calendar-light" : "calendar-dark" );
       _cal.add_css_class( _win.themes.dark_mode ? "calendar-dark" : "calendar-light" );
     });
+
+  }
+
+  /* Display the journal status information */
+  private void add_status() {
+
+    var journal = new Label( Utils.make_title( _( "Journal:" ) ) ) {
+      use_markup = true
+    };
+
+    _lb_status = new Label( "" );
+
+    var jbox = new Box( Orientation.HORIZONTAL, 5 );
+    jbox.append( journal );
+    jbox.append( _lb_status );
+
+    var calendar = new Label( Utils.make_title( _( "Monthly:" ) ) ) {
+      use_markup = true
+    };
+
+    _cal_status = new Label( "" );
+
+    var cbox = new Box( Orientation.HORIZONTAL, 5 );
+    cbox.append( calendar );
+    cbox.append( _cal_status );
+
+    var streak = new Label( Utils.make_title( _( "Current Streak:" ) ) ) {
+      use_markup = true
+    };
+
+    _streak = new Label( "" );
+
+    var sbox = new Box( Orientation.HORIZONTAL, 5 );
+    sbox.append( streak );
+    sbox.append( _streak );
+
+    var box = new Box( Orientation.HORIZONTAL, 10 ) {
+      halign = Align.CENTER,
+      margin_start = 5,
+      margin_end = 5
+    };
+    box.append( jbox );
+    box.append( cbox );
+    box.append( sbox );
+
+    append( box );
 
   }
 
@@ -460,6 +527,9 @@ public class SidebarEntries : Box {
       _listbox.append( box );
     }
 
+    _lb_status.label = _listbox_entries.length.to_string();
+    _streak.label    = calculate_current_streak();
+
     if( select_entry != null ) {
       var index = get_listbox_index_for_date_time( select_entry.date, select_entry.time );
       if( index != -1 ) {
@@ -472,8 +542,35 @@ public class SidebarEntries : Box {
 
   }
 
+  /* Calculates the current entry streak for the current journal */
+  private string calculate_current_streak() {
+
+    var last   = DBEntry.todays_date();
+    var streak = 0;
+
+    for( int i=0; i<_listbox_entries.length; i++ ) {
+      var entry = _listbox_entries.index( i );
+      if( entry.date == last ) {
+        streak++;
+      } else {
+        var edate = entry.datetime().add_days( 1 );
+        if( DBEntry.datetime_date( edate ) == last ) {
+          streak++;
+        } else {
+          break;
+        }
+      }
+      last = entry.date;
+    }
+
+    return( streak.to_string() );
+
+  }
+
   /* Populates the calendar with marks that match the current month/year */
   private void populate_calendar() {
+
+    var count = 0;
 
     /* Clear all of the marked days */
     _cal.clear_marks();
@@ -483,8 +580,11 @@ public class SidebarEntries : Box {
       var day   = entry.get_day();
       if( (entry.get_year() == _cal.year) && (entry.get_month() == (_cal.month + 1)) ) {
         _cal.mark_day( day );
+        count++;
       }
     }
+
+    _cal_status.label = count.to_string();
 
     /* Select the current date again to make sure that everything draw correctly */
     var current = _cal.get_date();

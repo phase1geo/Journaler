@@ -700,7 +700,7 @@ public class Database {
     var last_id = "";
     var retval = exec_query( query, (ncols, vals, names) => {
       var tag = vals[EntryPos.TAG];
-      if( (vals[EntryPos.ID] != last_id) && ((tag == null) ? untagged : (tags.find(tag) != null)) ) {
+      if( (vals[EntryPos.ID] != last_id) && ((tag == null) ? untagged : (tags.find_custom( tag, strcmp ) != null)) ) {
         var entry = new DBEntry.for_list( vals[EntryPos.JOURNAL], trash, vals[EntryPos.TITLE], vals[EntryPos.DATE], vals[EntryPos.TIME], ((str == "") ? "" : vals[EntryPos.TEXT]) );
         matched_entries.add( entry );
         last_id = vals[EntryPos.ID];
