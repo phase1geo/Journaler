@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: com.github.phase1geo.journaler\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-09-22 13:38-0500\n"
+"POT-Creation-Date: 2023-11-02 23:40-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -31,7 +31,7 @@ msgstr ""
 msgid "Run '%s --help' to see valid options\n"
 msgstr ""
 
-#: src/Database.vala:624 src/Reviewer.vala:604
+#: src/Database.vala:678 src/Reviewer.vala:605
 msgid "Untagged"
 msgstr ""
 
@@ -312,23 +312,23 @@ msgstr ""
 msgid "Select an image"
 msgstr ""
 
-#: src/ImageArea.vala:270 src/TextArea.vala:621
+#: src/ImageArea.vala:270 src/TextArea.vala:727
 msgid "Add Image"
 msgstr ""
 
 #: src/ImageArea.vala:274
-msgid "PNG Images"
+msgid "Image Files"
 msgstr ""
 
 #: src/ImageArea.vala:357
 msgid "Enter Description (Optional)"
 msgstr ""
 
-#: src/ImageArea.vala:373 src/MainWindow.vala:778 src/Preferences.vala:94
+#: src/ImageArea.vala:373 src/MainWindow.vala:776 src/Preferences.vala:94
 msgid "Close"
 msgstr ""
 
-#: src/Journals.vala:94
+#: src/Journals.vala:97
 msgid "Journal"
 msgstr ""
 
@@ -378,45 +378,45 @@ msgstr ""
 msgid "Lock Journaler"
 msgstr ""
 
-#: src/MainWindow.vala:463 src/SidebarEditor.vala:275
+#: src/MainWindow.vala:461 src/SidebarEditor.vala:275
 msgid "Create New Template"
 msgstr ""
 
-#: src/MainWindow.vala:470
+#: src/MainWindow.vala:468
 msgid "View Awards"
 msgstr ""
 
-#: src/MainWindow.vala:473
+#: src/MainWindow.vala:471
 msgid "Shortcut Cheatsheet"
 msgstr ""
 
-#: src/MainWindow.vala:474
+#: src/MainWindow.vala:472
 msgid "Preferences…"
 msgstr ""
 
-#: src/MainWindow.vala:477
+#: src/MainWindow.vala:475
 msgid "Manage Templates"
 msgstr ""
 
-#: src/MainWindow.vala:613 src/SidebarEditor.vala:213 src/Templater.vala:733
+#: src/MainWindow.vala:611 src/SidebarEditor.vala:213 src/Templater.vala:733
 #: src/Utils.vala:309
 msgid "Cancel"
 msgstr ""
 
-#: src/MainWindow.vala:621
+#: src/MainWindow.vala:619
 msgid "Set Password"
 msgstr ""
 
-#: src/MainWindow.vala:950
+#: src/MainWindow.vala:948
 msgid "Complete!"
 msgstr ""
 
-#: src/MainWindow.vala:951
+#: src/MainWindow.vala:949
 #, c-format
 msgid "%d out of %d (%d%%)"
 msgstr ""
 
-#: src/MainWindow.vala:953
+#: src/MainWindow.vala:951
 #, c-format
 msgid "Status: %s"
 msgstr ""
@@ -752,80 +752,84 @@ msgid ""
 "quotes to the system"
 msgstr ""
 
-#: src/Reviewer.vala:134
+#: src/Reviewer.vala:135
 msgid "Journals:"
 msgstr ""
 
-#: src/Reviewer.vala:140 src/Reviewer.vala:226
+#: src/Reviewer.vala:141 src/Reviewer.vala:227
 msgid "Select All"
 msgstr ""
 
-#: src/Reviewer.vala:149 src/Reviewer.vala:235
+#: src/Reviewer.vala:150 src/Reviewer.vala:236
 msgid "Clear All"
 msgstr ""
 
-#: src/Reviewer.vala:220
+#: src/Reviewer.vala:221
 msgid "Tags:"
 msgstr ""
 
-#: src/Reviewer.vala:281
+#: src/Reviewer.vala:282
 msgid "Date Range:"
 msgstr ""
 
-#: src/Reviewer.vala:330
+#: src/Reviewer.vala:331
 msgid "Search entry title and text"
 msgstr ""
 
-#: src/Reviewer.vala:347
+#: src/Reviewer.vala:348
 msgid "Save exact dates"
 msgstr ""
 
-#: src/Reviewer.vala:348
+#: src/Reviewer.vala:349
 msgid "Save relative to exact start date"
 msgstr ""
 
-#: src/Reviewer.vala:349
+#: src/Reviewer.vala:350
 msgid "Save relative to current date"
 msgstr ""
 
-#: src/Reviewer.vala:352
+#: src/Reviewer.vala:353
 msgid "Save search"
 msgstr ""
 
-#: src/Reviewer.vala:355
+#: src/Reviewer.vala:356
 msgid "Delete saved search"
 msgstr ""
 
-#: src/Reviewer.vala:358
+#: src/Reviewer.vala:359
 msgid "Show all entries"
 msgstr ""
 
-#: src/Reviewer.vala:365
+#: src/Reviewer.vala:366
 msgid "Save Review Criteria"
 msgstr ""
 
-#: src/Reviewer.vala:684
+#: src/Reviewer.vala:685
 msgid "All Journals"
 msgstr ""
 
-#: src/Reviewer.vala:684
+#: src/Reviewer.vala:685
 msgid "No Journals"
 msgstr ""
 
-#: src/Reviewer.vala:688
+#: src/Reviewer.vala:689
 msgid "All Tags"
 msgstr ""
 
-#: src/Reviewer.vala:688
+#: src/Reviewer.vala:689
 msgid "No Tags"
 msgstr ""
 
-#: src/Reviewer.vala:844
+#: src/Reviewer.vala:849
 msgid "Restore"
 msgstr ""
 
-#: src/Reviewer.vala:847
+#: src/Reviewer.vala:852
 msgid "Move To Trash"
+msgstr ""
+
+#: src/Reviewer.vala:866
+msgid "Shown Entries:"
 msgstr ""
 
 #: src/SavedReview.vala:80
@@ -921,41 +925,53 @@ msgstr ""
 msgid "Save"
 msgstr ""
 
-#: src/SidebarEntries.vala:158
+#: src/SidebarEntries.vala:172
 msgid "Edit current journal"
 msgstr ""
 
-#: src/SidebarEntries.vala:164 src/SidebarEntries.vala:169
+#: src/SidebarEntries.vala:178 src/SidebarEntries.vala:183
 msgid "Create New Journal"
 msgstr ""
 
-#: src/SidebarEntries.vala:170
+#: src/SidebarEntries.vala:184
 msgid "Empty trash"
 msgstr ""
 
-#: src/SidebarEntries.vala:192
+#: src/SidebarEntries.vala:209
 msgid "Hide hidden journals"
 msgstr ""
 
-#: src/SidebarEntries.vala:194
+#: src/SidebarEntries.vala:211
 msgid "Show hidden journals"
 msgstr ""
 
-#: src/SidebarEntries.vala:236
+#: src/SidebarEntries.vala:253
 msgid "Empty Trash?"
 msgstr ""
 
-#: src/SidebarEntries.vala:237
+#: src/SidebarEntries.vala:254
 msgid ""
 "All entries will be permanently deleted.\n"
 "This operation cannot be undone."
 msgstr ""
 
-#: src/SidebarEntries.vala:361
+#: src/SidebarEntries.vala:376
+msgid "Journal:"
+msgstr ""
+
+#: src/SidebarEntries.vala:386
+msgid "Monthly:"
+msgstr ""
+
+#: src/SidebarEntries.vala:396
+msgid "Current Streak:"
+msgstr ""
+
+#: src/SidebarEntries.vala:439
 msgid "Hidden Journals"
 msgstr ""
 
-#: src/SidebarEntries.vala:370
+#: src/SidebarEntries.vala:461
 msgid "No journal selected"
 msgstr ""
 
@@ -1152,7 +1168,7 @@ msgstr ""
 msgid "Insert Transform Function"
 msgstr ""
 
-#: src/Templater.vala:519 src/TextArea.vala:597
+#: src/Templater.vala:519 src/TextArea.vala:703
 msgid "Format Text"
 msgstr ""
 
@@ -1173,31 +1189,39 @@ msgstr ""
 msgid "Template"
 msgstr ""
 
-#: src/TextArea.vala:248
+#: src/TextArea.vala:255
 msgid "Title (Optional)"
 msgstr ""
 
-#: src/TextArea.vala:259
+#: src/TextArea.vala:266
 msgid "View previous entry in sidebar"
 msgstr ""
 
-#: src/TextArea.vala:266
+#: src/TextArea.vala:273
 msgid "View next entry in sidebar"
 msgstr ""
 
-#: src/TextArea.vala:614
+#: src/TextArea.vala:417
+msgid "Change date"
+msgstr ""
+
+#: src/TextArea.vala:462
+msgid "Move to journal"
+msgstr ""
+
+#: src/TextArea.vala:720
 msgid "Restore entry"
 msgstr ""
 
-#: src/TextArea.vala:615
+#: src/TextArea.vala:721
 msgid "Delete entry permanently"
 msgstr ""
 
-#: src/TextArea.vala:627
+#: src/TextArea.vala:733
 msgid "Insert Template"
 msgstr ""
 
-#: src/TextArea.vala:631
+#: src/TextArea.vala:737
 msgid "Move entry to trash"
 msgstr ""
 

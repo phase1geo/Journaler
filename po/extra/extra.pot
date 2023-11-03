@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: extra\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-09-22 13:38-0500\n"
+"POT-Creation-Date: 2023-11-02 23:40-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -117,33 +117,73 @@ msgid "Trevor Williams"
 msgstr ""
 
 #: data/com.github.phase1geo.journaler.appdata.xml.in:62
-msgid "Bug Fixes"
+msgid "New"
 msgstr ""
 
 #: data/com.github.phase1geo.journaler.appdata.xml.in:64
-msgid "Adding launchable tag."
+msgid "Added ability to add new entries to past dates."
 msgstr ""
 
 #: data/com.github.phase1geo.journaler.appdata.xml.in:65
-msgid "Fixing release dates in appdata."
+msgid ""
+"Added ability to move a journal entry to a different journal within the "
+"editing area."
 msgstr ""
 
 #: data/com.github.phase1geo.journaler.appdata.xml.in:66
+msgid ""
+"Added ability to move a journal to a different date within the editing area."
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.appdata.xml.in:67
+msgid "Added sidebar entry count information (including entry streak count)."
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.appdata.xml.in:69
+msgid "Changes"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.appdata.xml.in:71
+msgid "Changed to allow multiple entries per day."
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.appdata.xml.in:73
+#: data/com.github.phase1geo.journaler.appdata.xml.in:82
+msgid "Bug Fixes"
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.appdata.xml.in:75
+msgid "Fixed issue with using non-PNG images."
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.appdata.xml.in:76
+msgid "Fixed tag matching issue in review mode."
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.appdata.xml.in:84
+msgid "Adding launchable tag."
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.appdata.xml.in:85
+msgid "Fixing release dates in appdata."
+msgstr ""
+
+#: data/com.github.phase1geo.journaler.appdata.xml.in:86
 msgid ""
 "Fixed UI issues when switching from distraction-free editing to normal "
 "editing mode."
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:72
+#: data/com.github.phase1geo.journaler.appdata.xml.in:92
 msgid ""
 "Updating versioning information to 1.0.2 to satisfy AppCenter review "
 "requirements."
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:77
+#: data/com.github.phase1geo.journaler.appdata.xml.in:97
 msgid "Adding Stripe key to appdata.xml file"
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:82
+#: data/com.github.phase1geo.journaler.appdata.xml.in:102
 msgid "Initial release"
 msgstr ""

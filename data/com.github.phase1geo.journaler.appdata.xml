@@ -57,6 +57,26 @@
   </custom>
   <content_rating type="oars-1.1"/>
   <releases>
+    <release version="1.1.0" date="2023-11-30">
+      <description>
+        <p>New</p>
+        <ul>
+          <li>Added ability to add new entries to past dates.</li>
+          <li>Added ability to move a journal entry to a different journal within the editing area.</li>
+          <li>Added ability to move a journal to a different date within the editing area.</li>
+          <li>Added sidebar entry count information (including entry streak count).</li>
+        </ul>
+        <p>Changes</p>
+        <ul>
+          <li>Changed to allow multiple entries per day.</li>
+        </ul>
+        <p>Bug Fixes</p>
+        <ul>
+          <li>Fixed issue with using non-PNG images.</li>
+          <li>Fixed tag matching issue in review mode.</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.0.3" date="2023-09-22">
       <description>
         <p>Bug Fixes</p>
