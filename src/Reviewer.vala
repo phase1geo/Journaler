@@ -77,12 +77,21 @@ public class Reviewer : Grid {
   private GLib.Menu   _saved_delete_menu;
 
   private ListBox                _match_lb;
+  private Box                    _bulk_box;
+  private Gee.ArrayList<CheckButton> _match_cb;
   private ScrolledWindow         _lb_scroll;
   private Label                  _lb_status;
   private Gee.ArrayList<DBEntry> _match_entries;
   private int                    _match_index;
   private Button                 _trash_btn;
   private Button                 _restore_btn;
+  private Button                 _tag_btn;
+  private Button                 _untag_btn;
+  private Box                    _tag_box;
+  private Box                    _untag_box;
+  private TagBox                 _tag_add_box;
+  private CheckButton            _select_btn;
+  private bool                   _bulk_edit = false;
 
   private const GLib.ActionEntry action_entries[] = {
     { "action_show_all",      action_show_all },
@@ -93,6 +102,16 @@ public class Reviewer : Grid {
 
   public signal void show_matched_entry( DBEntry entry, SelectedEntryPos pos );
   public signal void close_requested();
+
+  public bool bulk_edit {
+    get {
+      return( _bulk_edit );
+    }
+    set {
+      _bulk_edit = value;
+      update_bulk_edit();
+    }
+  }
 
   /* Default constructor */
   public Reviewer( MainWindow win, Journals journals ) {
@@ -690,6 +709,22 @@ public class Reviewer : Grid {
 
   }
 
+  /* Updates the state of the selection button */
+  private void update_select_btn() {
+    if( !_ignore_toggled ) {
+      _ignore_toggled = true;
+      var active = true;
+      foreach( var row in _match_lb.get_selected_rows()) {
+        if( !_match_cb.get( row.get_index() ).active ) {
+          active = false;
+          break;
+        }
+      }
+      _select_btn.active = active;
+      _ignore_toggled = false;
+    }
+  }
+
   /* Performs search of selected items, date ranges, and search terms */
   private void do_search() {
 
@@ -713,6 +748,7 @@ public class Reviewer : Grid {
     /* Clear the list of match entries */
     clear_listbox( _match_lb );
     _match_entries.clear();
+    _match_cb.clear();
 
     /* Add the matching entries to the list */
     foreach( var journal_name in journals ) {
@@ -738,6 +774,9 @@ public class Reviewer : Grid {
     /* Set the sensitivity of the action buttons */
     _trash_btn.sensitive   = false;
     _restore_btn.sensitive = false;
+    _tag_btn.sensitive     = false;
+    _untag_btn.sensitive   = false;
+    _select_btn.sensitive  = false;
 
     /* Display the first entry */
     if( _match_entries.size > 0 ) {
@@ -748,24 +787,42 @@ public class Reviewer : Grid {
 
   }
 
+  /* Updates the listbox to enter bulk edit mode */
+  void update_bulk_edit() {
+
+    /* Display the checkbuttons */
+    _match_cb.foreach((cb) => {
+      (cb.parent as Revealer).reveal_child = _bulk_edit;
+      return( true );
+    });
+
+    /* Update the visibility of the bulk edit toolbar */
+    _bulk_box.visible = _bulk_edit;
+
+    /* Set the listbox select mode */
+    _match_lb.selection_mode = _bulk_edit ? SelectionMode.MULTIPLE : SelectionMode.SINGLE;
+
+  }
+
   // --------------------------------------------------------------
 
   /* Displays the previous entry in the list */
   public void show_previous_entry() {
     var index = _match_index;
-    _match_lb.selection_mode = SelectionMode.SINGLE;
     _match_lb.select_row( _match_lb.get_row_at_index( index - 1 ) );
   }
 
   /* Displays the next entry in the list */
   public void show_next_entry() {
     var index = _match_index;
-    _match_lb.selection_mode = SelectionMode.SINGLE;
     _match_lb.select_row( _match_lb.get_row_at_index( index + 1 ) );
   }
 
   /* Displays the given entry in the textarea */
   private void show_entry( ListBoxRow? row ) {
+
+    /* Update the state of the selection button */
+    update_select_btn();
 
     if( row == null ) return;
 
@@ -787,7 +844,17 @@ public class Reviewer : Grid {
       _trash_btn.sensitive = true;
     }
 
-    _match_lb.selection_mode = SelectionMode.MULTIPLE;
+    _tag_btn.sensitive    = true;
+    _untag_btn.sensitive  = true;  // Only allow this if the selected items contain any tags
+    _select_btn.sensitive = true;
+
+  }
+
+  /* Called whenever the selection_changed */
+  private void selection_changed() {
+
+    /* Update the state of the selection button */
+    update_select_btn();
 
   }
 
@@ -818,16 +885,23 @@ public class Reviewer : Grid {
   /* Creates the sidebar where matched entries will be displayed */
   public Box create_reviewer_match_sidebar() {
 
+    _match_cb = new Gee.ArrayList<CheckButton>();
+
     _match_lb = new ListBox() {
       show_separators = true,
       activate_on_single_click = false,
-      selection_mode  = SelectionMode.MULTIPLE,
+      selection_mode  = SelectionMode.SINGLE,
       can_focus       = true
     };
 
     _match_lb.row_selected.connect((row) => {
       _win.reset_timer();
       show_entry( row );
+    });
+
+    _match_lb.selected_rows_changed.connect(() => {
+      _win.reset_timer();
+      selection_changed();
     });
 
     _lb_scroll = new ScrolledWindow() {
@@ -846,22 +920,144 @@ public class Reviewer : Grid {
       return( false );
     });
 
-    _restore_btn = new Button.with_label( _( "Restore" ) );
+    _restore_btn = new Button.from_icon_name( "edit-undo-symbolic" ) {
+      tooltip_text = _( "Restore from trash" )
+    };
     _restore_btn.clicked.connect( restore_from_trash );
 
-    _trash_btn = new Button.with_label( _( "Move To Trash" ) );
+    _trash_btn = new Button.from_icon_name( "user-trash-symbolic" ) {
+      tooltip_text = _( "Move to trash" )
+    };
     _trash_btn.clicked.connect( move_to_trash );
 
-    var bbox = new Box( Orientation.HORIZONTAL, 5 ) {
+    _tag_btn = new Button.from_icon_name( "tag-symbolic" ) {
+      tooltip_text = _( "Add tags" )
+    };
+    _tag_btn.clicked.connect(() => {
+      _win.reset_timer();
+      _bulk_box.visible = false;
+      _tag_box.visible = true;
+    });
+
+    _untag_btn = new Button.from_icon_name( "edit-clear-symbolic" ) {
+      tooltip_text = _( "Remove tags" )
+    };
+    _untag_btn.clicked.connect(() => {
+      _win.reset_timer();
+      _bulk_box.visible = false;
+      _untag_box.visible = true;
+    });
+
+    _select_btn = new CheckButton() {
+      tooltip_text = _( "Select/Deselect all" ),
+      margin_start = 5,
+      margin_end = 5
+    };
+    _select_btn.toggled.connect(() => {
+      if( !_ignore_toggled ) {
+        _ignore_toggled = true;
+        foreach( var row in _match_lb.get_selected_rows()) {
+          _match_cb.get( row.get_index() ).active = _select_btn.active;
+        }
+        _ignore_toggled = false;
+      }
+    });
+
+    _bulk_box = new Box( Orientation.HORIZONTAL, 5 ) {
       homogeneous  = true,
       halign       = Align.FILL,
       hexpand      = true,
       valign       = Align.END,
       margin_start = 5,
-      margin_end   = 5
+      margin_end   = 5,
+      visible      = _bulk_edit
     };
-    bbox.append( _trash_btn );
-    bbox.append( _restore_btn );
+    _bulk_box.append( _select_btn );
+    _bulk_box.append( _trash_btn );
+    _bulk_box.append( _restore_btn );
+    _bulk_box.append( _tag_btn );
+    _bulk_box.append( _untag_btn );
+
+    /* Create tag box */
+    _tag_add_box = new TagBox( _win );
+
+    var tag_add_cancel = new Button.with_label( _( "Cancel" ) ) {
+      halign = Align.START,
+      hexpand = true
+    };
+    tag_add_cancel.clicked.connect(() => {
+      _win.reset_timer();
+      _bulk_box.visible = true;
+      _tag_box.visible = false;
+    });
+
+    var tag_add_save = new Button.with_label( _( "Add Tags" ) ) {
+      halign = Align.END,
+      hexpand = true
+    };
+    tag_add_save.clicked.connect(() => {
+      _win.reset_timer();
+      bulk_add_tags();
+      _bulk_box.visible = true;
+      _tag_box.visible = false;
+    });
+
+    var tag_add_bbox = new Box( Orientation.HORIZONTAL, 5 ) {
+      halign = Align.FILL,
+      hexpand = true
+    };
+    tag_add_bbox.append( tag_add_cancel );
+    tag_add_bbox.append( tag_add_save );
+
+    _tag_box = new Box( Orientation.VERTICAL, 5 ) {
+      visible = false
+    };
+    _tag_box.append( _tag_add_box );
+    _tag_box.append( tag_add_bbox );
+
+    /* Create untag box */
+    var tag_del_cancel = new Button.with_label( _( "Cancel" ) ) {
+      halign = Align.START,
+      hexpand = true
+    };
+    tag_del_cancel.clicked.connect(() => {
+      _win.reset_timer();
+      _bulk_box.visible = true;
+      _untag_box.visible = false;
+    });
+
+    var tag_del_save = new Button.with_label( _( "Remove Tags" ) ) {
+      halign = Align.END,
+      hexpand = true
+    };
+    tag_del_save.clicked.connect(() => {
+      _win.reset_timer();
+      bulk_remove_tags();
+      _bulk_box.visible = true;
+      _untag_box.visible = false;
+    });
+
+    var tag_del_bbox = new Box( Orientation.HORIZONTAL, 5 ) {
+      halign = Align.FILL,
+      hexpand = true
+    };
+    tag_del_bbox.append( tag_del_cancel );
+    tag_del_bbox.append( tag_del_save );
+
+    _untag_box = new Box( Orientation.VERTICAL, 5 ) {
+      visible = false
+    };
+    _untag_box.append( tag_del_bbox );
+
+    var bulk = new Button.from_icon_name( "format-justify-fill-symbolic" ) {
+      halign = Align.END,
+      hexpand = true,
+      margin_end = 5,
+      tooltip_text = _( "Toggle bulk edit mode" )
+    };
+    bulk.clicked.connect(() => {
+      bulk_edit = !bulk_edit;
+    });
 
     var status = new Label( Utils.make_title( _( "Shown Entries:" ) ) ) {
       use_markup = true
@@ -880,14 +1076,23 @@ public class Reviewer : Grid {
     sbox.append( status );
     sbox.append( _lb_status );
 
+    var fbox = new Box( Orientation.HORIZONTAL, 5 ) {
+      halign = Align.FILL,
+      hexpand = true
+    };
+    fbox.append( sbox );
+    fbox.append( bulk );
+
     var box = new Box( Orientation.VERTICAL, 5 ) {
       margin_top    = 5,
       margin_bottom = 5
     };
     box.append( _lb_scroll );
-    box.append( bbox );
+    box.append( _bulk_box );
+    box.append( _tag_box );
+    box.append( _untag_box );
     box.append( sep );
-    box.append( sbox );
+    box.append( fbox );
 
     return( box );
 
@@ -919,6 +1124,20 @@ public class Reviewer : Grid {
       }
     }
     do_search();
+  }
+
+  /* Allows the user to add tags to all selected items */
+  private void bulk_add_tags() {
+
+    // TODO
+
+  }
+
+  /* Allows the user to remove tags from all selected items */
+  private void bulk_remove_tags() {
+
+    // TODO
+
   }
 
   /* Retrieves a portion of the matched entry text if the search entry contains any non-whitespace characters */
@@ -986,7 +1205,7 @@ public class Reviewer : Grid {
     };
     dbox.append( journal );
     dbox.append( date );
-    var box = new Box( Orientation.VERTICAL, 2 ) {
+    var lbox = new Box( Orientation.VERTICAL, 2 ) {
       halign        = Align.FILL,
       hexpand       = true,
       width_request = 300,
@@ -995,12 +1214,31 @@ public class Reviewer : Grid {
       margin_start  = 5,
       margin_end    = 5
     };
-    box.append( label );
+    lbox.append( label );
     if( text.label != "" ) {
-      box.append( text );
+      lbox.append( text );
     }
-    box.append( dbox );
+    lbox.append( dbox );
+
+    var check = new CheckButton() {
+      margin_start = 5
+    };
+    check.toggled.connect( update_select_btn );
+    var check_revealer = new Revealer() {
+      transition_type = RevealerTransitionType.SLIDE_RIGHT,
+      reveal_child = _bulk_edit,
+      child = check
+    };
+
+    var box = new Box( Orientation.HORIZONTAL, 5 ) {
+      halign  = Align.FILL,
+      hexpand = true
+    };
+    box.append( check_revealer );
+    box.append( lbox );
+
     _match_lb.append( box );
+    _match_cb.add( check );
 
   }
 
