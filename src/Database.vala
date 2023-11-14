@@ -162,23 +162,18 @@ public class DBImage {
 
 public class DBEntry {
 
-  private List<string>  _tags   = new List<string>();
   private List<DBImage> _images = new List<DBImage>();
 
-  public string        journal        { get; set; default = ""; }
-  public bool          trash          { get; set; default = false; }
-  public string        title          { get; set; default = ""; }
-  public string        text           { get; set; default = ""; }
-  public string        date           { get; set; default = ""; }
-  public string        time           { get; set; default = ""; }
-  public bool          images_changed { get; set; default = false; }
-  public bool          loaded         { get; set; default = false; }
+  public string   journal        { get; set; default = ""; }
+  public bool     trash          { get; set; default = false; }
+  public string   title          { get; set; default = ""; }
+  public string   text           { get; set; default = ""; }
+  public string   date           { get; set; default = ""; }
+  public string   time           { get; set; default = ""; }
+  public bool     images_changed { get; set; default = false; }
+  public bool     loaded         { get; set; default = false; }
+  public TagList  tags           { get; set; default = new TagList(); }
 
-  public List<string> tags  {
-    get {
-      return( _tags );
-    }
-  }
   public List<DBImage> images {
     get {
       return( _images );
@@ -198,7 +193,7 @@ public class DBEntry {
     this.text    = text;
     this.date    = todays_date();
     this.time    = todays_time();
-    store_tag_list( tag_list );
+    this.tags.store_tag_list( tag_list );
   }
 
   /* Constructor */
@@ -218,7 +213,7 @@ public class DBEntry {
     this.text    = text;
     this.date    = date;
     this.time    = time;
-    store_tag_list( tag_list );
+    this.tags.store_tag_list( tag_list );
   }
 
   /* Copy constructor */
@@ -229,9 +224,7 @@ public class DBEntry {
     this.text    = other.text;
     this.date    = other.date;
     this.time    = other.time;
-    foreach( var tag in other.tags ) {
-      _tags.append( tag );
-    }
+    this.tags.copy( other.tags );
     foreach( var img  in other.images ) {
       var image = new DBImage.copy( img );
       _images.append( image );
@@ -272,51 +265,6 @@ public class DBEntry {
   public void mark_images_for_removal() {
     foreach( var image in _images ) {
       image.state = ChangeState.DELETED;
-    }
-  }
-
-  /* Returns true if the given tag currently exists */
-  public bool contains_tag( string tag ) {
-    return( _tags.find_custom( tag, strcmp ) != null );
-  }
-
-  /* Adds the given tag (if it doesn't already exist in the list) */
-  public void add_tag( string tag ) {
-    if( !contains_tag( tag ) ) {
-      _tags.append( tag );
-    }
-  }
-
-  /* Replaces the old tag with the new tag */
-  public void replace_tag( string old_tag, string new_tag ) {
-    var index = _tags.index( old_tag );
-    if( index != -1 ) {
-      _tags.remove_link( _tags.find_custom( old_tag, strcmp ) );
-      _tags.insert( new_tag, index );
-    }
-  }
-
-  /* Removes the given tag (if it exists in the list) */
-  public void remove_tag( string tag ) {
-    if( contains_tag( tag ) ) {
-      _tags.remove_link( _tags.find_custom( tag, strcmp ) );
-    }
-  }
-
-  /* Returns the tag list in the form suitable for display */
-  public string get_tag_list() {
-    string[] tag_array = {};
-    foreach( string tag in _tags ) {
-      tag_array += tag;
-    }
-    return( string.joinv( ", ", tag_array ) );
-  }
-
-  /* Stores the given comma-separated list as a list of tag strings */
-  private void store_tag_list( string tag_list ) {
-    var tag_array = tag_list.split( "," );
-    foreach( string tag in tag_array ) {
-      add_tag( tag.strip() );
     }
   }
 
@@ -422,11 +370,7 @@ public class DBEntry {
 
   /* Debug purposes.  Displays the contents of this entry */
   public string to_string() {
-    string[] tag_array = {};
-    foreach( string tag in tags ) {
-      tag_array += tag;
-    }
-    return( "journal: %s, title: %s, text: %s, date: %s, tags: %s".printf( journal, title, text, date, string.joinv( ":", tag_array ) ) );
+    return( "journal: %s, title: %s, text: %s, date: %s, tags: %s".printf( journal, title, text, date, tags.to_string() ) );
   }
 
 }
@@ -763,7 +707,7 @@ public class Database {
         """.printf( entry_id );
       exec_query( tag_query, (ncols, vals, names) => {
         if( vals[0] != null ) {
-          entry.add_tag( vals[0] );
+          entry.tags.add_tag( vals[0] );
         }
         return( 0 );
       });
@@ -783,10 +727,10 @@ public class Database {
   /* Saves only the tags stored in this entry in the Tag table */
   public bool save_tags_only( DBEntry entry ) {
 
-    foreach( var tag in entry.tags ) {
+    entry.tags.foreach((tag) => {
       var tag_query = "INSERT INTO Tag (name) VALUES('%s');".printf( sql_string( tag ) );
       exec_query( tag_query );
-    }
+    });
 
     return( true );
 
@@ -856,7 +800,7 @@ public class Database {
     exec_query( map_del_query );
 
     /* Let's store the tags and tag mappings */
-    foreach( string tag in entry.tags ) {
+    entry.tags.foreach((tag) => {
 
       /* Insert the tag into the table */
       var tag_query = "INSERT INTO Tag (name) VALUES('%s');".printf( tag );
@@ -876,7 +820,7 @@ public class Database {
         exec_query( map_query );
       }
 
-    }
+    });
 
     /* Handle associated images */
     foreach( var image in entry.images ) {

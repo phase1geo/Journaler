@@ -24,7 +24,7 @@ using Gtk;
 public class TagBox : Box {
 
   private Journal? _journal = null;
-  private DBEntry? _entry = null;
+  private TagList  _tags;
 
   private MainWindow _win;
   private Box        _box;
@@ -43,13 +43,9 @@ public class TagBox : Box {
     }
   }
 
-  public DBEntry? entry {
+  public TagList tags {
     get {
-      return( _entry );
-    }
-    set {
-      _entry = value;
-      update_tags();
+      return( _tags );
     }
   }
 
@@ -77,13 +73,14 @@ public class TagBox : Box {
     _win         = win;
     _tag_widgets = new List<Widget>();
     _all_tags    = new Array<string>();
+    _tags        = new TagList();
 
     _new_tag_entry = new TagEntry( _win, _("Click to add tag…") ) {
       add_css = false
     };
     _new_tag_entry.activated.connect((tag) => {
       _win.reset_timer();
-      _entry.add_tag( tag );
+      _tags.add_tag( tag );
       update_tags();
     });
 
@@ -107,6 +104,17 @@ public class TagBox : Box {
 
   }
 
+  /* Adds the given tags to this list */
+  public void add_tags( TagList tags ) {
+
+    /* Copy the given tag list */
+    _tags.copy( tags );
+
+    /* Update the tags */
+    update_tags();
+
+  }
+
   /* This should be called whenever the tags change in _entry */
   public void update_tags() {
 
@@ -115,9 +123,6 @@ public class TagBox : Box {
 
     /* Redraw the tags in the UI */
     redraw_tags();
-
-    /* Update the database with the entry changes */
-    _journal.db.save_tags_only( _entry );
 
   }
 
@@ -132,7 +137,7 @@ public class TagBox : Box {
 
     /* Remove any tags that are currently set for this entry */
     for( int i=(int)(_all_tags.length - 1); i>=0; i-- ) {
-      if( (_entry != null) && _entry.contains_tag( _all_tags.index( i ) ) ) {
+      if( _tags.contains_tag( _all_tags.index( i ) ) ) {
         _all_tags.remove_index( i );
       }
     }
@@ -150,11 +155,7 @@ public class TagBox : Box {
       tag_widget.destroy();
     });
 
-    if( _entry == null ) {
-      return;
-    }
-
-    foreach( var tag in _entry.tags ) {
+    _tags.foreach((tag) => {
 
       var tag_motion = new EventControllerMotion();
       var tag_key    = new EventControllerKey();
@@ -193,17 +194,10 @@ public class TagBox : Box {
         return( true );
       });
 
-      /*
-      tag_button.clicked.connect(() => {
-        _win.reset_timer();
-        remove_tag( tag_button, tag );
-      });
-      */
-
       _box.append( tag_button );
       _tag_widgets.append( tag_button );
 
-    }
+    });
 
     _new_tag_entry.populate_completion( _all_tags );
     _new_tag_entry.hide_entry();
@@ -214,8 +208,6 @@ public class TagBox : Box {
   }
 
   private void remove_tag( Widget btn, string tag ) {
-    _entry.remove_tag( tag );
-    _journal.db.save_tags_only( _entry );
     _box.remove( btn );
     _tag_widgets.remove( btn );
     btn.destroy();

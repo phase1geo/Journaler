@@ -120,11 +120,11 @@ public class ExportXML : Export {
 
       Xml.Node* tags = new Xml.Node( null, "tags" );
 
-      foreach( var tag in load_entry.tags ) {
+      load_entry.tags.foreach((tag) => {
         Xml.Node* t = new Xml.Node( null, "tag" );
         t->set_prop( "name", tag );
         tags->add_child( t );
-      }
+      });
 
       node->add_child( tags );
 
@@ -283,7 +283,7 @@ public class ExportXML : Export {
       if( (it->type == Xml.ElementType.ELEMENT_NODE) && (it->name == "tag") ) {
         var tag = it->get_prop( "name" );
         if( tag != null ) {
-          entry.add_tag( tag );
+          entry.tags.add_tag( tag );
         }
       }
     }

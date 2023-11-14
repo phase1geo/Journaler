@@ -112,9 +112,9 @@ public class ExportJSON : Export {
         builder.set_member_name( "tags" );
         builder.begin_array();
 
-          foreach( var tag in load_entry.tags ) {
+          load_entry.tags.foreach((tag) => {
             builder.add_string_value( tag );
-          }
+          });
 
         builder.end_array();
 

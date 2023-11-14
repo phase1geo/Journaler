@@ -1081,7 +1081,7 @@ public class TextArea : Box {
     }
 
     var entry = new DBEntry.with_date( 
-      _entry.journal, _title.text, _text.buffer.text, _tags.entry.get_tag_list(), _entry.date, _entry.time
+      _entry.journal, _title.text, _text.buffer.text, _tags.tags.get_tag_list(), _entry.date, _entry.time
     );
 
     _image_area.get_images( entry );
@@ -1172,7 +1172,7 @@ public class TextArea : Box {
 
     /* Set the tags */
     _tags.journal = _journal;
-    _tags.entry   = _entry;
+    _tags.add_tags( _entry.tags );
     _tags.update_tags();
     _tags.editable = enable_ui;
 
@@ -1219,7 +1219,7 @@ public class TextArea : Box {
     /* Set the grab */
     if( enable_ui ) {
       var title_empty = _title.text == "";
-      var tags_empty  = _tags.entry.tags.length() == 0;
+      var tags_empty  = _tags.tags.length() == 0;
       var text_empty  = _text.buffer.text == "";
       if( title_empty && tags_empty && text_empty ) {
         _title.grab_focus();
