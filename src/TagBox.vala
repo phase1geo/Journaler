@@ -208,9 +208,9 @@ public class TagBox : Box {
   }
 
   private void remove_tag( Widget btn, string tag ) {
-    _box.remove( btn );
-    _tag_widgets.remove( btn );
-    btn.destroy();
+    var entry = (Entry)btn;
+    _tags.remove_tag( entry.text );
+    update_tags();
   }
 
   public void add_class( string name ) {

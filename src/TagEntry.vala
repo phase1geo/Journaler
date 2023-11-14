@@ -29,7 +29,7 @@ public class TagEntry : Box {
   private Revealer   _entry_revealer;
   private Revealer   _button_revealer;
 
-  private bool _hide_if_contains_text = false;
+  private bool _hide_if_contains_text = true;
   private bool _always_shown_when_revealed = false;
   private bool _add_css = true;
 
@@ -68,7 +68,7 @@ public class TagEntry : Box {
     Object( orientation: Orientation.VERTICAL, spacing: 0, halign: Align.START, valign: Align.CENTER, vexpand: false );
 
     _win                        = win;
-    _always_shown_when_revealed = true;
+    // _always_shown_when_revealed = true;
 
     var button_key = new EventControllerKey();
     var button_click = new GestureClick();
@@ -90,6 +90,13 @@ public class TagEntry : Box {
       minimum_key_length = 1
     };
 
+    completion.match_selected.connect((model, iter) => {
+      string str = "";
+      model.get( iter, 0, &str, -1 );
+      activated( str );
+      return( true );
+    });
+
     var entry_focus = new EventControllerFocus();
     var entry_key   = new EventControllerKey();
     _entry = new Entry() {
@@ -110,7 +117,7 @@ public class TagEntry : Box {
     });
 
     entry_focus.leave.connect(() => {
-      if( !_always_shown_when_revealed && (_hide_if_contains_text || (_entry.get_text () == "")) ) {
+      if( !_always_shown_when_revealed && (_hide_if_contains_text || (_entry.get_text() == "")) ) {
         hide_entry();
       }
     });
@@ -167,12 +174,13 @@ public class TagEntry : Box {
     TreeIter iter;
 
     var list_store = new Gtk.ListStore( 1, typeof(string) );
-    _entry.completion.set_model( list_store );
 
     for( int i=0; i<tags.length; i++ ) {
       list_store.append( out iter );
       list_store.set( iter, 0, tags.index( i ) );
     }
+
+    _entry.completion.set_model( list_store );
 
   }
 

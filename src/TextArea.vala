@@ -1067,6 +1067,11 @@ public class TextArea : Box {
     return( _title.editable && (_title.text != _entry.title) );
   }
 
+  /* Returns true if the tags have changed since it was loaded */
+  private bool tags_changed() {
+    return( _tags.editable && (_tags.tags.get_tag_list() != _entry.tags.get_tag_list()) );
+  }
+
   /* Returns true if the text of the entry has changed since it was loaded */
   private bool text_changed() {
     return( _text.editable && _text.buffer.get_modified() );
@@ -1076,7 +1081,7 @@ public class TextArea : Box {
   public void save( bool image_changed = false ) {
 
     /* If the text area is not editable or has not changed, there's no need to save */
-    if( (_journal == null) || (_entry == null) || (!title_changed() && !_date_changed && !_image_area.changed() && !text_changed()) ) {
+    if( (_journal == null) || (_entry == null) || (!title_changed() && !_date_changed && !tags_changed() && !_image_area.changed() && !text_changed()) ) {
       return;
     }
 
