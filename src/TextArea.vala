@@ -1069,7 +1069,7 @@ public class TextArea : Box {
 
   /* Returns true if the tags have changed since it was loaded */
   private bool tags_changed() {
-    return( _tags.editable && (_tags.tags.get_tag_list() != _entry.tags.get_tag_list()) );
+    return( _tags.editable && (_tags.tags.load_tag_list() != _entry.tags.load_tag_list()) );
   }
 
   /* Returns true if the text of the entry has changed since it was loaded */
@@ -1086,7 +1086,7 @@ public class TextArea : Box {
     }
 
     var entry = new DBEntry.with_date( 
-      _entry.journal, _title.text, _text.buffer.text, _tags.tags.get_tag_list(), _entry.date, _entry.time
+      _entry.journal, _title.text, _text.buffer.text, _tags.tags.load_tag_list(), _entry.date, _entry.time
     );
 
     _image_area.get_images( entry );
@@ -1176,7 +1176,9 @@ public class TextArea : Box {
     _image_area.editable = enable_ui;
 
     /* Set the tags */
-    _tags.journal = _journal;
+    var avail_tags = new TagList();
+    _journal.db.get_all_tags( avail_tags );
+    _tags.set_available_tags( avail_tags );
     _tags.add_tags( _entry.tags );
     _tags.update_tags();
     _tags.editable = enable_ui;

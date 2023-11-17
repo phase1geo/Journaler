@@ -23,25 +23,13 @@ using Gtk;
 
 public class TagBox : Box {
 
-  private Journal? _journal = null;
-  private TagList  _tags;
-
-  private MainWindow _win;
-  private Box        _box;
-  private TagEntry   _new_tag_entry;
-
+  private TagList       _tags;
+  private MainWindow    _win;
+  private Box           _box;
+  private TagEntry      _new_tag_entry;
   private List<Widget>  _tag_widgets;
   private Array<string> _all_tags;
   private bool          _editable = true;
-
-  public Journal? journal {
-    get {
-      return( _journal );
-    }
-    set {
-      _journal = value;
-    }
-  }
 
   public TagList tags {
     get {
@@ -65,6 +53,8 @@ public class TagBox : Box {
     }
   }
 
+  public signal void changed();
+
   /* Default constructor */
   public TagBox( MainWindow win ) {
 
@@ -82,6 +72,7 @@ public class TagBox : Box {
       _win.reset_timer();
       _tags.add_tag( tag );
       update_tags();
+      changed();
     });
 
     _box = new Box( Orientation.HORIZONTAL, 5 ) {
@@ -104,6 +95,13 @@ public class TagBox : Box {
 
   }
 
+  /* Initializes the set of available tags */
+  public void set_available_tags( TagList tags ) {
+    tags.foreach((tag) => {
+      _all_tags.append_val( tag );
+    });
+  }
+
   /* Adds the given tags to this list */
   public void add_tags( TagList tags ) {
 
@@ -115,37 +113,8 @@ public class TagBox : Box {
 
   }
 
-  /* This should be called whenever the tags change in _entry */
-  public void update_tags() {
-
-    /* Refresh the completion data */
-    refresh_completion();
-
-    /* Redraw the tags in the UI */
-    redraw_tags();
-
-  }
-
-  /* Updates the completion UI */
-  private void refresh_completion () {
-
-    /* Clear the current tags */
-    _all_tags.remove_range( 0, _all_tags.length );
-
-    /* Get the tags from the database */
-    _journal.db.get_all_tags( _all_tags );
-
-    /* Remove any tags that are currently set for this entry */
-    for( int i=(int)(_all_tags.length - 1); i>=0; i-- ) {
-      if( _tags.contains_tag( _all_tags.index( i ) ) ) {
-        _all_tags.remove_index( i );
-      }
-    }
-
-  }
-
   /* Redraws the tags */
-  private void redraw_tags() {
+  public void update_tags() {
 
     /* Delete the tags from the box */
     _box.remove( _new_tag_entry );
@@ -199,7 +168,15 @@ public class TagBox : Box {
 
     });
 
-    _new_tag_entry.populate_completion( _all_tags );
+    /* Remove any tags that are currently set for this entry */
+    var avail_tags = new Array<string>();
+    for( int i=0; i<_all_tags.length; i++ ) {
+      if( !_tags.contains_tag( _all_tags.index( i ) ) ) {
+        avail_tags.append_val( _all_tags.index( i ) );
+      }
+    }
+
+    _new_tag_entry.populate_completion( avail_tags );
     _new_tag_entry.hide_entry();
     _new_tag_entry.text = "";
 
@@ -211,6 +188,7 @@ public class TagBox : Box {
     var entry = (Entry)btn;
     _tags.remove_tag( entry.text );
     update_tags();
+    changed();
   }
 
   public void add_class( string name ) {

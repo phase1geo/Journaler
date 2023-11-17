@@ -231,6 +231,11 @@ public class DBEntry {
     }
   }
 
+  /* Specifies if this entry is purgeable */
+  public bool is_purgeable() {
+    return( this.text == "" );
+  }
+
   /*
    Adds the given image.  If the image add works properly, we will return the new pathname of the file;
    otherwise, we will return null.
@@ -515,12 +520,12 @@ public class Database {
   }
 
   /* Returns the list of all tags that currently exist */
-  public bool get_all_tags( Array<string> tags ) {
+  public bool get_all_tags( TagList tags ) {
 
     var query = "SELECT * FROM Tag;";
 
     var retval = exec_query( query, (ncols, vals, names) => {
-      tags.append_val( vals[1] );
+      tags.add_tag( vals[1] );
       return( 0 );
     });
 
@@ -598,7 +603,7 @@ public class Database {
   }
 
   /* Performs search query using tags, date and search string */
-  public bool query_entries( bool trash, List<string> tags, string? start_date, string? end_date, string str,
+  public bool query_entries( bool trash, TagList tags, string? start_date, string? end_date, string str,
                              Gee.List<DBEntry> matched_entries ) {
 
     string[] where = {};
@@ -619,7 +624,7 @@ public class Database {
     }
 
     var untagged = false;
-    if( (tags.length() > 0) && (tags.nth_data( 0 ) == _( "Untagged" )) ) {
+    if( (tags.length() > 0) && (tags.get_tag( 0 ) == _( "Untagged" )) ) {
       untagged = true;
     }
 
@@ -644,9 +649,11 @@ public class Database {
     var last_id = "";
     var retval = exec_query( query, (ncols, vals, names) => {
       var tag = vals[EntryPos.TAG];
-      if( (vals[EntryPos.ID] != last_id) && ((tag == null) ? untagged : (tags.find_custom( tag, strcmp ) != null)) ) {
+      if( (vals[EntryPos.ID] != last_id) && ((tag == null) ? untagged : tags.contains_tag( tag )) ) {
         var entry = new DBEntry.for_list( vals[EntryPos.JOURNAL], trash, vals[EntryPos.TITLE], vals[EntryPos.DATE], vals[EntryPos.TIME], ((str == "") ? "" : vals[EntryPos.TEXT]) );
-        matched_entries.add( entry );
+        if( vals[EntryPos.TEXT] != "" ) {
+          matched_entries.add( entry );
+        }
         last_id = vals[EntryPos.ID];
       }
       return( 0 );
@@ -860,6 +867,57 @@ public class Database {
     entry.loaded = true;
 
     show_all_tables( "After save" );
+
+    return( true );
+
+  }
+
+  /* Only updates the tags associated with the given entry */
+  public bool update_tags( DBEntry entry ) {
+
+    var entry_query = """ 
+      SELECT id
+      FROM Entry
+      WHERE date = '%s' AND time = '%s';
+      """.printf( entry.date, entry.time );
+
+    var entry_id = -1;
+    var res = exec_query( entry_query, (ncols, vals, names) => {
+      entry_id = int.parse( vals[0] );
+      return( 0 );
+    });
+
+    /* If the entry update failed something bad happened so stop here */
+    if( !res || (entry_id == -1) ) {
+      return( false );
+    }
+
+    /* Delete the tag-map entries associated with the updated entry */
+    var map_del_query = "DELETE FROM TagMap WHERE entry_id = %d;".printf( entry_id );
+    exec_query( map_del_query );
+
+    /* Let's store the tags and tag mappings */
+    entry.tags.foreach((tag) => {
+
+      /* Insert the tag into the table */
+      var tag_query = "INSERT INTO Tag (name) VALUES('%s');".printf( tag );
+      exec_query( tag_query );
+
+      /* Get the index of the tag (even if it wasn't inserted */
+      var tag2_query = "SELECT id FROM Tag WHERE name = '%s';".printf( tag );
+      var tag_id     = -1;
+      exec_query( tag2_query, (ncols, vals, names) => {
+        tag_id = int.parse( vals[0] );
+        return( 0 );
+      });
+
+      /* Add the tag-map entry */
+      if( (entry_id != -1) && (tag_id != -1) ) {
+        var map_query = "INSERT INTO TagMap (entry_id, tag_id) VALUES(%d, %d);".printf( entry_id, tag_id );
+        exec_query( map_query );
+      }
+
+    });
 
     return( true );
 

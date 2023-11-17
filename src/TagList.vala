@@ -55,6 +55,24 @@ public class TagList {
     }
   }
 
+  /* Adds the contents of the specified taglist to our taglist, avoiding copies */
+  public void add_tag_list( TagList tags ) {
+    tags.foreach((tag) => {
+      if( !contains_tag( tag ) ) {
+        _tags.append( tag );
+      }
+    });
+  }
+
+  /* Adds the contents of the specified string list, avoiding copies */
+  public void add_string_list( List<string> tags ) {
+    foreach( var tag in tags ) {
+      if( (tag != null) && !contains_tag( tag ) ) {
+        _tags.append( tag );
+      }
+    }
+  }
+
   /* Replaces the old tag with the new tag */
   public void replace_tag( string old_tag, string new_tag ) {
     var index = _tags.index( old_tag );
@@ -69,6 +87,20 @@ public class TagList {
     if( contains_tag( tag ) ) {
       _tags.remove_link( _tags.find_custom( tag, strcmp ) );
     }
+  }
+
+  /* Removes the items in the specified tag list from our tag list */
+  public void remove_tag_list( TagList tags ) {
+    tags.foreach((tag) => {
+      if( contains_tag( tag ) ) {
+        _tags.remove_link( _tags.find_custom( tag, strcmp ) );
+      }
+    });
+  }
+
+  /* Sorts the results */
+  public void sort() {
+    _tags.sort( strcmp );
   }
 
   /* Foreach function for the tag list */
@@ -89,7 +121,7 @@ public class TagList {
   }
 
   /* Returns the tag list in the form suitable for display */
-  public string get_tag_list() {
+  public string load_tag_list() {
     string[] tag_array = {};
     foreach( string tag in _tags ) {
       tag_array += tag;

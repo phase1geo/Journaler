@@ -590,43 +590,33 @@ public class Reviewer : Grid {
     clear_listbox( _tag_lb );
 
     /* Get the list of unique tags and sort them */
-    var all_tags = new List<string>();
+    var all_tags = new TagList();
     for( int i=0; i<_journals.num_journals(); i++ ) {
       var journal = _journals.get_journal( i );
       if( !journal.hidden ) {
-        var journal_tags = new Array<string>();
-        if( journal.db.get_all_tags( journal_tags ) ) {
-          for( int j=0; j<journal_tags.length; j++ ) {
-            var tag = journal_tags.index( j );
-            if( all_tags.find( tag ) == null ) {
-              all_tags.append( tag );
-            }
-          }
-        }
+        journal.db.get_all_tags( all_tags );
       }
     }
 
-    var selected = new List<string>();
-    if( (review == null) || review.all_journals ) {
-      foreach( var tag in all_tags ) {
-        selected.append( tag );
-      }
+    var selected = new TagList();
+    if( (review == null) || review.all_tags ) {
+      selected.add_tag_list( all_tags );
     } else {
       foreach( var tag in review.tags ) {
-        if( all_tags.find( tag ).length() > 0 ) {
-          selected.append( tag );
+        if( all_tags.contains_tag( tag ) ) {
+          selected.add_tag( tag );
         }
       }
     }
-    selected.sort( strcmp );
+    selected.sort();
 
     /* Populate the listbox */
     add_item_to_list( _tag_lb, _( "Untagged" ), true );
-    foreach( var tag in selected ) {
+    selected.foreach((tag) => {
       add_item_to_list( _tag_lb, tag, true );
-    }
+    });
 
-    _num_tags = (int)all_tags.length();
+    _num_tags = all_tags.length();
 
   }
 
@@ -671,7 +661,7 @@ public class Reviewer : Grid {
   public static string make_menubutton_label( List<string> list, int max_length, string all_str, string none_str ) {
     if( list.length() == 0 ) {
       return( none_str );
-    } else if( list.length() == max_length ) {
+    } else if( list.length() >= max_length ) {
       return( all_str );
     } else {
       string[] values = {};
@@ -730,6 +720,7 @@ public class Reviewer : Grid {
 
     var journals = new List<string>();
     var tags     = new List<string>();
+    var taglist  = new TagList();
 
     /* Get the selected journals and tags */
     if( _trash_cb.active ) {
@@ -738,6 +729,8 @@ public class Reviewer : Grid {
       get_activated_items_from_list( _journal_lb, ref journals );
     }
     get_activated_items_from_list( _tag_lb, ref tags );
+
+    taglist.add_string_list( tags );
 
     var start_date = get_date( _start_date );
     var end_date   = get_date( _end_date );
@@ -753,8 +746,10 @@ public class Reviewer : Grid {
     /* Add the matching entries to the list */
     foreach( var journal_name in journals ) {
       var journal = (journal_name == _journals.trash.name) ? _journals.trash : _journals.get_journal_by_name( journal_name );
-      journal.db.query_entries( (journal_name == _journals.trash.name), tags, start_date, end_date, _search_entry.text.strip(), _match_entries );
+      journal.db.query_entries( (journal_name == _journals.trash.name), taglist, start_date, end_date, _search_entry.text.strip(), _match_entries );
     }
+
+    stdout.printf( "matched_entries: %d\n", _match_entries.size );
 
     /* Sort the entries */
     _match_entries.sort((a, b) => {
@@ -937,6 +932,7 @@ public class Reviewer : Grid {
       _win.reset_timer();
       _bulk_box.visible = false;
       _tag_box.visible = true;
+      setup_add_tags();
     });
 
     _untag_btn = new Button.from_icon_name( "edit-clear-symbolic" ) {
@@ -946,6 +942,7 @@ public class Reviewer : Grid {
       _win.reset_timer();
       _bulk_box.visible = false;
       _untag_box.visible = true;
+      setup_remove_tags();
     });
 
     _select_btn = new CheckButton() {
@@ -979,8 +976,6 @@ public class Reviewer : Grid {
     _bulk_box.append( _untag_btn );
 
     /* Create tag box */
-    _tag_add_box = new TagBox( _win );
-
     var tag_add_cancel = new Button.with_label( _( "Cancel" ) ) {
       halign = Align.START,
       hexpand = true
@@ -993,13 +988,19 @@ public class Reviewer : Grid {
 
     var tag_add_save = new Button.with_label( _( "Add Tags" ) ) {
       halign = Align.END,
-      hexpand = true
+      hexpand = true,
+      sensitive = false
     };
     tag_add_save.clicked.connect(() => {
       _win.reset_timer();
       bulk_add_tags();
       _bulk_box.visible = true;
       _tag_box.visible = false;
+    });
+
+    _tag_add_box = new TagBox( _win );
+    _tag_add_box.changed.connect(() => {
+      tag_add_save.sensitive = (_tag_add_box.tags.length() > 0);
     });
 
     var tag_add_bbox = new Box( Orientation.HORIZONTAL, 5 ) {
@@ -1010,7 +1011,9 @@ public class Reviewer : Grid {
     tag_add_bbox.append( tag_add_save );
 
     _tag_box = new Box( Orientation.VERTICAL, 5 ) {
-      visible = false
+      visible      = false,
+      margin_start = 5,
+      margin_end   = 5
     };
     _tag_box.append( _tag_add_box );
     _tag_box.append( tag_add_bbox );
@@ -1101,35 +1104,106 @@ public class Reviewer : Grid {
   /* Moves all entries to the trash */
   private void move_to_trash() {
     _win.reset_timer();
-    foreach( var row in _match_lb.get_selected_rows() ) {
-      var index   = row.get_index();
-      var entry   = _match_entries.get( index );
-      var journal = _journals.get_journal_by_name( entry.journal );
-      if( !entry.trash ) {
-        journal.move_entry( entry, _journals.trash );
+    var i = 0;
+    _match_cb.foreach((cb) => {
+      if( cb.active ) {
+        var entry   = _match_entries.get( i );
+        var journal = _journals.get_journal_by_name( entry.journal );
+        if( !entry.trash ) {
+          journal.move_entry( entry, _journals.trash );
+        }
       }
-    }
+      i++;
+      return( true );
+    });
     do_search();
   }
 
   /* Restores the entries from the trash */
   private void restore_from_trash() {
     _win.reset_timer();
-    foreach( var row in _match_lb.get_selected_rows() ) {
-      var index   = row.get_index();
-      var entry   = _match_entries.get( index );
-      var journal = _journals.get_journal_by_name( entry.journal );
-      if( entry.trash ) {
-        _journals.trash.move_entry( entry, journal );
+    var i = 0;
+    _match_cb.foreach((cb) => {
+      if( cb.active ) {
+        var entry   = _match_entries.get( i );
+        var journal = _journals.get_journal_by_name( entry.journal );
+        if( entry.trash ) {
+          _journals.trash.move_entry( entry, journal );
+        }
       }
-    }
+      i++;
+      return( true );
+    });
     do_search();
+  }
+
+  /* Adds all of the tags from the checked entries to the given tag list */
+  private void collect_selected_tags( TagList tags ) {
+    var i = 0;
+    _match_cb.foreach((cb) => {
+      if( cb.active ) {
+        var entry = _match_entries.get( i );
+        tags.add_tag_list( entry.tags );
+      }
+      i++;
+      return( true );
+    });
+  }
+
+  /* Performs the setup task for adding tags */
+  private void setup_add_tags() {
+
+    var all_tags = new TagList();
+    var sel_tags = new TagList();
+
+    /* Collect the selected tags */
+    collect_selected_tags( sel_tags );
+
+    /* Get all of the tags from the selected journals */
+    var journals = new List<string>();
+    get_activated_items_from_list( _journal_lb, ref journals );
+    foreach( var name in journals ) {
+      var journal = (name == _journals.trash.name) ? _journals.trash : _journals.get_journal_by_name( name );
+      journal.db.get_all_tags( all_tags );
+    }
+
+    /* Remove sel_tags from all_tags */
+    all_tags.remove_tag_list( sel_tags );
+
+    /* Add the remaining tags to the list of match tags */
+    all_tags.sort();
+    _tag_add_box.set_available_tags( all_tags );
+
+  }
+
+  /* Performs the setup task for removing tags */
+  private void setup_remove_tags() {
+    var tags = new TagList();
+    collect_selected_tags( tags );
+    // TODO - Need to create interface for removing tags
   }
 
   /* Allows the user to add tags to all selected items */
   private void bulk_add_tags() {
 
+    /* Add all of the tags to the selected items */
+    var i = 0;
+    _match_cb.foreach((cb) => {
+      if( cb.active ) {
+        var entry = _match_entries.get( i );
+        var journal = _journals.get_journal_by_name( entry.journal );
+        entry.tags.add_tag_list( _tag_add_box.tags );
+        journal.db.update_tags( entry );
+      }
+      i++;
+      return( true );
+    });
+
+    /* Add the tags to the list of tags to search for */
     // TODO
+
+    /* Perform the search */
+    do_search();
 
   }
 
