@@ -53,6 +53,7 @@ public class Reviewer : Grid {
   private Journals   _journals;
 
   private SavedReviews _reviews;
+  private SavedReview? _last_review;
 
   private MenuButton  _journal_mb;
   private ListBox     _journal_lb;
@@ -83,15 +84,19 @@ public class Reviewer : Grid {
   private Label                  _lb_status;
   private Gee.ArrayList<DBEntry> _match_entries;
   private int                    _match_index;
+  private bool                   _bulk_edit = false;
+
   private Button                 _trash_btn;
   private Button                 _restore_btn;
-  private Button                 _tag_btn;
-  private Button                 _untag_btn;
-  private Box                    _tag_box;
-  private Box                    _untag_box;
-  private TagBox                 _tag_add_box;
   private CheckButton            _select_btn;
-  private bool                   _bulk_edit = false;
+
+  private Button                 _tag_btn;
+  private Box                    _tag_box;
+  private TagBox                 _tag_add_box;
+
+  private Button                 _untag_btn;
+  private Box                    _untag_box;
+  private TagBox                 _tag_del_box;
 
   private const GLib.ActionEntry action_entries[] = {
     { "action_show_all",      action_show_all },
@@ -636,6 +641,8 @@ public class Reviewer : Grid {
   /* Initializes the reviewer UI when this is shown */
   public void initialize( SavedReview? review = null ) {
 
+    _last_review = review;
+
     /* Populate the journals and tags lists */
     populate_journals( review );
     populate_tags( review );
@@ -697,6 +704,36 @@ public class Reviewer : Grid {
     _tag_clear_all.sensitive = (tags.length() > 0);
     _tag_mb.label = make_menubutton_label( tags, _num_tags, _( "All Tags" ), _( "No Tags" ) );
 
+    /* Disable the bulk edit UI */
+    bulk_edit = false;
+
+  }
+
+  /* Updates the state of the bulk UI buttons */
+  private void update_bulk_ui_state() {
+
+    var i = 0;
+    var trash_selected   = false;
+    var journal_selected = false;
+    _match_cb.foreach((cb) => {
+      if( cb.active ) {
+        var entry = _match_entries.get( i );
+        if( entry.trash ) {
+          trash_selected = true;
+        } else {
+          journal_selected = true;
+        }
+        return( false );
+      }
+      i++;
+      return( true );
+    });
+
+    _trash_btn.sensitive   = journal_selected;
+    _restore_btn.sensitive = trash_selected;
+    _tag_btn.sensitive     = journal_selected || trash_selected;
+    _untag_btn.sensitive   = journal_selected || trash_selected;
+
   }
 
   /* Updates the state of the selection button */
@@ -749,8 +786,6 @@ public class Reviewer : Grid {
       journal.db.query_entries( (journal_name == _journals.trash.name), taglist, start_date, end_date, _search_entry.text.strip(), _match_entries );
     }
 
-    stdout.printf( "matched_entries: %d\n", _match_entries.size );
-
     /* Sort the entries */
     _match_entries.sort((a, b) => {
       var date_match = strcmp( b.date, a.date );
@@ -797,6 +832,10 @@ public class Reviewer : Grid {
     /* Set the listbox select mode */
     _match_lb.selection_mode = _bulk_edit ? SelectionMode.MULTIPLE : SelectionMode.SINGLE;
 
+    /* Make sure that the tag and untag UI elements are hidden */
+    _tag_box.visible   = false;
+    _untag_box.visible = false;
+
   }
 
   // --------------------------------------------------------------
@@ -828,20 +867,8 @@ public class Reviewer : Grid {
     if( selected == 1 ) {
       show_matched_entry( entry, SelectedEntryPos.parse( _match_entries.size, _match_index ) );
       _match_lb.grab_focus();
-      _trash_btn.sensitive   = false;
-      _restore_btn.sensitive = false;
       show_row( row );
     }
-
-    if( entry.trash ) {
-      _restore_btn.sensitive = true;
-    } else {
-      _trash_btn.sensitive = true;
-    }
-
-    _tag_btn.sensitive    = true;
-    _untag_btn.sensitive  = true;  // Only allow this if the selected items contain any tags
-    _select_btn.sensitive = true;
 
   }
 
@@ -882,6 +909,7 @@ public class Reviewer : Grid {
 
     _match_cb = new Gee.ArrayList<CheckButton>();
 
+    /* Add the entry listbox */
     _match_lb = new ListBox() {
       show_separators = true,
       activate_on_single_click = false,
@@ -915,18 +943,55 @@ public class Reviewer : Grid {
       return( false );
     });
 
+    /* Add the bulk edit UI box */
+    _bulk_box = add_bulk_edit_ui();
+
+    /* Create tag box */
+    _tag_box = add_tag_ui();
+
+    /* Create untag box */
+    _untag_box = add_untag_ui();
+
+    var sep = new Separator( Orientation.HORIZONTAL ) {
+      hexpand = true
+    };
+
+    /* Create the sidebar status UI */
+    var status_box = add_sidebar_status();
+
+    var box = new Box( Orientation.VERTICAL, 5 ) {
+      margin_top    = 5,
+      margin_bottom = 5
+    };
+    box.append( _lb_scroll );
+    box.append( _bulk_box );
+    box.append( _tag_box );
+    box.append( _untag_box );
+    box.append( sep );
+    box.append( status_box );
+
+    return( box );
+
+  }
+
+  /* Add bulk edit UI to the sidebar */
+  private Box add_bulk_edit_ui() {
+
     _restore_btn = new Button.from_icon_name( "edit-undo-symbolic" ) {
-      tooltip_text = _( "Restore from trash" )
+      tooltip_text = _( "Restore from trash" ),
+      sensitive = false
     };
     _restore_btn.clicked.connect( restore_from_trash );
 
     _trash_btn = new Button.from_icon_name( "user-trash-symbolic" ) {
-      tooltip_text = _( "Move to trash" )
+      tooltip_text = _( "Move to trash" ),
+      sensitive = false
     };
     _trash_btn.clicked.connect( move_to_trash );
 
     _tag_btn = new Button.from_icon_name( "tag-symbolic" ) {
-      tooltip_text = _( "Add tags" )
+      tooltip_text = _( "Add tags" ),
+      sensitive = false
     };
     _tag_btn.clicked.connect(() => {
       _win.reset_timer();
@@ -936,7 +1001,8 @@ public class Reviewer : Grid {
     });
 
     _untag_btn = new Button.from_icon_name( "edit-clear-symbolic" ) {
-      tooltip_text = _( "Remove tags" )
+      tooltip_text = _( "Remove tags" ),
+      sensitive = false
     };
     _untag_btn.clicked.connect(() => {
       _win.reset_timer();
@@ -960,7 +1026,7 @@ public class Reviewer : Grid {
       }
     });
 
-    _bulk_box = new Box( Orientation.HORIZONTAL, 5 ) {
+    var box = new Box( Orientation.HORIZONTAL, 5 ) {
       homogeneous  = true,
       halign       = Align.FILL,
       hexpand      = true,
@@ -969,13 +1035,19 @@ public class Reviewer : Grid {
       margin_end   = 5,
       visible      = _bulk_edit
     };
-    _bulk_box.append( _select_btn );
-    _bulk_box.append( _trash_btn );
-    _bulk_box.append( _restore_btn );
-    _bulk_box.append( _tag_btn );
-    _bulk_box.append( _untag_btn );
+    box.append( _select_btn );
+    box.append( _trash_btn );
+    box.append( _restore_btn );
+    box.append( _tag_btn );
+    box.append( _untag_btn );
 
-    /* Create tag box */
+    return( box );
+
+  }
+
+  /* Adds the bulk tagging UI to the sidebar */
+  private Box add_tag_ui() {
+
     var tag_add_cancel = new Button.with_label( _( "Cancel" ) ) {
       halign = Align.START,
       hexpand = true
@@ -993,12 +1065,12 @@ public class Reviewer : Grid {
     };
     tag_add_save.clicked.connect(() => {
       _win.reset_timer();
-      bulk_add_tags();
       _bulk_box.visible = true;
       _tag_box.visible = false;
+      bulk_add_tags();
     });
 
-    _tag_add_box = new TagBox( _win );
+    _tag_add_box = new TagBox( _win, true );
     _tag_add_box.changed.connect(() => {
       tag_add_save.sensitive = (_tag_add_box.tags.length() > 0);
     });
@@ -1010,15 +1082,21 @@ public class Reviewer : Grid {
     tag_add_bbox.append( tag_add_cancel );
     tag_add_bbox.append( tag_add_save );
 
-    _tag_box = new Box( Orientation.VERTICAL, 5 ) {
+    var box = new Box( Orientation.VERTICAL, 5 ) {
       visible      = false,
       margin_start = 5,
       margin_end   = 5
     };
-    _tag_box.append( _tag_add_box );
-    _tag_box.append( tag_add_bbox );
+    box.append( _tag_add_box );
+    box.append( tag_add_bbox );
 
-    /* Create untag box */
+    return( box );
+
+  }
+
+  /* Adds the bulk untagging UI to the sidebar */
+  private Box add_untag_ui() {
+
     var tag_del_cancel = new Button.with_label( _( "Cancel" ) ) {
       halign = Align.START,
       hexpand = true
@@ -1031,13 +1109,19 @@ public class Reviewer : Grid {
 
     var tag_del_save = new Button.with_label( _( "Remove Tags" ) ) {
       halign = Align.END,
-      hexpand = true
+      hexpand = true,
+      sensitive = false
     };
     tag_del_save.clicked.connect(() => {
       _win.reset_timer();
-      bulk_remove_tags();
       _bulk_box.visible = true;
       _untag_box.visible = false;
+      bulk_remove_tags();
+    });
+
+    _tag_del_box = new TagBox( _win, false );
+    _tag_del_box.changed.connect(() => {
+      tag_del_save.sensitive = (_tag_del_box.tags.length() > 0);
     });
 
     var tag_del_bbox = new Box( Orientation.HORIZONTAL, 5 ) {
@@ -1047,10 +1131,20 @@ public class Reviewer : Grid {
     tag_del_bbox.append( tag_del_cancel );
     tag_del_bbox.append( tag_del_save );
 
-    _untag_box = new Box( Orientation.VERTICAL, 5 ) {
-      visible = false
+    var box = new Box( Orientation.VERTICAL, 5 ) {
+      visible      = false,
+      margin_start = 5,
+      margin_end   = 5
     };
-    _untag_box.append( tag_del_bbox );
+    box.append( _tag_del_box );
+    box.append( tag_del_bbox );
+
+    return( box );
+
+  }
+
+  /* Adds the sidebar status area which also includes the bulk edit button */
+  private Box add_sidebar_status() {
 
     var bulk = new Button.from_icon_name( "format-justify-fill-symbolic" ) {
       halign = Align.END,
@@ -1067,10 +1161,6 @@ public class Reviewer : Grid {
     };
     _lb_status = new Label( "" );
 
-    var sep = new Separator( Orientation.HORIZONTAL ) {
-      hexpand = true
-    };
-
     var sbox = new Box( Orientation.HORIZONTAL, 5 ) {
       halign       = Align.CENTER,
       margin_start = 5,
@@ -1079,27 +1169,18 @@ public class Reviewer : Grid {
     sbox.append( status );
     sbox.append( _lb_status );
 
-    var fbox = new Box( Orientation.HORIZONTAL, 5 ) {
+    var box = new Box( Orientation.HORIZONTAL, 5 ) {
       halign = Align.FILL,
       hexpand = true
     };
-    fbox.append( sbox );
-    fbox.append( bulk );
-
-    var box = new Box( Orientation.VERTICAL, 5 ) {
-      margin_top    = 5,
-      margin_bottom = 5
-    };
-    box.append( _lb_scroll );
-    box.append( _bulk_box );
-    box.append( _tag_box );
-    box.append( _untag_box );
-    box.append( sep );
-    box.append( fbox );
+    box.append( sbox );
+    box.append( bulk );
 
     return( box );
 
   }
+
+  // --------------------------------------------------------------
 
   /* Moves all entries to the trash */
   private void move_to_trash() {
@@ -1142,8 +1223,12 @@ public class Reviewer : Grid {
     var i = 0;
     _match_cb.foreach((cb) => {
       if( cb.active ) {
-        var entry = _match_entries.get( i );
-        tags.add_tag_list( entry.tags );
+        var entry   = _match_entries.get( i );
+        var journal = _journals.get_journal_by_name( entry.journal );
+        var res     = journal.db.load_entry( entry, false );
+        if( res == DBLoadResult.LOADED ) {
+          tags.add_tag_list( entry.tags );
+        }
       }
       i++;
       return( true );
@@ -1173,14 +1258,21 @@ public class Reviewer : Grid {
     /* Add the remaining tags to the list of match tags */
     all_tags.sort();
     _tag_add_box.set_available_tags( all_tags );
+    _tag_add_box.clear_tags();
 
   }
 
   /* Performs the setup task for removing tags */
   private void setup_remove_tags() {
+
     var tags = new TagList();
     collect_selected_tags( tags );
-    // TODO - Need to create interface for removing tags
+
+    /* Add the collected tags to the list of match tags */
+    tags.sort();
+    _tag_del_box.set_available_tags( tags );
+    _tag_del_box.clear_tags();
+
   }
 
   /* Allows the user to add tags to all selected items */
@@ -1190,27 +1282,46 @@ public class Reviewer : Grid {
     var i = 0;
     _match_cb.foreach((cb) => {
       if( cb.active ) {
-        var entry = _match_entries.get( i );
+        var entry   = _match_entries.get( i );
         var journal = _journals.get_journal_by_name( entry.journal );
-        entry.tags.add_tag_list( _tag_add_box.tags );
-        journal.db.update_tags( entry );
+        if( entry.tags.add_tag_list( _tag_add_box.tags ) ) {
+          journal.db.update_tags( entry );
+        }
       }
       i++;
       return( true );
     });
 
     /* Add the tags to the list of tags to search for */
-    // TODO
+    populate_tags( _last_review );
 
     /* Perform the search */
-    do_search();
+    // do_search();
 
   }
 
   /* Allows the user to remove tags from all selected items */
   private void bulk_remove_tags() {
 
-    // TODO
+    /* Remove all of the tags to the selected items */
+    var i = 0;
+    _match_cb.foreach((cb) => {
+      if( cb.active ) {
+        var entry   = _match_entries.get( i );
+        var journal = _journals.get_journal_by_name( entry.journal );
+        if( entry.tags.remove_tag_list( _tag_del_box.tags ) ) {
+          journal.db.update_tags( entry );
+        }
+      }
+      i++;
+      return( true );
+    });
+
+    /* Remove the tags to the list of tags to search for */
+    populate_tags( _last_review );
+
+    /* Perform the search */
+    // do_search();
 
   }
 
@@ -1297,7 +1408,10 @@ public class Reviewer : Grid {
     var check = new CheckButton() {
       margin_start = 5
     };
-    check.toggled.connect( update_select_btn );
+    check.toggled.connect(() => {
+      update_bulk_ui_state();
+      update_select_btn();
+    });
     var check_revealer = new Revealer() {
       transition_type = RevealerTransitionType.SLIDE_RIGHT,
       reveal_child = _bulk_edit,

@@ -26,7 +26,8 @@ public class TagBox : Box {
   private TagList       _tags;
   private MainWindow    _win;
   private Box           _box;
-  private TagEntry      _new_tag_entry;
+  private TagEntry?     _new_tag_entry  = null;
+  private TagSelect?    _new_tag_select = null;
   private List<Widget>  _tag_widgets;
   private Array<string> _all_tags;
   private bool          _editable = true;
@@ -44,10 +45,18 @@ public class TagBox : Box {
     set {
       if( _editable != value ) {
         _editable = value;
-        if( _editable ) {
-          _new_tag_entry.show();
+        if( _new_tag_entry != null ) {
+          if( _editable ) {
+            _new_tag_entry.show();
+          } else {
+            _new_tag_entry.hide();
+          }
         } else {
-          _new_tag_entry.hide();
+          if( _editable ) {
+            _new_tag_select.show();
+          } else {
+            _new_tag_select.hide();
+          }
         }
       }
     }
@@ -56,7 +65,7 @@ public class TagBox : Box {
   public signal void changed();
 
   /* Default constructor */
-  public TagBox( MainWindow win ) {
+  public TagBox( MainWindow win, bool for_add ) {
 
     Object( orientation: Orientation.VERTICAL, spacing: 0 );
 
@@ -65,21 +74,39 @@ public class TagBox : Box {
     _all_tags    = new Array<string>();
     _tags        = new TagList();
 
-    _new_tag_entry = new TagEntry( _win, _("Click to add tag…") ) {
-      add_css = false
-    };
-    _new_tag_entry.activated.connect((tag) => {
-      _win.reset_timer();
-      _tags.add_tag( tag );
-      update_tags();
-      changed();
-    });
+    if( for_add ) {
+
+      _new_tag_entry = new TagEntry( _win, _("Click to add tag…") ) {
+        add_css = false
+      };
+      _new_tag_entry.activated.connect((tag) => {
+        _win.reset_timer();
+        _tags.add_tag( tag );
+        update_tags();
+        changed();
+      });
+
+    } else {
+
+      _new_tag_select = new TagSelect( _win, _("Click to select tag…") );
+      _new_tag_select.activated.connect((tag) => {
+        _win.reset_timer();
+        _tags.add_tag( tag );
+        update_tags();
+        changed();
+      });
+
+    }
 
     _box = new Box( Orientation.HORIZONTAL, 5 ) {
       valign = Align.CENTER
     };
     _box.append( new Gtk.Image.from_icon_name( "tag-symbolic" ) );
-    _box.append( _new_tag_entry );
+    if( for_add ) {
+      _box.append( _new_tag_entry );
+    } else {
+      _box.append( _new_tag_select );
+    }
 
     var scroller = new ScrolledWindow() {
       hexpand = true,
@@ -104,20 +131,25 @@ public class TagBox : Box {
 
   /* Adds the given tags to this list */
   public void add_tags( TagList tags ) {
-
-    /* Copy the given tag list */
     _tags.copy( tags );
-
-    /* Update the tags */
     update_tags();
+  }
 
+  /* Clears the list of tags */
+  public void clear_tags() {
+    _tags.clear();
+    update_tags();
   }
 
   /* Redraws the tags */
   public void update_tags() {
 
     /* Delete the tags from the box */
-    _box.remove( _new_tag_entry );
+    if( _new_tag_entry != null ) {
+      _box.remove( _new_tag_entry );
+    } else {
+      _box.remove( _new_tag_select );
+    }
     _tag_widgets.foreach((tag_widget) => {
       _box.remove( tag_widget );
       _tag_widgets.remove( tag_widget );
@@ -176,11 +208,16 @@ public class TagBox : Box {
       }
     }
 
-    _new_tag_entry.populate_completion( avail_tags );
-    _new_tag_entry.hide_entry();
-    _new_tag_entry.text = "";
-
-    _box.append( _new_tag_entry );
+    if( _new_tag_entry != null ) {
+      _new_tag_entry.populate_completion( avail_tags );
+      _new_tag_entry.hide_entry();
+      _new_tag_entry.text = "";
+      _box.append( _new_tag_entry );
+    } else {
+      _new_tag_select.populate_completion( avail_tags );
+      _new_tag_select.hide_select();
+      _box.append( _new_tag_select );
+    }
 
   }
 

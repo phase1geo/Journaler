@@ -49,53 +49,68 @@ public class TagList {
   }
 
   /* Adds the given tag (if it doesn't already exist in the list) */
-  public void add_tag( string tag ) {
+  public bool add_tag( string tag ) {
     if( !contains_tag( tag ) ) {
       _tags.append( tag );
+      return( true );
     }
+    return( false );
   }
 
   /* Adds the contents of the specified taglist to our taglist, avoiding copies */
-  public void add_tag_list( TagList tags ) {
+  public bool add_tag_list( TagList tags ) {
+    bool added = true;
     tags.foreach((tag) => {
       if( !contains_tag( tag ) ) {
         _tags.append( tag );
+        added = true;
       }
     });
+    return( added );
   }
 
   /* Adds the contents of the specified string list, avoiding copies */
-  public void add_string_list( List<string> tags ) {
+  public bool add_string_list( List<string> tags ) {
+    bool added = false;
     foreach( var tag in tags ) {
       if( (tag != null) && !contains_tag( tag ) ) {
         _tags.append( tag );
+        added = true;
       }
     }
+    return( added );
   }
 
   /* Replaces the old tag with the new tag */
-  public void replace_tag( string old_tag, string new_tag ) {
+  public bool replace_tag( string old_tag, string new_tag ) {
     var index = _tags.index( old_tag );
     if( index != -1 ) {
       _tags.remove_link( _tags.find_custom( old_tag, strcmp ) );
       _tags.insert( new_tag, index );
+      return( true );
     }
+    return( false );
   }
 
   /* Removes the given tag (if it exists in the list) */
-  public void remove_tag( string tag ) {
+  public bool remove_tag( string tag ) {
     if( contains_tag( tag ) ) {
       _tags.remove_link( _tags.find_custom( tag, strcmp ) );
+      return( true );
     }
+    return( false );
   }
 
   /* Removes the items in the specified tag list from our tag list */
-  public void remove_tag_list( TagList tags ) {
+  public bool remove_tag_list( TagList tags ) {
+    bool removed = false;
     tags.foreach((tag) => {
       if( contains_tag( tag ) ) {
         _tags.remove_link( _tags.find_custom( tag, strcmp ) );
+        removed = true;
       }
     });
+    return( removed );
   }
 
   /* Sorts the results */

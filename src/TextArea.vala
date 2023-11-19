@@ -348,7 +348,7 @@ public class TextArea : Box {
     });
 
     /* Add the tags */
-    _tags = new TagBox( _win );
+    _tags = new TagBox( _win, true );
 
     /* Delay adding the CSS classes to clean up a Gtk4 issue */
     Idle.add(() => {
