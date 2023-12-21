@@ -27,6 +27,7 @@ sources += files(
     'TagBox.vala',
     'TagEntry.vala',
     'TagList.vala',
+    'TagSelect.vala',
     'Template.vala',
     'Templater.vala',
     'Templates.vala',
