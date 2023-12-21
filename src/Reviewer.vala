@@ -94,7 +94,6 @@ public class Reviewer : Grid {
   private Box                    _untag_box;
   private TagBox                 _tag_add_box;
   private TagBox                 _tag_del_box;
-  private bool                   _bulk_edit = false;
 
   private const GLib.ActionEntry action_entries[] = {
     { "action_show_all",      action_show_all },
@@ -1013,7 +1012,7 @@ public class Reviewer : Grid {
       setup_remove_tags();
     });
 
-    _bulk_box = new Box( Orientation.HORIZONTAL, 5 ) {
+    var box = new Box( Orientation.HORIZONTAL, 5 ) {
       homogeneous  = true,
       halign       = Align.FILL,
       hexpand      = true,
@@ -1022,10 +1021,10 @@ public class Reviewer : Grid {
       margin_end   = 5,
       visible      = _bulk_edit
     };
-    _bulk_box.append( _trash_btn );
-    _bulk_box.append( _restore_btn );
-    _bulk_box.append( _tag_btn );
-    _bulk_box.append( _untag_btn );
+    box.append( _trash_btn );
+    box.append( _restore_btn );
+    box.append( _tag_btn );
+    box.append( _untag_btn );
 
     return( box );
 
@@ -1135,31 +1134,16 @@ public class Reviewer : Grid {
     var status = new Label( Utils.make_title( _( "Shown Entries:" ) ) ) {
       use_markup = true
     };
+
     _lb_status = new Label( "" );
 
-    var sbox = new Box( Orientation.HORIZONTAL, 5 ) {
+    var box = new Box( Orientation.HORIZONTAL, 5 ) {
       halign       = Align.CENTER,
       margin_start = 5,
       margin_end   = 5
     };
-    sbox.append( status );
-    sbox.append( _lb_status );
-
-    var box = new Box( Orientation.HORIZONTAL, 5 ) {
-      halign = Align.FILL,
-      hexpand = true
-    };
-
-    var box = new Box( Orientation.VERTICAL, 5 ) {
-      margin_top    = 5,
-      margin_bottom = 5
-    };
-    box.append( _lb_scroll );
-    box.append( _bulk_box );
-    box.append( _tag_box );
-    box.append( _untag_box );
-    box.append( sep );
-    box.append( sbox );
+    box.append( status );
+    box.append( _lb_status );
 
     return( box );
 
