@@ -1354,6 +1354,7 @@ public class TextArea : Box {
           <style>
             body {
               color: %s;
+              line-height: 1.5em;
             }
             %s
             table, th, td {

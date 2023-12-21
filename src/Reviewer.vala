@@ -90,7 +90,6 @@ public class Reviewer : Grid {
   private Box                    _tag_box;
   private Box                    _untag_box;
   private TagBox                 _tag_add_box;
-  private CheckButton            _select_btn;
   private bool                   _bulk_edit = false;
 
   private const GLib.ActionEntry action_entries[] = {
@@ -108,8 +107,10 @@ public class Reviewer : Grid {
       return( _bulk_edit );
     }
     set {
-      _bulk_edit = value;
-      update_bulk_edit();
+      if( _bulk_edit != value ) {
+        _bulk_edit = value;
+        update_bulk_edit();
+      }
     }
   }
 
@@ -709,22 +710,6 @@ public class Reviewer : Grid {
 
   }
 
-  /* Updates the state of the selection button */
-  private void update_select_btn() {
-    if( !_ignore_toggled ) {
-      _ignore_toggled = true;
-      var active = true;
-      foreach( var row in _match_lb.get_selected_rows()) {
-        if( !_match_cb.get( row.get_index() ).active ) {
-          active = false;
-          break;
-        }
-      }
-      _select_btn.active = active;
-      _ignore_toggled = false;
-    }
-  }
-
   /* Performs search of selected items, date ranges, and search terms */
   private void do_search() {
 
@@ -776,7 +761,6 @@ public class Reviewer : Grid {
     _restore_btn.sensitive = false;
     _tag_btn.sensitive     = false;
     _untag_btn.sensitive   = false;
-    _select_btn.sensitive  = false;
 
     /* Display the first entry */
     if( _match_entries.size > 0 ) {
@@ -792,15 +776,15 @@ public class Reviewer : Grid {
 
     /* Display the checkbuttons */
     _match_cb.foreach((cb) => {
-      (cb.parent as Revealer).reveal_child = _bulk_edit;
+      var rev = (Revealer)cb.parent;
+      if( rev != null ) {
+        rev.reveal_child = _bulk_edit;
+      }
       return( true );
     });
 
     /* Update the visibility of the bulk edit toolbar */
     _bulk_box.visible = _bulk_edit;
-
-    /* Set the listbox select mode */
-    _match_lb.selection_mode = _bulk_edit ? SelectionMode.MULTIPLE : SelectionMode.SINGLE;
 
   }
 
@@ -820,9 +804,6 @@ public class Reviewer : Grid {
 
   /* Displays the given entry in the textarea */
   private void show_entry( ListBoxRow? row ) {
-
-    /* Update the state of the selection button */
-    update_select_btn();
 
     if( row == null ) return;
 
@@ -844,17 +825,27 @@ public class Reviewer : Grid {
       _trash_btn.sensitive = true;
     }
 
-    _tag_btn.sensitive    = true;
-    _untag_btn.sensitive  = true;  // Only allow this if the selected items contain any tags
-    _select_btn.sensitive = true;
+    _tag_btn.sensitive   = true;
+    _untag_btn.sensitive = true;  // Only allow this if the selected items contain any tags
 
   }
 
   /* Called whenever the selection_changed */
   private void selection_changed() {
 
-    /* Update the state of the selection button */
-    update_select_btn();
+    bulk_edit = (_match_lb.get_selected_rows().length() > 1);
+
+    if( _ignore_toggled ) return;
+
+    _ignore_toggled = true;
+    _match_cb.foreach((cb) => {
+      cb.active = false;
+      return( true );
+    });
+    _match_lb.get_selected_rows().foreach((row) => {
+      _match_cb.get( row.get_index() ).active = true;
+    });
+    _ignore_toggled = false;
 
   }
 
@@ -869,16 +860,13 @@ public class Reviewer : Grid {
     var top    = _lb_scroll.vadjustment.value;
     var bottom = top + _lb_scroll.vadjustment.page_size;
 
-    Idle.add(() => {
-      if( wtop < top ) {
-        _lb_scroll.vadjustment.value = wtop;
-      } else if( wbottom > bottom ) {
-        _lb_scroll.vadjustment.value = wbottom - _lb_scroll.vadjustment.page_size;
-      } else {
-        _lb_scroll.vadjustment.value = top;
-      }
-      return( false );
-    });
+    if( wtop < top ) {
+      _lb_scroll.vadjustment.value = wtop;
+    } else if( wbottom > bottom ) {
+      _lb_scroll.vadjustment.value = wbottom - _lb_scroll.vadjustment.page_size;
+    } else {
+      _lb_scroll.vadjustment.value = top;
+    }
 
   }
 
@@ -890,7 +878,7 @@ public class Reviewer : Grid {
     _match_lb = new ListBox() {
       show_separators = true,
       activate_on_single_click = false,
-      selection_mode  = SelectionMode.SINGLE,
+      selection_mode  = SelectionMode.MULTIPLE,
       can_focus       = true
     };
 
@@ -948,21 +936,6 @@ public class Reviewer : Grid {
       _untag_box.visible = true;
     });
 
-    _select_btn = new CheckButton() {
-      tooltip_text = _( "Select/Deselect all" ),
-      margin_start = 5,
-      margin_end = 5
-    };
-    _select_btn.toggled.connect(() => {
-      if( !_ignore_toggled ) {
-        _ignore_toggled = true;
-        foreach( var row in _match_lb.get_selected_rows()) {
-          _match_cb.get( row.get_index() ).active = _select_btn.active;
-        }
-        _ignore_toggled = false;
-      }
-    });
-
     _bulk_box = new Box( Orientation.HORIZONTAL, 5 ) {
       homogeneous  = true,
       halign       = Align.FILL,
@@ -972,7 +945,6 @@ public class Reviewer : Grid {
       margin_end   = 5,
       visible      = _bulk_edit
     };
-    _bulk_box.append( _select_btn );
     _bulk_box.append( _trash_btn );
     _bulk_box.append( _restore_btn );
     _bulk_box.append( _tag_btn );
@@ -1049,16 +1021,6 @@ public class Reviewer : Grid {
     };
     _untag_box.append( tag_del_bbox );
 
-    var bulk = new Button.from_icon_name( "format-justify-fill-symbolic" ) {
-      halign = Align.END,
-      hexpand = true,
-      margin_end = 5,
-      tooltip_text = _( "Toggle bulk edit mode" )
-    };
-    bulk.clicked.connect(() => {
-      bulk_edit = !bulk_edit;
-    });
-
     var status = new Label( Utils.make_title( _( "Shown Entries:" ) ) ) {
       use_markup = true
     };
@@ -1081,7 +1043,6 @@ public class Reviewer : Grid {
       hexpand = true
     };
     fbox.append( sbox );
-    fbox.append( bulk );
 
     var box = new Box( Orientation.VERTICAL, 5 ) {
       margin_top    = 5,
@@ -1177,6 +1138,8 @@ public class Reviewer : Grid {
   /* Adds the given match entry to the list of matching entries */
   private void add_match_entry( DBEntry entry ) {
 
+    var index = _match_cb.size;
+
     /* Populate the listbox */
     var label = new Label( "<b>" + entry.gen_title() + "</b>" ) {
       halign     = Align.START,
@@ -1223,7 +1186,18 @@ public class Reviewer : Grid {
     var check = new CheckButton() {
       margin_start = 5
     };
-    check.toggled.connect( update_select_btn );
+    check.toggled.connect(() => {
+      if( !_ignore_toggled ) {
+        var row = _match_lb.get_row_at_index( index );
+        _ignore_toggled = true;
+        if( check.active ) {
+          _match_lb.select_row( row );
+        } else {
+          _match_lb.unselect_row( row );
+        }
+        _ignore_toggled = false;
+      }
+    });
     var check_revealer = new Revealer() {
       transition_type = RevealerTransitionType.SLIDE_RIGHT,
       reveal_child = _bulk_edit,
