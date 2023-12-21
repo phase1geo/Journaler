@@ -488,7 +488,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     }
   }
 
-  /* Returns the currently visibile lock stack pane */
+  /* Returns the currently visible lock stack pane */
   public string get_current_pane() {
     return( _lock_stack.visible_child_name );
   }
