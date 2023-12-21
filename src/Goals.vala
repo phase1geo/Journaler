@@ -225,9 +225,9 @@ public class Goals {
 
     Xml.Node* root = doc->get_root_element();
 
-    var verson = root->get_prop( "version" );
-    if( verson != null ) {
-      check_version( verson );
+    var version = root->get_prop( "version" );
+    if( version != null ) {
+      check_version( version );
     }
 
     for( Xml.Node* it = doc->get_root_element()->children; it != null; it = it->next ) {

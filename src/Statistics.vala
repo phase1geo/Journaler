@@ -121,7 +121,7 @@ public class Statistics : Box {
     }
   }
 
-  /* Calculate the statistics (should be called whenver the text buffer changes) */
+  /* Calculate the statistics (should be called whenever the text buffer changes) */
   private void calculate_statistics() {
     _chars = _buffer.text.char_count();
     _words = calculate_word_count( _buffer.text );

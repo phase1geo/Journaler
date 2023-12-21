@@ -70,7 +70,7 @@ public class Goal {
   }
 
   /*
-   This should be called whenver an entry goal has been met.  It will return true if the goal requires
+   This should be called whenever an entry goal has been met.  It will return true if the goal requires
    saving.
   */
   public bool mark_achievement( string todays_date, out bool achievement ) {
