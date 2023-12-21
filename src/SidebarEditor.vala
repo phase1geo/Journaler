@@ -50,7 +50,7 @@ public class SidebarEditor : Box {
     { "action_new_template", action_new_template },
   };
 
-  /* Indicates that the editing process hsa completed */
+  /* Indicates that the editing process has completed */
   public signal void done();
 
   /* Create the main window UI */

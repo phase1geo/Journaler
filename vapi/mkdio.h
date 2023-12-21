@@ -113,6 +113,6 @@ void mkd_ref_prefix(MMIOT*, char*);
 #define MKD_GITHUBTAGS	0x08000000	/* allow dash and underscore in element names */
 #define MKD_URLENCODEDANCHOR 0x10000000 /* urlencode non-identifier chars instead of replacing with dots */
 #define MKD_LATEX	0x40000000	/* handle embedded LaTeX escapes */
-#define MKD_EXPLICITLIST 0x80000000	/* don't combine numbered/bulletted lists */
+#define MKD_EXPLICITLIST 0x80000000	/* don't combine numbered/bulleted lists */
 
 #endif/*_MKDIO_D*/

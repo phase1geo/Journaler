@@ -565,7 +565,7 @@ public class Reviewer : Grid {
 
   }
 
-  /* Grab the lastest tags */
+  /* Grab the latest tags */
   private void populate_tags( SavedReview? review = null ) {
 
     clear_listbox( _tag_lb );
