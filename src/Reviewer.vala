@@ -78,6 +78,7 @@ public class Reviewer : Grid {
   private GLib.Menu   _saved_delete_menu;
 
   private ListBox                _match_lb;
+  private FlowBox                _match_fbox;
   private Box                    _bulk_box;
   private Gee.ArrayList<CheckButton> _match_cb;
   private ScrolledWindow         _lb_scroll;
@@ -911,7 +912,7 @@ public class Reviewer : Grid {
   }
 
   /* Creates the sidebar where matched entries will be displayed */
-  public Box create_reviewer_match_sidebar() {
+  private Box create_reviewer_match_sidebar_entries() {
 
     _match_cb = new Gee.ArrayList<CheckButton>();
 
@@ -982,6 +983,76 @@ public class Reviewer : Grid {
     box.append( _tag_box );
     box.append( sep );
     box.append( status_box );
+
+    return( box );
+
+  }
+
+  /* Creates the images sidebar */
+  private Box create_reviewer_match_sidebar_images() {
+
+    _match_fbox = new FlowBox() {
+      homogeneous    = true,
+      row_spacing    = 5,
+      column_spacing = 5,
+      selection_mode = SelectionMode.BROWSE
+    };
+
+    _match_fbox.selected_children_changed.connect(() => {
+      _match_fbox.selected_foreach((box, child) => {
+        stdout.printf( "TODO\n" );
+      });
+    });
+
+    var sw = new ScrolledWindow() {
+      vscrollbar_policy = PolicyType.AUTOMATIC,
+      hscrollbar_policy = PolicyType.NEVER,
+      child             = _match_fbox
+    };
+
+    var box = new Box( Orientation.VERTICAL, 5 );
+    box.append( sw );
+    
+    return( box );
+
+  }
+
+  /* Create the match sidebar */
+  public Box create_reviewer_match_sidebar() {
+
+    var stack = new Stack();
+    stack.add_titled( create_reviewer_match_sidebar_entries(), "entries", _( "Entries" ) );
+    stack.add_titled( create_reviewer_match_sidebar_images(),  "images",  _( "Images" ) );
+
+    var switcher = new StackSwitcher() {
+      halign = Align.FILL,
+      stack = stack
+    };
+
+    var sort_btn = new Button.from_icon_name( "view-sort-descending-symbolic" ) {
+      halign  = Align.END,
+      hexpand = true
+    };
+
+    sort_btn.clicked.connect(() => {
+      if( sort_btn.icon_name == "view-sort-descending-symbolic" ) {
+        sort_btn.icon_name = "view-sort-ascending-symbolic";
+      } else {
+        sort_btn.icon_name = "view-sort-descending-symbolic";
+      }
+    });
+
+    var sbox = new Box( Orientation.HORIZONTAL, 5 ) {
+      halign  = Align.FILL,
+      hexpand = true
+    };
+    sbox.append( switcher );
+    sbox.append( sort_btn );
+
+    var box = new Box( Orientation.VERTICAL, 5 ) {
+    };
+    box.append( sbox );
+    box.append( stack );
 
     return( box );
 
