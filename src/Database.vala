@@ -36,31 +36,18 @@ public enum ChangeState {
   NUM
 }
 
-public class DBImage {
+public class DBImageBase {
 
-  public int         id          { get; private set; default = -1; }
-  public string      uri         { get; private set; default = ""; }
-  public string      extension   { get; private set; default = ""; }
-  public string      description { get; set; default = ""; }
-  public ChangeState state       { get; set; default = ChangeState.NONE; }
+  public int id           { get; protected set; default = -1; }
+  public string extension { get; protected set; default = ""; }
 
   /* Default constructor */
-  public DBImage() {}
+  public DBImageBase() {}
 
   /* Constructor */
-  public DBImage.from_database( int id, string uri, string extension, string description ) {
-    this.id          = id;
-    this.uri         = uri;
-    this.extension   = extension;
-    this.description = description;
-  }
-
-  /* Copy constructor */
-  public DBImage.copy( DBImage other ) {
-    this.id          = other.id;
-    this.uri         = other.uri;
-    this.extension   = other.extension;
-    this.description = other.description;
+  public DBImageBase.from_database( int id, string extension ) {
+    this.id        = id;
+    this.extension = extension;
   }
 
   /* Returns the relative image filename.  Call image_path to get the absolute filepath. */
@@ -71,6 +58,70 @@ public class DBImage {
   /* Returns the image path */
   public string image_path( Journal journal ) {
     return( Path.build_filename( journal.image_path(), image_file() ) );
+  }
+
+  /*
+   Generates a pixbuf from the stored image file such that the height of the image matches the specified height while
+   retaining the original image proportions.
+  */
+  public Pixbuf? make_pixbuf( Journal journal, int height ) {
+    try {
+      var pixbuf = new Pixbuf.from_file_at_scale( image_path( journal ), -1, height, true );
+      return( pixbuf );
+    } catch( Error e ) {
+      stderr.printf( "ERROR: %s\n", e.message );
+    }
+    return( null );
+  }
+
+}
+
+public class DBQueryImage : DBImageBase {
+
+  public string journal   { get; private set; default = ""; }
+  public bool   trash     { get; private set; default = false; }
+  public string date      { get; private set; default = ""; }
+  public string time      { get; private set; default = ""; }
+
+  /* Default constructor */
+  public DBQueryImage() {
+    base();
+  }
+
+  /* Constructor */
+  public DBQueryImage.from_database( string journal, bool trash, string date, string time, int id, string extension ) {
+    base.from_database( id, extension );
+    this.journal = journal;
+    this.trash   = trash;
+    this.date    = date;
+    this.time    = time;
+  }
+
+}
+
+public class DBImage : DBImageBase {
+
+  public string      uri         { get; private set; default = ""; }
+  public string      description { get; set; default = ""; }
+  public ChangeState state       { get; set; default = ChangeState.NONE; }
+
+  /* Default constructor */
+  public DBImage() {
+    base();
+  }
+
+  /* Constructor */
+  public DBImage.from_database( int id, string uri, string extension, string description ) {
+    base.from_database( id, extension );
+    this.uri         = uri;
+    this.description = description;
+  }
+
+  /* Copy constructor */
+  public DBImage.copy( DBImage other ) {
+    base.from_database( other.id, other.extension);
+    this.uri         = other.uri;
+    this.description = other.description;
   }
 
   /* Copies the file from the given URI to the local images directory */
@@ -139,20 +190,6 @@ public class DBImage {
 
   }
 
-  /*
-   Generates a pixbuf from the stored image file such that the height of the image matches the specified height while
-   retaining the original image proportions.
-  */
-  public Pixbuf? make_pixbuf( Journal journal, int height ) {
-    try {
-      var pixbuf = new Pixbuf.from_file_at_scale( image_path( journal ), -1, height, true );
-      return( pixbuf );
-    } catch( Error e ) {
-      stderr.printf( "ERROR: %s\n", e.message );
-    }
-    return( null );
-  }
-
   /* Returns true if the given image matches this one */
   public bool matches( DBImage image ) {
     return( id == image.id );
@@ -184,6 +221,14 @@ public class DBEntry {
   public DBEntry() {
     this.date = todays_date();
     this.time = todays_time();
+  }
+
+  /* Creates an entry with the necessary information for displaying an entry via the sidebar */
+  public DBEntry.for_show( string journal, bool trash, string date, string time ) {
+    this.journal = journal;
+    this.trash   = trash;
+    this.date    = date;
+    this.time    = time;
   }
 
   /* Constructor */
@@ -390,7 +435,9 @@ public class Database {
     TIME,
     JOURNAL_ID,
     JOURNAL,
-    TAG
+    TAG,
+    IMAGE_ID,
+    IMAGE_EXT
   }
 
   private const int ERRCODE_NOT_UNIQUE = 19;
@@ -604,7 +651,7 @@ public class Database {
 
   /* Performs search query using tags, date and search string */
   public bool query_entries( bool trash, TagList tags, string? start_date, string? end_date, string str,
-                             Gee.List<DBEntry> matched_entries ) {
+                             Gee.List<DBEntry> matched_entries, Gee.List<DBQueryImage> matched_images ) {
 
     string[] where = {};
 
@@ -636,9 +683,12 @@ public class Database {
       SELECT
         Entry.*,
         Journal.name,
-        Tag.name
+        Tag.name,
+        Image.file_id,
+        Image.extension
       FROM
         Entry
+        LEFT JOIN Image   ON Image.entry_id = Entry.id
         LEFT JOIN Journal ON Journal.id = Entry.journal_id
         LEFT JOIN TagMap  ON TagMap.entry_id = Entry.id
         LEFT JOIN Tag     ON TagMap.tag_id = Tag.id
@@ -649,10 +699,16 @@ public class Database {
     var last_id = "";
     var retval = exec_query( query, (ncols, vals, names) => {
       var tag = vals[EntryPos.TAG];
-      if( (vals[EntryPos.ID] != last_id) && ((tag == null) ? untagged : tags.contains_tag( tag )) ) {
-        var entry = new DBEntry.for_list( vals[EntryPos.JOURNAL], trash, vals[EntryPos.TITLE], vals[EntryPos.DATE], vals[EntryPos.TIME], ((str == "") ? "" : vals[EntryPos.TEXT]) );
-        if( vals[EntryPos.TEXT] != "" ) {
-          matched_entries.add( entry );
+      if( (tag == null) ? untagged : tags.contains_tag( tag ) ) {
+        if( vals[EntryPos.ID] != last_id ) {
+          var entry = new DBEntry.for_list( vals[EntryPos.JOURNAL], trash, vals[EntryPos.TITLE], vals[EntryPos.DATE], vals[EntryPos.TIME], ((str == "") ? "" : vals[EntryPos.TEXT]) );
+          if( vals[EntryPos.TEXT] != "" ) {
+            matched_entries.add( entry );
+          }
+        }
+        if( vals[EntryPos.IMAGE_ID] != null ) {
+          var image = new DBQueryImage.from_database( vals[EntryPos.JOURNAL], trash, vals[EntryPos.DATE], vals[EntryPos.TIME], int.parse( vals[EntryPos.IMAGE_ID] ), vals[EntryPos.IMAGE_EXT] );
+          matched_images.add( image );
         }
         last_id = vals[EntryPos.ID];
       }
