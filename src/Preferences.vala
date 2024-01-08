@@ -346,10 +346,6 @@ public class Preferences : Gtk.Dialog {
     var login_box = new FlowBox() {
       row_spacing    = 5,
       column_spacing = 5,
-      halign         = Align.FILL,
-      valign         = Align.FILL,
-      hexpand        = true,
-      vexpand        = true,
       homogeneous    = true,
       margin_end     = 10
     };
@@ -434,8 +430,17 @@ public class Preferences : Gtk.Dialog {
     var flow_child = login_box.get_child_at_index( _win.locker.current );
     login_box.select_child( flow_child );
 
+    var lbox = new Box( Orientation.VERTICAL, 0 ) {
+      vexpand = true
+    };
+    lbox.append( login_box );
+
     var scroll = new ScrolledWindow() {
-      child = login_box
+      halign  = Align.FILL,
+      valign  = Align.FILL,
+      hexpand = true,
+      vexpand = true,
+      child   = lbox
     };
 
     var box = new Box( Orientation.VERTICAL, 5 );

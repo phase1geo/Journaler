@@ -77,21 +77,21 @@ public class Reviewer : Grid {
   private GLib.Menu   _saved_search_menu;
   private GLib.Menu   _saved_delete_menu;
 
-  private ListBox                _match_lb;
-  private FlowBox                _match_fbox;
-  private Box                    _bulk_box;
-  private Gee.ArrayList<CheckButton> _match_cb;
-  private ScrolledWindow         _lb_scroll;
-  private Label                  _lb_status;
+  private ListBox                     _match_lb;
+  private FlowBox                     _match_fbox;
+  private Box                         _bulk_box;
+  private Gee.ArrayList<CheckButton>  _match_cb;
+  private ScrolledWindow              _lb_scroll;
+  private Label                       _lb_status;
   private Gee.ArrayList<DBEntry>      _match_entries;
   private Gee.ArrayList<DBQueryImage> _match_images;
-  private int                    _match_index;
-  private bool                   _bulk_edit = false;
+  private int                         _match_index;
+  private bool                        _bulk_edit = false;
 
-  private Button                 _trash_btn;
-  private Button                 _restore_btn;
-  private Button                 _tag_btn;
-  private TagListbox             _tag_box;
+  private Button     _trash_btn;
+  private Button     _restore_btn;
+  private Button     _tag_btn;
+  private TagListbox _tag_box;
 
   private const GLib.ActionEntry action_entries[] = {
     { "action_show_all",      action_show_all },
@@ -1031,10 +1031,15 @@ public class Reviewer : Grid {
       });
     });
 
+    var mbox = new Box( Orientation.VERTICAL, 0 ) {
+      vexpand = true
+    };
+    mbox.append( _match_fbox );
+
     var sw = new ScrolledWindow() {
       vscrollbar_policy = PolicyType.AUTOMATIC,
       hscrollbar_policy = PolicyType.NEVER,
-      child             = _match_fbox,
+      child             = mbox,
       halign            = Align.FILL,
       valign            = Align.FILL,
       hexpand           = true,
