@@ -94,7 +94,7 @@ public class Preferences : Gtk.Dialog {
     var close_button = new Button.with_label( _( "Close" ) );
     close_button.clicked.connect(() => {
       _win.reset_timer();
-      save_news_feeds();
+      // save_news_feeds();
       close();
     });
 
