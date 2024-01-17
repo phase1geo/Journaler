@@ -82,6 +82,7 @@ public class DBQueryImage : DBImageBase {
   public bool   trash     { get; private set; default = false; }
   public string date      { get; private set; default = ""; }
   public string time      { get; private set; default = ""; }
+  public int    index     { get; private set; default = -1; }
 
   /* Default constructor */
   public DBQueryImage() {
@@ -89,12 +90,13 @@ public class DBQueryImage : DBImageBase {
   }
 
   /* Constructor */
-  public DBQueryImage.from_database( string journal, bool trash, string date, string time, int id, string extension ) {
+  public DBQueryImage.from_database( string journal, bool trash, string date, string time, int id, string extension, int index ) {
     base.from_database( id, extension );
     this.journal = journal;
     this.trash   = trash;
     this.date    = date;
     this.time    = time;
+    this.index   = index;
   }
 
 }
@@ -679,6 +681,7 @@ public class Database {
       where += "((Entry.title LIKE '%%%s%%') OR (Entry.txt LIKE '%%%s%%'))".printf( str, str );
     }
 
+    var image_index = 0;
     var query = """
       SELECT
         Entry.*,
@@ -705,9 +708,10 @@ public class Database {
           if( vals[EntryPos.TEXT] != "" ) {
             matched_entries.add( entry );
           }
+          image_index = 0;
         }
         if( vals[EntryPos.IMAGE_ID] != null ) {
-          var image = new DBQueryImage.from_database( vals[EntryPos.JOURNAL], trash, vals[EntryPos.DATE], vals[EntryPos.TIME], int.parse( vals[EntryPos.IMAGE_ID] ), vals[EntryPos.IMAGE_EXT] );
+          var image = new DBQueryImage.from_database( vals[EntryPos.JOURNAL], trash, vals[EntryPos.DATE], vals[EntryPos.TIME], int.parse( vals[EntryPos.IMAGE_ID] ), vals[EntryPos.IMAGE_EXT], image_index++ );
           matched_images.add( image );
         }
         last_id = vals[EntryPos.ID];

@@ -258,9 +258,13 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     /* Create the reviewer UI */
     _reviewer = new Reviewer( this, _journals );
-    _reviewer.show_matched_entry.connect((entry, pos) => {
+    _reviewer.show_matched_entry.connect((entry, pos, image_index) => {
       _journals.current = entry.trash ? _journals.trash : _journals.get_journal_by_name( entry.journal );
       _entries.show_entry_for_date( entry.journal, entry.date, entry.time, false, false, pos, "from show_matched_entry" );
+      if( image_index != -1 ) {
+        _text_area.image_area.show_full_image( image_index );
+        show_pane( "image-view" );
+      }
     });
     _reviewer.close_requested.connect( action_review );
 

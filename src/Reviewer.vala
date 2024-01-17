@@ -100,7 +100,7 @@ public class Reviewer : Grid {
     { "action_delete_review", action_delete_review, "i" },
   };
 
-  public signal void show_matched_entry( DBEntry entry, SelectedEntryPos pos );
+  public signal void show_matched_entry( DBEntry entry, SelectedEntryPos pos, int image );
   public signal void close_requested();
 
   public bool bulk_edit {
@@ -879,7 +879,7 @@ public class Reviewer : Grid {
     var entry    = _match_entries.get( _match_index );
     var selected = _match_lb.get_selected_rows().length();
     if( selected == 1 ) {
-      show_matched_entry( entry, SelectedEntryPos.parse( _match_entries.size, _match_index ) );
+      show_matched_entry( entry, SelectedEntryPos.parse( _match_entries.size, _match_index ), -1 );
       _match_lb.grab_focus();
       show_row( row );
     }
@@ -1027,7 +1027,7 @@ public class Reviewer : Grid {
         var index = child.get_index();
         var image = _match_images.get( index );
         var entry = new DBEntry.for_show( image.journal, image.trash, image.date, image.time );
-        show_matched_entry( entry, SelectedEntryPos.parse( _match_images.size, index ) );
+        show_matched_entry( entry, SelectedEntryPos.parse( _match_images.size, index ), image.index );
       });
     });
 
