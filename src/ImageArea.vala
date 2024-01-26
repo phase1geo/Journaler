@@ -207,9 +207,11 @@ public class ImageArea : Box {
 
       overlay.add_overlay( dbox );
 
+      var image_index = (int)_images.length;
+
       gesture.pressed.connect((n_press, x, y) => {
         if( (n_press == 2) && area.editable ) {
-          show_full_image( image );
+          show_full_image( image_index );
           _win.show_pane( "image-view" );
         }
       });
@@ -333,7 +335,7 @@ public class ImageArea : Box {
     _viewer_prev_btn.clicked.connect(() => {
       var index = get_image_index( _viewer_image );
       update_current_state();
-      show_full_image( _images.index( index - 1 ) );
+      show_full_image( index - 1 );
     });
 
     _viewer_preview = new Picture() {
@@ -350,7 +352,7 @@ public class ImageArea : Box {
     _viewer_next_btn.clicked.connect(() => {
       var index = get_image_index( _viewer_image );
       update_current_state();
-      show_full_image( _images.index( index + 1 ) );
+      show_full_image( index + 1 );
     });
 
     _viewer_description = new Entry() {
@@ -403,10 +405,10 @@ public class ImageArea : Box {
   }
 
   /* Displays the image and description */
-  public void show_full_image( DBImage image ) {
+  public void show_full_image( int index ) {
 
     /* Get the index of the image to display */
-    var index = get_image_index( image );
+    var image = _images.index( index );
 
     /* Handle the button sensitivity */
     _viewer_prev_btn.sensitive = (index > 0);

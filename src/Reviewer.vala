@@ -77,19 +77,21 @@ public class Reviewer : Grid {
   private GLib.Menu   _saved_search_menu;
   private GLib.Menu   _saved_delete_menu;
 
-  private ListBox                _match_lb;
-  private Box                    _bulk_box;
-  private Gee.ArrayList<CheckButton> _match_cb;
-  private ScrolledWindow         _lb_scroll;
-  private Label                  _lb_status;
-  private Gee.ArrayList<DBEntry> _match_entries;
-  private int                    _match_index;
-  private bool                   _bulk_edit = false;
+  private ListBox                     _match_lb;
+  private FlowBox                     _match_fbox;
+  private Box                         _bulk_box;
+  private Gee.ArrayList<CheckButton>  _match_cb;
+  private ScrolledWindow              _lb_scroll;
+  private Label                       _lb_status;
+  private Gee.ArrayList<DBEntry>      _match_entries;
+  private Gee.ArrayList<DBQueryImage> _match_images;
+  private int                         _match_index;
+  private bool                        _bulk_edit = false;
 
-  private Button                 _trash_btn;
-  private Button                 _restore_btn;
-  private Button                 _tag_btn;
-  private TagListbox             _tag_box;
+  private Button     _trash_btn;
+  private Button     _restore_btn;
+  private Button     _tag_btn;
+  private TagListbox _tag_box;
 
   private const GLib.ActionEntry action_entries[] = {
     { "action_show_all",      action_show_all },
@@ -98,7 +100,7 @@ public class Reviewer : Grid {
     { "action_delete_review", action_delete_review, "i" },
   };
 
-  public signal void show_matched_entry( DBEntry entry, SelectedEntryPos pos );
+  public signal void show_matched_entry( DBEntry entry, SelectedEntryPos pos, int image );
   public signal void close_requested();
 
   public bool bulk_edit {
@@ -121,6 +123,7 @@ public class Reviewer : Grid {
     _win           = win;
     _journals      = journals;
     _match_entries = new Gee.ArrayList<DBEntry>();
+    _match_images  = new Gee.ArrayList<DBQueryImage>();
     _reviews       = new SavedReviews();
 
     /* Add the UI components */
@@ -543,6 +546,15 @@ public class Reviewer : Grid {
     }
   }
 
+  /* Clears the contents of the passed flowbox */
+  private void clear_flowbox( FlowBox fb ) {
+    var row = fb.get_child_at_index( 0 );
+    while( row != null ) {
+      fb.remove( row );
+      row = fb.get_child_at_index( 0 );
+    }
+  }
+
   /* Returns the string date for the given picker */
   private string get_date( DateSelector selector ) {
     return( DBEntry.datetime_date( selector.date ) );
@@ -768,13 +780,15 @@ public class Reviewer : Grid {
 
     /* Clear the list of match entries */
     clear_listbox( _match_lb );
+    clear_flowbox( _match_fbox );
     _match_entries.clear();
+    _match_images.clear();
     _match_cb.clear();
 
     /* Add the matching entries to the list */
     foreach( var journal_name in journals ) {
       var journal = (journal_name == _journals.trash.name) ? _journals.trash : _journals.get_journal_by_name( journal_name );
-      journal.db.query_entries( (journal_name == _journals.trash.name), taglist, start_date, end_date, _search_entry.text.strip(), _match_entries );
+      journal.db.query_entries( (journal_name == _journals.trash.name), taglist, start_date, end_date, _search_entry.text.strip(), _match_entries, _match_images );
     }
 
     /* Sort the entries */
@@ -786,9 +800,24 @@ public class Reviewer : Grid {
       return( date_match );
     });
 
+    /* Sort the images */
+    _match_images.sort((a, b) => {
+      var date_match = strcmp( b.date, a.date );
+      if( date_match == 0 ) {
+        return( strcmp( a.journal, b.journal ) );
+      }
+      return( date_match );
+    });
+
     /* Add the entries */
     _match_entries.foreach((journal_entry) => {
       add_match_entry( journal_entry );
+      return( true );
+    });
+
+    /* Add the images */
+    _match_images.foreach((image) => {
+      add_match_image( image );
       return( true );
     });
 
@@ -850,7 +879,7 @@ public class Reviewer : Grid {
     var entry    = _match_entries.get( _match_index );
     var selected = _match_lb.get_selected_rows().length();
     if( selected == 1 ) {
-      show_matched_entry( entry, SelectedEntryPos.parse( _match_entries.size, _match_index ) );
+      show_matched_entry( entry, SelectedEntryPos.parse( _match_entries.size, _match_index ), -1 );
       _match_lb.grab_focus();
       show_row( row );
     }
@@ -911,7 +940,7 @@ public class Reviewer : Grid {
   }
 
   /* Creates the sidebar where matched entries will be displayed */
-  public Box create_reviewer_match_sidebar() {
+  private Box create_reviewer_match_sidebar_entries() {
 
     _match_cb = new Gee.ArrayList<CheckButton>();
 
@@ -940,9 +969,7 @@ public class Reviewer : Grid {
       hexpand           = true,
       hexpand_set       = true,
       vexpand           = true,
-      child             = _match_lb,
-      margin_start      = 5,
-      margin_end        = 5
+      child             = _match_lb
     };
     _lb_scroll.scroll_child.connect((t,h) => {
       _win.reset_timer();
@@ -974,14 +1001,103 @@ public class Reviewer : Grid {
     var status_box = add_sidebar_status();
 
     var box = new Box( Orientation.VERTICAL, 5 ) {
-      margin_top    = 5,
-      margin_bottom = 5
     };
     box.append( _lb_scroll );
     box.append( _bulk_box );
     box.append( _tag_box );
     box.append( sep );
     box.append( status_box );
+
+    return( box );
+
+  }
+
+  /* Creates the images sidebar */
+  private Box create_reviewer_match_sidebar_images() {
+
+    _match_fbox = new FlowBox() {
+      homogeneous    = true,
+      row_spacing    = 5,
+      column_spacing = 5,
+      selection_mode = SelectionMode.BROWSE
+    };
+
+    _match_fbox.selected_children_changed.connect(() => {
+      _match_fbox.selected_foreach((box, child) => {
+        var index = child.get_index();
+        var image = _match_images.get( index );
+        var entry = new DBEntry.for_show( image.journal, image.trash, image.date, image.time );
+        show_matched_entry( entry, SelectedEntryPos.parse( _match_images.size, index ), image.index );
+      });
+    });
+
+    var mbox = new Box( Orientation.VERTICAL, 0 ) {
+      vexpand = true
+    };
+    mbox.append( _match_fbox );
+
+    var sw = new ScrolledWindow() {
+      vscrollbar_policy = PolicyType.AUTOMATIC,
+      hscrollbar_policy = PolicyType.NEVER,
+      child             = mbox,
+      halign            = Align.FILL,
+      valign            = Align.FILL,
+      hexpand           = true,
+      vexpand           = true
+    };
+
+    var box = new Box( Orientation.VERTICAL, 5 ) {
+      halign  = Align.FILL,
+      valign  = Align.FILL,
+      hexpand = true,
+      vexpand = true,
+    };
+    box.append( sw );
+    
+    return( box );
+
+  }
+
+  /* Create the match sidebar */
+  public Box create_reviewer_match_sidebar() {
+
+    var stack = new Stack();
+    stack.add_titled( create_reviewer_match_sidebar_entries(), "entries", _( "Entries" ) );
+    stack.add_titled( create_reviewer_match_sidebar_images(),  "images",  _( "Images" ) );
+
+    var switcher = new StackSwitcher() {
+      halign  = Align.FILL,
+      hexpand = true,
+      stack   = stack
+    };
+
+    var sort_btn = new Button.from_icon_name( "view-sort-descending-symbolic" ) {
+      halign = Align.END,
+    };
+
+    sort_btn.clicked.connect(() => {
+      if( sort_btn.icon_name == "view-sort-descending-symbolic" ) {
+        sort_btn.icon_name = "view-sort-ascending-symbolic";
+      } else {
+        sort_btn.icon_name = "view-sort-descending-symbolic";
+      }
+    });
+
+    var sbox = new Box( Orientation.HORIZONTAL, 5 ) {
+      halign  = Align.FILL,
+      hexpand = true
+    };
+    sbox.append( switcher );
+    sbox.append( sort_btn );
+
+    var box = new Box( Orientation.VERTICAL, 5 ) {
+      margin_start  = 5,
+      margin_end    = 5,
+      margin_top    = 5,
+      margin_bottom = 5
+    };
+    box.append( sbox );
+    box.append( stack );
 
     return( box );
 
@@ -1276,6 +1392,21 @@ public class Reviewer : Grid {
 
     _match_lb.append( box );
     _match_cb.add( check );
+
+  }
+
+  private void add_match_image( DBQueryImage image ) {
+
+    var journal = _journals.get_journal_by_name( image.journal );
+    var pixbuf  = image.make_pixbuf( journal, 100 );
+
+    if( pixbuf != null ) {
+      var texture = Gdk.Texture.for_pixbuf( pixbuf );
+      var img = new Picture.for_paintable( texture ) {
+        can_shrink = false
+      };
+      _match_fbox.append( img );
+    }
 
   }
 
