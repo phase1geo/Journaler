@@ -87,6 +87,7 @@ public class Reviewer : Grid {
   private Gee.ArrayList<DBQueryImage> _match_images;
   private int                         _match_index;
   private bool                        _bulk_edit = false;
+  private bool                        _oldest_first = true;
 
   private Button     _trash_btn;
   private Button     _restore_btn;
@@ -793,7 +794,7 @@ public class Reviewer : Grid {
 
     /* Sort the entries */
     _match_entries.sort((a, b) => {
-      var date_match = strcmp( b.date, a.date );
+      var date_match = _oldest_first ? strcmp( b.date, a.date ) : strcmp( a.date, b.date );
       if( date_match == 0 ) {
         return( strcmp( a.journal, b.journal ) );
       }
@@ -802,7 +803,7 @@ public class Reviewer : Grid {
 
     /* Sort the images */
     _match_images.sort((a, b) => {
-      var date_match = strcmp( b.date, a.date );
+      var date_match = _oldest_first ? strcmp( b.date, a.date ) : strcmp( a.date, b.date );
       if( date_match == 0 ) {
         return( strcmp( a.journal, b.journal ) );
       }
@@ -1078,8 +1079,12 @@ public class Reviewer : Grid {
     sort_btn.clicked.connect(() => {
       if( sort_btn.icon_name == "view-sort-descending-symbolic" ) {
         sort_btn.icon_name = "view-sort-ascending-symbolic";
+        _oldest_first = false;
+        do_search();
       } else {
         sort_btn.icon_name = "view-sort-descending-symbolic";
+        _oldest_first = true;
+        do_search();
       }
     });
 
