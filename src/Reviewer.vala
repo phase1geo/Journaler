@@ -86,8 +86,8 @@ public class Reviewer : Grid {
   private Gee.ArrayList<DBEntry>      _match_entries;
   private Gee.ArrayList<DBQueryImage> _match_images;
   private int                         _match_index;
-  private bool                        _bulk_edit = false;
-  private bool                        _oldest_first = true;
+  private bool                        _bulk_edit    = false;
+  private bool                        _newest_first = true;
 
   private Button     _trash_btn;
   private Button     _restore_btn;
@@ -794,7 +794,7 @@ public class Reviewer : Grid {
 
     /* Sort the entries */
     _match_entries.sort((a, b) => {
-      var date_match = _oldest_first ? strcmp( b.date, a.date ) : strcmp( a.date, b.date );
+      var date_match = _newest_first ? strcmp( b.date, a.date ) : strcmp( a.date, b.date );
       if( date_match == 0 ) {
         return( strcmp( a.journal, b.journal ) );
       }
@@ -803,7 +803,7 @@ public class Reviewer : Grid {
 
     /* Sort the images */
     _match_images.sort((a, b) => {
-      var date_match = _oldest_first ? strcmp( b.date, a.date ) : strcmp( a.date, b.date );
+      var date_match = _newest_first ? strcmp( b.date, a.date ) : strcmp( a.date, b.date );
       if( date_match == 0 ) {
         return( strcmp( a.journal, b.journal ) );
       }
@@ -1072,20 +1072,19 @@ public class Reviewer : Grid {
       stack   = stack
     };
 
-    var sort_btn = new Button.from_icon_name( "view-sort-descending-symbolic" ) {
-      halign = Align.END,
+    /* Get the saved setting */
+    _newest_first = Journaler.settings.get_boolean( "review-mode-order-newest-first" );
+
+    var sort_btn = new Button() {
+      halign    = Align.END,
+      icon_name = _newest_first ? "view-sort-ascending-symbolic" : "view-sort-descending-symbolic"
     };
 
     sort_btn.clicked.connect(() => {
-      if( sort_btn.icon_name == "view-sort-descending-symbolic" ) {
-        sort_btn.icon_name = "view-sort-ascending-symbolic";
-        _oldest_first = false;
-        do_search();
-      } else {
-        sort_btn.icon_name = "view-sort-descending-symbolic";
-        _oldest_first = true;
-        do_search();
-      }
+      _newest_first = !_newest_first;
+      sort_btn.icon_name = _newest_first ? "view-sort-ascending-symbolic" : "view-sort-descending-symbolic";
+      Journaler.settings.set_boolean( "review-mode-order-newest-first", _newest_first );
+      do_search();
     });
 
     var sbox = new Box( Orientation.HORIZONTAL, 5 ) {

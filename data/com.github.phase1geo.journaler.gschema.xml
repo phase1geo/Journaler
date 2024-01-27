@@ -95,5 +95,10 @@
       <default>false</default>
       <summary>This values is not recommended for Journaler non-developers</summary>
     </key>
+    <key name="review-mode-order-newest-first" type="b">
+      <default>true</default>
+      <summary>Specifies if entries listed in the reviewer entry list should show the newest matched entry at the top of the list</summary>
+      <description>Specifies if entries listed in the reviewer entry list should show the newest matched entry at the top of the list</description>
+    </key>
   </schema>
 </schemalist>
