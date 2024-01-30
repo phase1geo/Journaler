@@ -208,7 +208,7 @@ public class Reviewer : Grid {
       margin_start  = 10,
       margin_end    = 5,
       margin_top    = 5,
-      margin_bottom = 10 
+      margin_bottom = 10
     };
     _trash_cb.toggled.connect(() => {
       _win.reset_timer();
@@ -1054,7 +1054,7 @@ public class Reviewer : Grid {
       vexpand = true,
     };
     box.append( sw );
-    
+
     return( box );
 
   }
@@ -1065,6 +1065,14 @@ public class Reviewer : Grid {
     var stack = new Stack();
     stack.add_titled( create_reviewer_match_sidebar_entries(), "entries", _( "Entries" ) );
     stack.add_titled( create_reviewer_match_sidebar_images(),  "images",  _( "Images" ) );
+
+    stack.notify["visible-child-name"].connect(() => {
+      if( stack.visible_child_name == "entries" ) {
+        _win.show_content( "text" );
+      } else {
+        _win.show_content( "image" );
+      }
+    });
 
     var switcher = new StackSwitcher() {
       halign  = Align.FILL,
@@ -1405,11 +1413,18 @@ public class Reviewer : Grid {
     var pixbuf  = image.make_pixbuf( journal, 100 );
 
     if( pixbuf != null ) {
+
       var texture = Gdk.Texture.for_pixbuf( pixbuf );
       var img = new Picture.for_paintable( texture ) {
-        can_shrink = false
+        can_shrink    = false,
+        margin_start  = 5,
+        margin_end    = 5,
+        margin_top    = 5,
+        margin_bottom = 5,
       };
+
       _match_fbox.append( img );
+
     }
 
   }

@@ -236,7 +236,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     var misc_btn = new MenuButton() {
       has_frame  = false,
       child      = misc_img,
-      menu_model = create_misc_menu() 
+      menu_model = create_misc_menu()
     };
     _header_buttons.append( misc_btn );
     header.pack_end( misc_btn );
@@ -1022,6 +1022,8 @@ public class MainWindow : Gtk.ApplicationWindow {
       _sidebar_stack.visible_child_name = "review";
     }
 
+    show_content( "text" );
+
   }
 
   /* Shows the awards view */
@@ -1155,4 +1157,3 @@ public class MainWindow : Gtk.ApplicationWindow {
   }
 
 }
-
