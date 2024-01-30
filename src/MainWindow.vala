@@ -88,6 +88,7 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   private GLib.Settings              _settings;
   private Stack                      _lock_stack;
+  private Stack                      _content_stack;
   private TextArea                   _text_area;
   private Stack                      _sidebar_stack;
   private Revealer                   _sidebar_revealer;
@@ -202,8 +203,6 @@ public class MainWindow : Gtk.ApplicationWindow {
     /* Create the hash map for the focus widgets */
     _stack_focus_widgets = new Gee.HashMap<string,Widget>();
 
-    // var window_x = settings.get_int( "window-x" );
-    // var window_y = settings.get_int( "window-y" );
     var window_w = settings.get_int( "window-w" );
     var window_h = settings.get_int( "window-h" );
 
@@ -237,7 +236,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     var misc_btn = new MenuButton() {
       has_frame  = false,
       child      = misc_img,
-      menu_model = create_misc_menu() 
+      menu_model = create_misc_menu()
     };
     _header_buttons.append( misc_btn );
     header.pack_end( misc_btn );
@@ -263,7 +262,7 @@ public class MainWindow : Gtk.ApplicationWindow {
       _entries.show_entry_for_date( entry.journal, entry.date, entry.time, false, false, pos, "from show_matched_entry" );
       if( image_index != -1 ) {
         _text_area.image_area.show_full_image( image_index );
-        show_pane( "image-view" );
+        show_content( "image" );
       }
     });
     _reviewer.close_requested.connect( action_review );
@@ -276,7 +275,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     var lbox = new Box( Orientation.VERTICAL, 0 );
     var rbox = new Box( Orientation.VERTICAL, 0 );
 
-    add_text_area( app, lbox );
+    add_content_area( app, lbox );
     add_sidebar( rbox );
 
     var pw = new Paned( Orientation.HORIZONTAL ) {
@@ -339,9 +338,6 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     add_awards_view( abox );
 
-    var ibox = _text_area.image_area.create_full_image_viewer();
-    _stack_focus_widgets.set( "image-view", _text_area.image_area.get_focus_widget() );
-
     /* Create primary stack */
     _lock_stack = new Stack() {
       halign = Align.FILL,
@@ -354,7 +350,6 @@ public class MainWindow : Gtk.ApplicationWindow {
     _lock_stack.add_named( sbox, "setlock-view" );
     _lock_stack.add_named( tbox, "template-view" );
     _lock_stack.add_named( abox, "awards-view" );
-    _lock_stack.add_named( ibox, "image-view" );
 
     child = _lock_stack;
 
@@ -514,11 +509,10 @@ public class MainWindow : Gtk.ApplicationWindow {
           _lock_stack.transition_type = StackTransitionType.SLIDE_LEFT;
         } else if( _lock_stack.visible_child_name == "awards-view" ) {
           _lock_stack.transition_type = StackTransitionType.CROSSFADE;
-        } else if( _lock_stack.visible_child_name == "image-view" ) {
-          _lock_stack.transition_type = StackTransitionType.SLIDE_DOWN;
         } else {
           _lock_stack.transition_type = StackTransitionType.SLIDE_UP;
         }
+        show_content( "text" );
         set_header_bar_sensitivity( true );
         break;
       case "template-view" :
@@ -527,10 +521,6 @@ public class MainWindow : Gtk.ApplicationWindow {
         break;
       case "awards-view" :
         _lock_stack.transition_type = StackTransitionType.CROSSFADE;
-        set_header_bar_sensitivity( false );
-        break;
-      case "image-view" :
-        _lock_stack.transition_type = StackTransitionType.SLIDE_UP;
         set_header_bar_sensitivity( false );
         break;
       default :
@@ -560,14 +550,41 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   }
 
+  /* Displays the pane in the content area */
+  public void show_content( string name ) {
+
+    switch( name ) {
+      case "text" :
+        _content_stack.transition_type = StackTransitionType.SLIDE_DOWN;
+        break;
+      case "image" :
+        _content_stack.transition_type = StackTransitionType.SLIDE_UP;
+        break;
+    }
+
+    _content_stack.visible_child_name = name;
+
+  }
+
+  /* Creates the content area stack where the textarea and reviewer image viewer are displayed */
+  private void add_content_area( Gtk.Application app, Box box ) {
+
+    _content_stack = new Stack();
+    _content_stack.add_named( add_text_area( app ), "text" );
+    _content_stack.add_named( _text_area.image_area.create_full_image_viewer(), "image" );
+
+    box.append( _content_stack );
+
+  }
+
   /* Creates the textbox with today's entry. */
-  private void add_text_area( Gtk.Application app, Box box ) {
+  private Box add_text_area( Gtk.Application app ) {
 
     _text_area = new TextArea( app, this, _journals, _templates );
 
-    box.append( _text_area );
-
     _stack_focus_widgets.set( "entry-view", _text_area.get_focus_widget() );
+
+    return( _text_area );
 
   }
 
@@ -1005,6 +1022,8 @@ public class MainWindow : Gtk.ApplicationWindow {
       _sidebar_stack.visible_child_name = "review";
     }
 
+    show_content( "text" );
+
   }
 
   /* Shows the awards view */
@@ -1138,4 +1157,3 @@ public class MainWindow : Gtk.ApplicationWindow {
   }
 
 }
-

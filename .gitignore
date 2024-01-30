@@ -4,3 +4,4 @@ build/
 *.swp
 src/*.o
 src/*.c
+.DS_Store

@@ -25,10 +25,13 @@ using Granite;
 public enum SelectedEntryPos {
   FIRST,
   LAST,
+  ONLY,
   OTHER;
 
   public static SelectedEntryPos parse( int entries, int selected ) {
-    if( selected == 0 ) {
+    if( entries == 1 ) {
+      return( ONLY );
+    } else if( selected == 0 ) {
       return( FIRST );
     } else if( selected == (entries - 1) ) {
       return( LAST );
@@ -38,11 +41,11 @@ public enum SelectedEntryPos {
   }
 
   public bool prev_sensitivity() {
-    return( this != FIRST );
+    return( (this == OTHER) || (this == LAST) );
   }
 
   public bool next_sensitivity() {
-    return( this != LAST );
+    return( (this == OTHER) && (this == FIRST) );
   }
 
 }
@@ -86,7 +89,8 @@ public class Reviewer : Grid {
   private Gee.ArrayList<DBEntry>      _match_entries;
   private Gee.ArrayList<DBQueryImage> _match_images;
   private int                         _match_index;
-  private bool                        _bulk_edit = false;
+  private bool                        _bulk_edit    = false;
+  private bool                        _newest_first = true;
 
   private Button     _trash_btn;
   private Button     _restore_btn;
@@ -207,7 +211,7 @@ public class Reviewer : Grid {
       margin_start  = 10,
       margin_end    = 5,
       margin_top    = 5,
-      margin_bottom = 10 
+      margin_bottom = 10
     };
     _trash_cb.toggled.connect(() => {
       _win.reset_timer();
@@ -793,7 +797,7 @@ public class Reviewer : Grid {
 
     /* Sort the entries */
     _match_entries.sort((a, b) => {
-      var date_match = strcmp( b.date, a.date );
+      var date_match = _newest_first ? strcmp( b.date, a.date ) : strcmp( a.date, b.date );
       if( date_match == 0 ) {
         return( strcmp( a.journal, b.journal ) );
       }
@@ -802,7 +806,7 @@ public class Reviewer : Grid {
 
     /* Sort the images */
     _match_images.sort((a, b) => {
-      var date_match = strcmp( b.date, a.date );
+      var date_match = _newest_first ? strcmp( b.date, a.date ) : strcmp( a.date, b.date );
       if( date_match == 0 ) {
         return( strcmp( a.journal, b.journal ) );
       }
@@ -816,8 +820,9 @@ public class Reviewer : Grid {
     });
 
     /* Add the images */
+    var index = 0;
     _match_images.foreach((image) => {
-      add_match_image( image );
+      add_match_image( image, index++ );
       return( true );
     });
 
@@ -1022,15 +1027,6 @@ public class Reviewer : Grid {
       selection_mode = SelectionMode.BROWSE
     };
 
-    _match_fbox.selected_children_changed.connect(() => {
-      _match_fbox.selected_foreach((box, child) => {
-        var index = child.get_index();
-        var image = _match_images.get( index );
-        var entry = new DBEntry.for_show( image.journal, image.trash, image.date, image.time );
-        show_matched_entry( entry, SelectedEntryPos.parse( _match_images.size, index ), image.index );
-      });
-    });
-
     var mbox = new Box( Orientation.VERTICAL, 0 ) {
       vexpand = true
     };
@@ -1053,7 +1049,7 @@ public class Reviewer : Grid {
       vexpand = true,
     };
     box.append( sw );
-    
+
     return( box );
 
   }
@@ -1065,22 +1061,34 @@ public class Reviewer : Grid {
     stack.add_titled( create_reviewer_match_sidebar_entries(), "entries", _( "Entries" ) );
     stack.add_titled( create_reviewer_match_sidebar_images(),  "images",  _( "Images" ) );
 
+    stack.notify["visible-child-name"].connect(() => {
+      if( stack.visible_child_name == "entries" ) {
+        _win.show_content( "text" );
+      } else {
+        show_image( 0 );
+        _win.show_content( "image" );
+      }
+    });
+
     var switcher = new StackSwitcher() {
       halign  = Align.FILL,
       hexpand = true,
       stack   = stack
     };
 
-    var sort_btn = new Button.from_icon_name( "view-sort-descending-symbolic" ) {
-      halign = Align.END,
+    /* Get the saved setting */
+    _newest_first = Journaler.settings.get_boolean( "review-mode-order-newest-first" );
+
+    var sort_btn = new Button() {
+      halign    = Align.END,
+      icon_name = _newest_first ? "view-sort-ascending-symbolic" : "view-sort-descending-symbolic"
     };
 
     sort_btn.clicked.connect(() => {
-      if( sort_btn.icon_name == "view-sort-descending-symbolic" ) {
-        sort_btn.icon_name = "view-sort-ascending-symbolic";
-      } else {
-        sort_btn.icon_name = "view-sort-descending-symbolic";
-      }
+      _newest_first = !_newest_first;
+      sort_btn.icon_name = _newest_first ? "view-sort-ascending-symbolic" : "view-sort-descending-symbolic";
+      Journaler.settings.set_boolean( "review-mode-order-newest-first", _newest_first );
+      do_search();
     });
 
     var sbox = new Box( Orientation.HORIZONTAL, 5 ) {
@@ -1394,18 +1402,41 @@ public class Reviewer : Grid {
     _match_cb.add( check );
 
   }
+  
+  private void show_image( int index ) {
+    
+    var match_image = _match_images.get( index );
+    var entry       = new DBEntry.for_show( match_image.journal, match_image.trash, match_image.date, match_image.time );
+    
+    show_matched_entry( entry, SelectedEntryPos.parse( _match_images.size, index ), match_image.index );
+    
+  }
 
-  private void add_match_image( DBQueryImage image ) {
+  private void add_match_image( DBQueryImage image, int fbox_index ) {
 
     var journal = _journals.get_journal_by_name( image.journal );
     var pixbuf  = image.make_pixbuf( journal, 100 );
 
     if( pixbuf != null ) {
+
       var texture = Gdk.Texture.for_pixbuf( pixbuf );
+      var click = new GestureClick();
       var img = new Picture.for_paintable( texture ) {
-        can_shrink = false
+        can_shrink    = false,
+        margin_start  = 5,
+        margin_end    = 5,
+        margin_top    = 5,
+        margin_bottom = 5,
       };
+      img.add_controller( click );
+      
+      int index = fbox_index;
+      click.pressed.connect((npress, x, y) => {
+        show_image( index );
+      });
+
       _match_fbox.append( img );
+
     }
 
   }
