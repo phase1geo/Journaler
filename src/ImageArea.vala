@@ -28,12 +28,15 @@ public class ImageArea : Box {
 
   private MainWindow               _win;
   private Journal                  _journal;
+  private DBEntry                  _entry;
   private Box                      _image_box;
   private Gee.HashMap<string,bool> _extensions;
   private Array<DBImage>           _images = new Array<DBImage>();
 
+  private Label   _viewer_date;
   private Button  _viewer_prev_btn;
   private Button  _viewer_next_btn;
+  private Box     _viewer_prev_next_box;
   private Picture _viewer_preview;
   private Label   _viewer_detail;
   private Entry   _viewer_description;
@@ -123,6 +126,7 @@ public class ImageArea : Box {
   public void set_images( Journal journal, DBEntry? entry ) {
 
     _journal = journal;
+    _entry   = entry;
 
     hide();
 
@@ -327,13 +331,15 @@ public class ImageArea : Box {
   /* Create the full image viewer window */
   public Box create_full_image_viewer() {
 
-    var close_btn = new Button.with_label( _( "Back to Entry" ) ) {
+    var close_btn = new Button.with_label( _( "To Entry" ) ) {
       halign = Align.START,
     };
     close_btn.clicked.connect(() => {
       update_current_state();
       _win.show_content( "text" );
     });
+    
+    _viewer_date = new Label( "" );
 
     /* Create image carousel */
     _viewer_prev_btn = new Button.from_icon_name( "go-previous-symbolic" ) {
@@ -358,20 +364,22 @@ public class ImageArea : Box {
       show_full_image( index + 1 );
     });
 
-    var npbox = new Box( Orientation.HORIZONTAL, 5 ) {
+    _viewer_prev_next_box = new Box( Orientation.HORIZONTAL, 5 ) {
       halign = Align.END,
       hexpand = true
     };
-    npbox.append( _viewer_prev_btn );
-    npbox.append( _viewer_next_btn );
+    _viewer_prev_next_box.append( _viewer_prev_btn );
+    _viewer_prev_next_box.append( _viewer_next_btn );
 
     var bbox = new Box( Orientation.HORIZONTAL, 5 ) {
       halign  = Align.FILL,
       valign  = Align.START,
-      hexpand = true
+      hexpand = true,
+      homogeneous = true
     };
     bbox.append( close_btn );
-    bbox.append( npbox );
+    bbox.append( _viewer_date );
+    bbox.append( _viewer_prev_next_box );
 
     _viewer_preview = new Picture() {
       halign  = Align.CENTER,
@@ -380,12 +388,28 @@ public class ImageArea : Box {
       vexpand = true
     };
 
+    var lbl = new Label( Utils.make_title( _( "Original Location:" ) ) ) {
+      halign     = Align.START,
+      use_markup = true
+    };
+    
     _viewer_detail = new Label( null ) {
       xalign       = 0,
+      halign       = Align.FILL,
+      ellipsize    = Pango.EllipsizeMode.MIDDLE,
       use_markup   = true,
       margin_start = 5,
       margin_end   = 5
     };
+    
+    var dbox = new Box( Orientation.HORIZONTAL, 5 ) {
+      margin_start  = 5,
+      margin_end    = 5,
+      margin_top    = 5,
+      margin_bottom = 5
+    };
+    dbox.append( lbl );
+    dbox.append( _viewer_detail );
 
     _viewer_description = new Entry() {
       placeholder_text = _( "Enter Description (Optional)" ),
@@ -406,7 +430,7 @@ public class ImageArea : Box {
     };
     box.append( bbox );
     box.append( _viewer_preview );
-    box.append( _viewer_detail );
+    box.append( dbox );
     box.append( _viewer_description );
 
     return( box );
@@ -418,15 +442,24 @@ public class ImageArea : Box {
 
     /* Get the index of the image to display */
     var image = _images.index( index );
+    
+    _viewer_date.label = "%s, %s".printf( _entry.date, _entry.time );
 
     /* Handle the button sensitivity */
     _viewer_prev_btn.sensitive = (index > 0);
     _viewer_next_btn.sensitive = (index < (_images.length - 1));
-
+    
+    if( editable ) {
+      _viewer_prev_next_box.show();
+    } else {
+      _viewer_prev_next_box.hide();
+    }
+    
     /* Display the button */
     _viewer_preview.set_pixbuf( image.make_pixbuf( _journal, 600 ) );
 
-    _viewer_detail.label = Utils.make_title( _( "Original Location: " ) ) + image.uri;
+    _viewer_detail.label = image.uri;
+    _viewer_detail.tooltip_text = image.uri;
 
     /* Set the description field */
     _viewer_description.text             = image.description;

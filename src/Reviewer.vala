@@ -25,10 +25,13 @@ using Granite;
 public enum SelectedEntryPos {
   FIRST,
   LAST,
+  ONLY,
   OTHER;
 
   public static SelectedEntryPos parse( int entries, int selected ) {
-    if( selected == 0 ) {
+    if( entries == 1 ) {
+      return( ONLY );
+    } else if( selected == 0 ) {
       return( FIRST );
     } else if( selected == (entries - 1) ) {
       return( LAST );
@@ -38,11 +41,11 @@ public enum SelectedEntryPos {
   }
 
   public bool prev_sensitivity() {
-    return( this != FIRST );
+    return( (this == OTHER) || (this == LAST) );
   }
 
   public bool next_sensitivity() {
-    return( this != LAST );
+    return( (this == OTHER) && (this == FIRST) );
   }
 
 }
@@ -817,8 +820,9 @@ public class Reviewer : Grid {
     });
 
     /* Add the images */
+    var index = 0;
     _match_images.foreach((image) => {
-      add_match_image( image );
+      add_match_image( image, index++ );
       return( true );
     });
 
@@ -1023,15 +1027,6 @@ public class Reviewer : Grid {
       selection_mode = SelectionMode.BROWSE
     };
 
-    _match_fbox.selected_children_changed.connect(() => {
-      _match_fbox.selected_foreach((box, child) => {
-        var index = child.get_index();
-        var image = _match_images.get( index );
-        var entry = new DBEntry.for_show( image.journal, image.trash, image.date, image.time );
-        show_matched_entry( entry, SelectedEntryPos.parse( _match_images.size, index ), image.index );
-      });
-    });
-
     var mbox = new Box( Orientation.VERTICAL, 0 ) {
       vexpand = true
     };
@@ -1070,6 +1065,7 @@ public class Reviewer : Grid {
       if( stack.visible_child_name == "entries" ) {
         _win.show_content( "text" );
       } else {
+        show_image( 0 );
         _win.show_content( "image" );
       }
     });
@@ -1406,8 +1402,17 @@ public class Reviewer : Grid {
     _match_cb.add( check );
 
   }
+  
+  private void show_image( int index ) {
+    
+    var match_image = _match_images.get( index );
+    var entry       = new DBEntry.for_show( match_image.journal, match_image.trash, match_image.date, match_image.time );
+    
+    show_matched_entry( entry, SelectedEntryPos.parse( _match_images.size, index ), match_image.index );
+    
+  }
 
-  private void add_match_image( DBQueryImage image ) {
+  private void add_match_image( DBQueryImage image, int fbox_index ) {
 
     var journal = _journals.get_journal_by_name( image.journal );
     var pixbuf  = image.make_pixbuf( journal, 100 );
@@ -1415,6 +1420,7 @@ public class Reviewer : Grid {
     if( pixbuf != null ) {
 
       var texture = Gdk.Texture.for_pixbuf( pixbuf );
+      var click = new GestureClick();
       var img = new Picture.for_paintable( texture ) {
         can_shrink    = false,
         margin_start  = 5,
@@ -1422,6 +1428,12 @@ public class Reviewer : Grid {
         margin_top    = 5,
         margin_bottom = 5,
       };
+      img.add_controller( click );
+      
+      int index = fbox_index;
+      click.pressed.connect((npress, x, y) => {
+        show_image( index );
+      });
 
       _match_fbox.append( img );
 
