@@ -636,6 +636,9 @@ public class SidebarEntries : Box {
     entry.journal = journal_name;
     entry.date    = date;
     entry.time    = time;
+    
+    /* Allow the TextArea to save before we purge */
+    _win.text_area.save();
 
     /* Purge the empty entries but not today */
     var purged = _journals.current.db.purge_empty_entries( false );
