@@ -57,25 +57,32 @@
   </custom>
   <content_rating type="oars-1.1"/>
   <releases>
-    <release version="1.1.0" date="2023-11-30">
-      <description>
-        <p>New</p>
-        <ul>
-          <li>Added ability to add new entries to past dates.</li>
-          <li>Added ability to move a journal entry to a different journal within the editing area.</li>
-          <li>Added ability to move a journal to a different date within the editing area.</li>
-          <li>Added sidebar entry count information (including entry streak count).</li>
-        </ul>
-        <p>Changes</p>
-        <ul>
-          <li>Changed to allow multiple entries per day.</li>
-        </ul>
-        <p>Bug Fixes</p>
-        <ul>
-          <li>Fixed issue with using non-PNG images.</li>
-          <li>Fixed tag matching issue in review mode.</li>
-        </ul>
-      </description>
+    <release version="1.1.0" date="2024-02-03">
+      <p>New</p>
+      <ul>
+        <li>Added ability to add new entries to past dates.</li>
+        <li>Added ability to move a journal entry to a different journal within the content panel.</li>
+        <li>Added ability to move a journal entry to a different date within the content panel.</li>
+        <li>Added sidebar entry count information (including entry stream count).</li>
+        <li>Added ability to bulk edit entries in the review sidebar (includes moving, trashing and tagging features).</li>
+        <li>Added new image review panel.</li>
+        <li>Added ability to sort review entries oldest or newest first.</li>
+        <li>Added preference option to change the spell checker language.</li>
+        <li>Added new inspirational quotes.</li>
+      </ul>
+      <p>Changes</p>
+      <ul>
+        <li>Changed to allow multiple entries per day.</li>
+        <li>Added image date and original location information to image viewer.</li>
+        <li>Minor UI enhancements to improve application use and appearance.</li>
+      </ul>
+      <p>Bug Fixes</p>
+      <ul>
+        <li>Fixed issue with using non-PNG images.</li>
+        <li>Fixed tag matching issue in review mode.</li>
+        <li>Fixed bug where editing an entry before the current day could cause its contents to not get saved when a new date is chosen.</li>
+        <li>Fixed application crash that could happen if there are no suggestions for a misspelled word.</li>
+      </ul>
     </release>
     <release version="1.0.3" date="2023-09-22">
       <description>
