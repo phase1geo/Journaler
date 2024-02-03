@@ -18,6 +18,7 @@ src/SpellChecker.vala
 src/Statistics.vala
 src/TagBox.vala
 src/TagEntry.vala
+src/TagListbox.vala
 src/Templater.vala
 src/Template.vala
 src/TextArea.vala

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: com.github.phase1geo.journaler\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-11-02 23:40-0500\n"
+"POT-Creation-Date: 2024-02-03 01:12-0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -31,7 +31,7 @@ msgstr ""
 msgid "Run '%s --help' to see valid options\n"
 msgstr ""
 
-#: src/Database.vala:678 src/Reviewer.vala:605
+#: src/Database.vala:676 src/Reviewer.vala:630
 msgid "Untagged"
 msgstr ""
 
@@ -47,7 +47,7 @@ msgstr ""
 msgid "JSON"
 msgstr ""
 
-#: src/exports/ExportXML.vala:30 src/Preferences.vala:717
+#: src/exports/ExportXML.vala:30 src/Preferences.vala:780
 msgid "XML"
 msgstr ""
 
@@ -308,24 +308,28 @@ msgstr ""
 msgid "New Rewards Achieved!"
 msgstr ""
 
-#: src/ImageArea.vala:270 src/Preferences.vala:407
+#: src/ImageArea.vala:277 src/Preferences.vala:461
 msgid "Select an image"
 msgstr ""
 
-#: src/ImageArea.vala:270 src/TextArea.vala:727
+#: src/ImageArea.vala:277 src/TextArea.vala:747
 msgid "Add Image"
 msgstr ""
 
-#: src/ImageArea.vala:274
+#: src/ImageArea.vala:281
 msgid "Image Files"
 msgstr ""
 
-#: src/ImageArea.vala:357
-msgid "Enter Description (Optional)"
+#: src/ImageArea.vala:334
+msgid "To Entry"
 msgstr ""
 
-#: src/ImageArea.vala:373 src/MainWindow.vala:776 src/Preferences.vala:94
-msgid "Close"
+#: src/ImageArea.vala:391
+msgid "Original Location:"
+msgstr ""
+
+#: src/ImageArea.vala:415 src/ImageArea.vala:468
+msgid "Enter Description (Optional)"
 msgstr ""
 
 #: src/Journals.vala:97
@@ -362,108 +366,112 @@ msgstr ""
 msgid "When application loses focus"
 msgstr ""
 
-#: src/MainWindow.vala:213
+#: src/MainWindow.vala:217
 msgid "Journaler"
 msgstr ""
 
-#: src/MainWindow.vala:230
+#: src/MainWindow.vala:234
 msgid "Go To Today"
 msgstr ""
 
-#: src/MainWindow.vala:247
+#: src/MainWindow.vala:250
 msgid "Review Entries"
 msgstr ""
 
-#: src/MainWindow.vala:254
+#: src/MainWindow.vala:257
 msgid "Lock Journaler"
 msgstr ""
 
-#: src/MainWindow.vala:461 src/SidebarEditor.vala:275
+#: src/MainWindow.vala:464 src/SidebarEditor.vala:275
 msgid "Create New Template"
 msgstr ""
 
-#: src/MainWindow.vala:468
+#: src/MainWindow.vala:471
 msgid "View Awards"
 msgstr ""
 
-#: src/MainWindow.vala:471
+#: src/MainWindow.vala:474
 msgid "Shortcut Cheatsheet"
 msgstr ""
 
-#: src/MainWindow.vala:472
+#: src/MainWindow.vala:475
 msgid "Preferences…"
 msgstr ""
 
-#: src/MainWindow.vala:475
+#: src/MainWindow.vala:478
 msgid "Manage Templates"
 msgstr ""
 
-#: src/MainWindow.vala:611 src/SidebarEditor.vala:213 src/Templater.vala:733
-#: src/Utils.vala:309
+#: src/MainWindow.vala:636 src/SidebarEditor.vala:213 src/TagListbox.vala:74
+#: src/Templater.vala:733 src/Utils.vala:309
 msgid "Cancel"
 msgstr ""
 
-#: src/MainWindow.vala:619
+#: src/MainWindow.vala:644
 msgid "Set Password"
 msgstr ""
 
-#: src/MainWindow.vala:948
+#: src/MainWindow.vala:801 src/Preferences.vala:95
+msgid "Close"
+msgstr ""
+
+#: src/MainWindow.vala:973
 msgid "Complete!"
 msgstr ""
 
-#: src/MainWindow.vala:949
+#: src/MainWindow.vala:974
 #, c-format
 msgid "%d out of %d (%d%%)"
 msgstr ""
 
-#: src/MainWindow.vala:951
+#: src/MainWindow.vala:976
 #, c-format
 msgid "Status: %s"
 msgstr ""
 
-#: src/Preferences.vala:61
+#: src/Preferences.vala:62
 msgid "Preferences"
 msgstr ""
 
-#: src/Preferences.vala:76 data/com.github.phase1geo.journaler.shortcuts.ui:11
+#: src/Preferences.vala:77 data/com.github.phase1geo.journaler.shortcuts.ui:11
 #: data/com.github.phase1geo.journaler.shortcuts.ui:15
 #: data/com.github.phase1geo.journaler.shortcuts.ui:92
 msgid "General"
 msgstr ""
 
-#: src/Preferences.vala:77
+#: src/Preferences.vala:78
 msgid "Editor"
 msgstr ""
 
-#: src/Preferences.vala:78
+#: src/Preferences.vala:79
 msgid "Login Screen"
 msgstr ""
 
-#: src/Preferences.vala:80
+#: src/Preferences.vala:81
 msgid "Advanced"
 msgstr ""
 
-#: src/Preferences.vala:126
+#: src/Preferences.vala:127
 msgid "Automatically lock application"
 msgstr ""
 
-#: src/Preferences.vala:133
+#: src/Preferences.vala:134
 msgid "Default Entry Title"
 msgstr ""
 
-#: src/Preferences.vala:134
+#: src/Preferences.vala:135
 msgid "Prefix"
 msgstr ""
 
-#: src/Preferences.vala:139
+#: src/Preferences.vala:140
 msgid "Suffix"
 msgstr ""
 
-#: src/Preferences.vala:144
+#: src/Preferences.vala:145
 msgid "Preview:"
 msgstr ""
 
-#: src/Preferences.vala:152
+#: src/Preferences.vala:153
 msgid ""
 "This option is only available once the user has created a password.\n"
 "\n"
@@ -471,149 +479,157 @@ msgid ""
 "Lock icon in the headerbar, and create your password."
 msgstr ""
 
-#: src/Preferences.vala:206
+#: src/Preferences.vala:207
 msgid "Default Theme"
 msgstr ""
 
-#: src/Preferences.vala:210
+#: src/Preferences.vala:211
 msgid "Font Size"
 msgstr ""
 
-#: src/Preferences.vala:214
+#: src/Preferences.vala:215
 msgid "Margin"
 msgstr ""
 
-#: src/Preferences.vala:218
+#: src/Preferences.vala:219
 msgid "Line Spacing"
 msgstr ""
 
-#: src/Preferences.vala:222
+#: src/Preferences.vala:226
 msgid "Enable spell checker"
 msgstr ""
 
-#: src/Preferences.vala:229
+#: src/Preferences.vala:230
+msgid "Spell checker language"
+msgstr ""
+
+#: src/Preferences.vala:237
 msgid "Enable daily quotations"
 msgstr ""
 
-#: src/Preferences.vala:233
+#: src/Preferences.vala:241
 msgid "Dismiss daily quotation when writing"
 msgstr ""
 
-#: src/Preferences.vala:240
+#: src/Preferences.vala:248
 msgid "Writing Goal"
 msgstr ""
 
-#: src/Preferences.vala:244
+#: src/Preferences.vala:252
 msgid "Goal Count"
 msgstr ""
 
-#: src/Preferences.vala:284
-msgid "Name"
-msgstr ""
-
-#: src/Preferences.vala:290
-msgid "Feed URL"
+#: src/Preferences.vala:269 src/Preferences.vala:290 src/Preferences.vala:303
+msgid "Use System Language"
 msgstr ""
 
 #: src/Preferences.vala:342
+msgid "Name"
+msgstr ""
+
+#: src/Preferences.vala:348
+msgid "Feed URL"
+msgstr ""
+
+#: src/Preferences.vala:400
 msgid "Select a Login Screen Background"
 msgstr ""
 
-#: src/Preferences.vala:369
+#: src/Preferences.vala:423
 msgid "Enter image filename or URL"
 msgstr ""
 
-#: src/Preferences.vala:372
+#: src/Preferences.vala:426
 msgid "Browse…"
 msgstr ""
 
-#: src/Preferences.vala:407
+#: src/Preferences.vala:461
 msgid "Choose Image"
 msgstr ""
 
-#: src/Preferences.vala:674
+#: src/Preferences.vala:737
 msgid "Export all journals"
 msgstr ""
 
-#: src/Preferences.vala:677
+#: src/Preferences.vala:740
 msgid "Export journal"
 msgstr ""
 
-#: src/Preferences.vala:705
+#: src/Preferences.vala:768
 msgid "Export for the purpose of importing back into Journaler"
 msgstr ""
 
-#: src/Preferences.vala:708
+#: src/Preferences.vala:771
 msgid "Include entry images"
 msgstr ""
 
-#: src/Preferences.vala:715
+#: src/Preferences.vala:778
 msgid "Export Format:"
 msgstr ""
 
-#: src/Preferences.vala:738
+#: src/Preferences.vala:801
 msgid "Export…"
 msgstr ""
 
-#: src/Preferences.vala:774
+#: src/Preferences.vala:837
 msgid "Export Options"
 msgstr ""
 
-#: src/Preferences.vala:792
+#: src/Preferences.vala:855
 msgid ""
 "Import entries into original journals, automatically creating non-existing "
 "journals"
 msgstr ""
 
-#: src/Preferences.vala:796
+#: src/Preferences.vala:859
 msgid "Import all entries into journal"
 msgstr ""
 
-#: src/Preferences.vala:807
+#: src/Preferences.vala:870
 msgid "Create new journal"
 msgstr ""
 
-#: src/Preferences.vala:829
+#: src/Preferences.vala:892
 msgid "Enter new journal name"
 msgstr ""
 
-#: src/Preferences.vala:875
+#: src/Preferences.vala:938
 msgid "Import Options"
 msgstr ""
 
-#: src/Preferences.vala:930
+#: src/Preferences.vala:993
 msgid "Export Data As…"
 msgstr ""
 
-#: src/Preferences.vala:930
+#: src/Preferences.vala:993
 msgid "Export"
 msgstr ""
 
-#: src/Preferences.vala:947
+#: src/Preferences.vala:1010
 msgid "Export successful"
 msgstr ""
 
-#: src/Preferences.vala:949
+#: src/Preferences.vala:1012
 msgid "Export failed"
 msgstr ""
 
-#: src/Preferences.vala:975
+#: src/Preferences.vala:1038
 msgid "new called"
 msgstr ""
 
-#: src/Preferences.vala:999
+#: src/Preferences.vala:1062
 msgid "Import Data From…"
 msgstr ""
 
-#: src/Preferences.vala:999
+#: src/Preferences.vala:1062
 msgid "Import"
 msgstr ""
 
-#: src/Preferences.vala:1018
+#: src/Preferences.vala:1081
 msgid "Import successful"
 msgstr ""
 
-#: src/Preferences.vala:1020
+#: src/Preferences.vala:1083
 msgid "Import failed"
 msgstr ""
 
@@ -636,199 +652,339 @@ msgid "Tell me what happened today."
 msgstr ""
 
 #: src/Quotes.vala:83
-msgid "I want to know all about what happened to you today."
-msgstr ""
-
-#: src/Quotes.vala:84
 msgid "Sometimes the only paper will listen to you."
 msgstr ""
 
-#: src/Quotes.vala:85
+#: src/Quotes.vala:84
 msgid ""
 "Start writing, no matter what. The water does not flow until the faucet is "
 "turned on."
 msgstr ""
 
-#: src/Quotes.vala:86
+#: src/Quotes.vala:85
 msgid ""
 "I can shake off everything as I write; my sorrows disappear, my courage is "
 "reborn."
 msgstr ""
 
-#: src/Quotes.vala:87
+#: src/Quotes.vala:86
 msgid ""
 "Preserve your memories, keep them well, what you forget you can never retell."
 msgstr ""
 
-#: src/Quotes.vala:88
+#: src/Quotes.vala:87
 msgid ""
 "Write about what really interests you, whether it is real things or "
 "imaginary things, and nothing else."
 msgstr ""
 
-#: src/Quotes.vala:89
+#: src/Quotes.vala:88
 msgid ""
 "I believe myself that a good writer doesn’t really need to be told anything "
 "except to keep at it."
 msgstr ""
 
-#: src/Quotes.vala:90
+#: src/Quotes.vala:89
 msgid "Writing is medicine."
 msgstr ""
 
-#: src/Quotes.vala:91
+#: src/Quotes.vala:90
 msgid "I like to reserve the right to write about whatever I like."
 msgstr ""
 
-#: src/Quotes.vala:92
+#: src/Quotes.vala:91
 msgid "I write because I don’t know what I think until I read what I say."
 msgstr ""
 
-#: src/Quotes.vala:93
+#: src/Quotes.vala:92
 msgid ""
 "Journaling is like whispering to one’s self and listening at the same time."
 msgstr ""
 
-#: src/Quotes.vala:94
+#: src/Quotes.vala:93
 msgid "Journal writing is a voyage to the interior."
 msgstr ""
 
-#: src/Quotes.vala:95
+#: src/Quotes.vala:94
 msgid "What would you write if you weren’t afraid?"
 msgstr ""
 
-#: src/Quotes.vala:96
+#: src/Quotes.vala:95
 msgid "There is no greater agony than bearing an untold story inside you."
 msgstr ""
 
-#: src/Quotes.vala:97
+#: src/Quotes.vala:96
 msgid "A journal is your completely unaltered voice."
 msgstr ""
 
-#: src/Quotes.vala:98
+#: src/Quotes.vala:97
 msgid ""
 "Journaling helps you to remember how strong you truly are within yourself."
 msgstr ""
 
-#: src/Quotes.vala:99
+#: src/Quotes.vala:98
 msgid "People who keep journals have life twice."
 msgstr ""
 
-#: src/Quotes.vala:100
+#: src/Quotes.vala:99
 msgid ""
 "Journal writing gives us insights into who we are, who we were, and who we "
 "can become."
 msgstr ""
 
-#: src/Quotes.vala:101
+#: src/Quotes.vala:100
 msgid "You can always edit a bad page. You can’t edit a blank page."
 msgstr ""
 
-#: src/Quotes.vala:102
+#: src/Quotes.vala:101
 msgid "It ain’t whatcha write, it’s the way atcha write it."
 msgstr ""
 
-#: src/Quotes.vala:103
+#: src/Quotes.vala:102
 msgid "If a nation loses its storytellers, it loses its childhood."
 msgstr ""
 
-#: src/Quotes.vala:104
+#: src/Quotes.vala:103
 msgid ""
 "Documenting little details of your everyday life becomes a celebration of "
 "who you are."
 msgstr ""
 
-#: src/Quotes.vala:105
+#: src/Quotes.vala:104
 msgid "Turning your journal time into a mini-ritual gives it importance."
 msgstr ""
 
-#: src/Quotes.vala:106
+#: src/Quotes.vala:105
 msgid "Your journal is your private sanctuary, your safe haven."
 msgstr ""
 
-#: src/Quotes.vala:147
+#: src/Quotes.vala:107
+msgid ""
+"Keeping a journal of our thoughts, experiences, insights, and learnings "
+"promotes mental clarity, exactness, and context."
+msgstr ""
+
+#: src/Quotes.vala:108
+msgid "Writing is another powerful way to sharpen the mental saw."
+msgstr ""
+
+#: src/Quotes.vala:109
+msgid ""
+"When I go back and read my journals or fiction, I am always surprised. I may "
+"not remember having those thoughts, but they still exist and I know they are "
+"mine, and it’s all part of making sense of who I am."
+msgstr ""
+
+#: src/Quotes.vala:110
+msgid ""
+"Keeping a journal of what’s going on in your life is a good way to help you "
+"distill what’s important and what’s not."
+msgstr ""
+
+#: src/Quotes.vala:111
+msgid ""
+"A personal journal is an ideal environment in which to become. It is a "
+"perfect place for you to think, feel, discover, expand, remember, and dream."
+msgstr ""
+
+#: src/Quotes.vala:112
+msgid "In the journal I am at ease."
+msgstr ""
+
+#: src/Quotes.vala:113
+msgid ""
+"In the journal I do not just express myself more openly than I could to any "
+"person; I create myself."
+msgstr ""
+
+#: src/Quotes.vala:114
+msgid ""
+"Whether you’re keeping a journal or writing as a meditation, it’s the same "
+"thing. What’s important is you’re having a relationship with your mind."
+msgstr ""
+
+#: src/Quotes.vala:115
+msgid ""
+"I love my journal as much as I love my phone. I find it to be a big part of "
+"my self-care to reflect on my day and write words that inspire me."
+msgstr ""
+
+#: src/Quotes.vala:116
+msgid "I always have my journal with me."
+msgstr ""
+
+#: src/Quotes.vala:117
+msgid ""
+"Journaling is paying attention to the inside for the purpose of living well "
+"from the inside out."
+msgstr ""
+
+#: src/Quotes.vala:118
+msgid "I started writing a journal, and I was learning so much along the way."
+msgstr ""
+
+#: src/Quotes.vala:119
+msgid "Fill your paper with the breathings of your heart."
+msgstr ""
+
+#: src/Quotes.vala:120
+msgid "Journaling helps you to become a better version of yourself."
+msgstr ""
+
+#: src/Quotes.vala:121
+msgid ""
+"The starting point of discovering who you are, your gifts, your talents, "
+"your dreams, is being comfortable with yourself. Spend time alone. Write in "
+"a journal."
+msgstr ""
+
+#: src/Quotes.vala:122
+msgid ""
+"As there are a thousand thoughts lying within a man that he does not know "
+"till he takes up the pen to write."
+msgstr ""
+
+#: src/Quotes.vala:123
+msgid "Journal to awaken your mind and transform your life."
+msgstr ""
+
+#: src/Quotes.vala:124
+msgid ""
+"Your Journal is like your best friend. You don’t have to pretend with it, "
+"you can be honest and write exactly how you feel."
+msgstr ""
+
+#: src/Quotes.vala:125
+msgid ""
+"There comes a point in your life when you need to stop reading other "
+"people’s books and write your own."
+msgstr ""
+
+#: src/Quotes.vala:126
+msgid ""
+"What a comfort is this journal. I tell myself to myself and throw the burden "
+"on my book and feel relieved."
+msgstr ""
+
+#: src/Quotes.vala:127
+msgid ""
+"Just write every day of your life. Read intensely. Then see what happens. "
+"Most of my friends who are put on that diet have very pleasant careers."
+msgstr ""
+
+#: src/Quotes.vala:128
+msgid ""
+"Writing is powerful communication: perhaps even more so than speech, as it "
+"does not disappear on the breath."
+msgstr ""
+
+#: src/Quotes.vala:129
+msgid ""
+"These empty pages are your future, soon to become your past. I will read the "
+"most personal tale you shall ever find in a book."
+msgstr ""
+
+#: src/Quotes.vala:130
+msgid ""
+"When I look back on my personal story through my journals, it struck me my "
+"words had an unmatched power to heal me. To change me."
+msgstr ""
+
+#: src/Quotes.vala:171
 msgid ""
 "Add one or more <quote author=\"author-name\">quotation</quote> here to add "
 "quotes to the system"
 msgstr ""
 
-#: src/Reviewer.vala:135
+#: src/Reviewer.vala:161
 msgid "Journals:"
 msgstr ""
 
-#: src/Reviewer.vala:141 src/Reviewer.vala:227
+#: src/Reviewer.vala:167 src/Reviewer.vala:253
 msgid "Select All"
 msgstr ""
 
-#: src/Reviewer.vala:150 src/Reviewer.vala:236
+#: src/Reviewer.vala:176 src/Reviewer.vala:262
 msgid "Clear All"
 msgstr ""
 
-#: src/Reviewer.vala:221
+#: src/Reviewer.vala:247
 msgid "Tags:"
 msgstr ""
 
-#: src/Reviewer.vala:282
+#: src/Reviewer.vala:308
 msgid "Date Range:"
 msgstr ""
 
-#: src/Reviewer.vala:331
+#: src/Reviewer.vala:357
 msgid "Search entry title and text"
 msgstr ""
 
-#: src/Reviewer.vala:348
+#: src/Reviewer.vala:374
 msgid "Save exact dates"
 msgstr ""
 
-#: src/Reviewer.vala:349
+#: src/Reviewer.vala:375
 msgid "Save relative to exact start date"
 msgstr ""
 
-#: src/Reviewer.vala:350
+#: src/Reviewer.vala:376
 msgid "Save relative to current date"
 msgstr ""
 
-#: src/Reviewer.vala:353
+#: src/Reviewer.vala:379
 msgid "Save search"
 msgstr ""
 
-#: src/Reviewer.vala:356
+#: src/Reviewer.vala:382
 msgid "Delete saved search"
 msgstr ""
 
-#: src/Reviewer.vala:359
+#: src/Reviewer.vala:385
 msgid "Show all entries"
 msgstr ""
 
-#: src/Reviewer.vala:366
+#: src/Reviewer.vala:392
 msgid "Save Review Criteria"
 msgstr ""
 
-#: src/Reviewer.vala:685
+#: src/Reviewer.vala:725
 msgid "All Journals"
 msgstr ""
 
-#: src/Reviewer.vala:685
+#: src/Reviewer.vala:725
 msgid "No Journals"
 msgstr ""
 
-#: src/Reviewer.vala:689
+#: src/Reviewer.vala:729
 msgid "All Tags"
 msgstr ""
 
-#: src/Reviewer.vala:689
+#: src/Reviewer.vala:729
 msgid "No Tags"
 msgstr ""
 
-#: src/Reviewer.vala:849
-msgid "Restore"
+#: src/Reviewer.vala:1061
+msgid "Entries"
 msgstr ""
 
-#: src/Reviewer.vala:852
-msgid "Move To Trash"
+#: src/Reviewer.vala:1062
+msgid "Images"
 msgstr ""
 
-#: src/Reviewer.vala:866
+#: src/Reviewer.vala:1118
+msgid "Restore from trash"
+msgstr ""
+
+#: src/Reviewer.vala:1124
+msgid "Move to trash"
+msgstr ""
+
+#: src/Reviewer.vala:1130
+msgid "Edit tags"
+msgstr ""
+
+#: src/Reviewer.vala:1161
 msgid "Shown Entries:"
 msgstr ""
 
@@ -975,24 +1131,24 @@ msgstr ""
 msgid "No journal selected"
 msgstr ""
 
-#: src/SpellChecker.vala:234
+#: src/SpellChecker.vala:235
 msgid "No suggestions"
 msgstr ""
 
-#: src/SpellChecker.vala:246
+#: src/SpellChecker.vala:247
 msgid "More Suggestions"
 msgstr ""
 
-#: src/SpellChecker.vala:251
+#: src/SpellChecker.vala:252
 #, c-format
 msgid "Add \"%s\" to Dictionary"
 msgstr ""
 
-#: src/SpellChecker.vala:252
+#: src/SpellChecker.vala:253
 msgid "Ignore All"
 msgstr ""
 
-#: src/SpellChecker.vala:259
+#: src/SpellChecker.vala:260
 msgid "Spell Check"
 msgstr ""
 
@@ -1012,12 +1168,40 @@ msgstr ""
 msgid "Achieved"
 msgstr ""
 
-#: src/TagBox.vala:81
+#: src/TagBox.vala:79
 msgid "Click to add tag…"
+msgstr ""
+
+#: src/TagBox.vala:91
+msgid "Click to select tag…"
 msgstr ""
 
 #: src/TagEntry.vala:56
 msgid "Add Tag"
+msgstr ""
+
+#: src/TagListbox.vala:41
+msgid "Edit Tags"
+msgstr ""
+
+#: src/TagListbox.vala:64
+msgid "Add tag"
+msgstr ""
+
+#: src/TagListbox.vala:71
+msgid "Remove selected tags"
+msgstr ""
+
+#: src/TagListbox.vala:83
+msgid "Apply"
+msgstr ""
+
+#: src/TagListbox.vala:112
+msgid "Enter new tag"
+msgstr ""
+
+#: src/TagListbox.vala:206
+msgid "(New)"
 msgstr ""
 
 #: src/Templater.vala:69
@@ -1168,7 +1352,7 @@ msgstr ""
 msgid "Insert Transform Function"
 msgstr ""
 
-#: src/Templater.vala:519 src/TextArea.vala:703
+#: src/Templater.vala:519 src/TextArea.vala:723
 msgid "Format Text"
 msgstr ""
 
@@ -1189,39 +1373,39 @@ msgstr ""
 msgid "Template"
 msgstr ""
 
-#: src/TextArea.vala:255
+#: src/TextArea.vala:261
 msgid "Title (Optional)"
 msgstr ""
 
-#: src/TextArea.vala:266
+#: src/TextArea.vala:272
 msgid "View previous entry in sidebar"
 msgstr ""
 
-#: src/TextArea.vala:273
+#: src/TextArea.vala:279
 msgid "View next entry in sidebar"
 msgstr ""
 
-#: src/TextArea.vala:417
+#: src/TextArea.vala:423
 msgid "Change date"
 msgstr ""
 
-#: src/TextArea.vala:462
+#: src/TextArea.vala:468
 msgid "Move to journal"
 msgstr ""
 
-#: src/TextArea.vala:720
+#: src/TextArea.vala:740
 msgid "Restore entry"
 msgstr ""
 
-#: src/TextArea.vala:721
+#: src/TextArea.vala:741
 msgid "Delete entry permanently"
 msgstr ""
 
-#: src/TextArea.vala:733
+#: src/TextArea.vala:753
 msgid "Insert Template"
 msgstr ""
 
-#: src/TextArea.vala:737
+#: src/TextArea.vala:757
 msgid "Move entry to trash"
 msgstr ""
 
