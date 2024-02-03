@@ -41,6 +41,7 @@ public class Preferences : Gtk.Dialog {
   private const GLib.ActionEntry action_entries[] = {
     { "action_set_current_theme",         action_set_current_theme,         "s" },
     { "action_lock_menu",                 action_lock_menu,                 "i" },
+    { "action_spell_menu",                action_spell_menu,                "s" },
     { "action_goal_menu",                 action_goal_menu,                 "i" },
     { "action_select_journal_for_export", action_select_journal_for_export, "s" },
     { "action_select_export_format",      action_select_export_format,      "s" },
@@ -219,8 +220,15 @@ public class Preferences : Gtk.Dialog {
     grid.attach( make_spinner( "editor-line-spacing", 2, 20, 1 ), 1, row );
     row++;
 
+    grid.attach( make_spacer(), 0, row );
+    row++;
+
     grid.attach( make_label( _( "Enable spell checker" ) ), 0, row );
     grid.attach( make_switch( "enable-spellchecker" ), 1, row );
+    row++;
+    
+    grid.attach( make_label( _( "Spell checker language" ) ), 0, row );
+    grid.attach( make_menu( "spellchecker-language", spell_lang_label(), create_spell_lang_menu() ), 1, row, 2 );
     row++;
 
     grid.attach( make_spacer(), 0, row );
@@ -247,6 +255,56 @@ public class Preferences : Gtk.Dialog {
 
     return( grid );
 
+  }
+  
+  /* Create the spell checker language menu */
+  private GLib.Menu create_spell_lang_menu() {
+    
+    var menu  = new GLib.Menu();
+    var langs = new Gee.ArrayList<string>();
+    
+    _win.text_area.spell.get_language_list( langs );
+    
+    var sys_menu = new GLib.Menu();
+    sys_menu.append( _( "Use System Language" ), "prefs.action_spell_menu('system')" );
+    
+    var other_menu = new GLib.Menu();
+    langs.foreach((lang) => {
+      other_menu.append( lang, "prefs.action_spell_menu('%s')".printf( lang ) );
+      return( true );
+    });
+    
+    menu.append_section( null, sys_menu );
+    menu.append_section( null, other_menu );
+    
+    return( menu );
+    
+  }
+  
+  /* Get the currently specified spell checker language value from settings */
+  private string spell_lang_label() {
+    
+    var lang = Journaler.settings.get_string( "spellchecker-language" );
+    
+    if( lang == "system" ) {
+      return( _( "Use System Language" ) );
+    } else {
+      return( lang );
+    }
+    
+  }
+  
+  /* Handles changes to the spell checker language menu */
+  private void action_spell_menu( SimpleAction action, Variant? variant ) {
+    _win.reset_timer();
+    if( variant != null ) {
+      var lang = variant.get_string();
+      if( lang == "system" ) {
+        lang = _( "Use System Language" );
+      }
+      _menus.get( "spellchecker-language" ).label = lang;
+      Journaler.settings.set_string( "spellchecker-language", lang );
+    }
   }
 
   /* Create the application auto-lock menu */

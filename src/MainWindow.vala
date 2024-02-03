@@ -168,6 +168,11 @@ public class MainWindow : Gtk.ApplicationWindow {
       return( _goals );
     }
   }
+  public TextArea text_area {
+    get {
+      return( _text_area );
+    }
+  }
   public bool review_mode           { get; set; default = false; }
   public bool distraction_free_mode { get; set; default = false; }
 
@@ -234,7 +239,6 @@ public class MainWindow : Gtk.ApplicationWindow {
     /* Create gear menu */
     var misc_img = new Image.from_icon_name( get_header_icon_name( "emblem-system" ) );
     var misc_btn = new MenuButton() {
-      has_frame  = false,
       child      = misc_img,
       menu_model = create_misc_menu()
     };

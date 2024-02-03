@@ -92,6 +92,11 @@ public class TextArea : Box {
       return( _image_area );
     }
   }
+  public SpellChecker spell {
+    get {
+      return( _spell );
+    }
+  }
 
   public signal void entry_moved( DBEntry entry );
   public signal void show_previous_entry();
@@ -123,11 +128,12 @@ public class TextArea : Box {
     });
     Journaler.settings.changed.connect((key) => {
       switch( key ) {
-        case "editor-font-size"    :  set_font_size();      break;
-        case "editor-margin"       :  set_margin( false );  break;
-        case "editor-line-spacing" :  set_line_spacing();   break;
-        case "enable-spellchecker" :  set_spellchecker();   break;
-        case "enable-quotations"   :  
+        case "editor-font-size"      :  set_font_size();          break;
+        case "editor-margin"         :  set_margin( false );      break;
+        case "editor-line-spacing"   :  set_line_spacing();       break;
+        case "enable-spellchecker"   :  set_spellchecker();       break;
+        case "spellchecker-language" :  update_spell_language();  break;
+        case "enable-quotations"     :  
           if( _buffer.text == "" ) {
             _quote_revealer.reveal_child = Journaler.settings.get_boolean( "enable-quotations" );
           }
@@ -617,6 +623,39 @@ public class TextArea : Box {
     return( _viewer );
 
   }
+  
+  /* Sets the language based on the settings value */
+  public void update_spell_language() {
+    
+    var lang        = Journaler.settings.get_string( "spellchecker-language" );
+    var lang_exists = false;
+    
+    if( lang == "system" ) {
+      var env_lang = Environment.get_variable( "LANG" ).split( "." );
+      lang = env_lang[0];
+    }
+    
+    var lang_list = new Gee.ArrayList<string>();
+    _spell.get_language_list( lang_list );
+    
+    /* Check to see if the given language exists */
+    lang_list.foreach((elem) => {
+      if( elem == lang ) {
+        _spell.set_language( lang );
+        lang_exists = true;
+        return( false );
+      }
+      return( true );
+    });
+
+    /* Based on the search, set the language to use in the spell checker */
+    if( lang_list.size == 0 ) {
+      _spell.set_language( null );
+    } else if( !lang_exists ) {
+      _spell.set_language( lang_list.get( 0 ) );
+    }
+    
+  }
 
   /* Connects the text widget to the spell checker */
   private void initialize_spell_checker() {
@@ -624,27 +663,7 @@ public class TextArea : Box {
     _spell = new SpellChecker();
     _spell.populate_extra_menu.connect( populate_extra_menu );
 
-    var lang_exists = false;
-    var language    = Environment.get_variable( "LANG" );
-    var lang        = language.split( "." );
-    var lang_list = new Gee.ArrayList<string>();
-    _spell.get_language_list( lang_list );
-
-    lang_list.foreach((elem) => {
-      if( elem == lang[0] ) {
-        _spell.set_language( lang[0] );
-        lang_exists = true;
-        return( false );
-      }
-      return( true );
-    });
-
-    if( lang_list.size == 0 ) {
-      _spell.set_language( null );
-    } else if( !lang_exists ) {
-      _spell.set_language( lang_list.get( 0 ) );
-    }
-
+    update_spell_language();
     set_spellchecker();
 
   }

@@ -91,6 +91,11 @@
       <summary>Enables or disables the spelling checker</summary>
       <description>Enables or disables the spelling checker</description>
     </key>
+    <key name="spellchecker-language" type="s">
+      <default>"system"</default>
+      <summary>Specifies the spelling checker language dictionary</summary>
+      <description>Specifies the spelling checker language dictionary</description>
+    </key>
     <key name="developer-mode" type="b">
       <default>false</default>
       <summary>This values is not recommended for Journaler non-developers</summary>
