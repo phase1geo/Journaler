@@ -80,8 +80,7 @@ public class Quotes {
     add_quote( new Quote( _( "Journal writing, when it becomes a ritual for transformation, is not only life-changing but life-expanding." ), "Jen Williamson" ) );
     add_quote( new Quote( _( "Tell me about your day." ) ) );
     add_quote( new Quote( _( "Tell me what happened today." ) ) );
-    add_quote( new Quote( _( "I want to know all about what happened to you today." ) ) );
-    add_quote( new Quote( _( "Sometimes the only paper will listen to you." ), "Anonymous" ) );
+    add_quote( new Quote( _( "Sometimes the only paper will listen to you." ) ) );
     add_quote( new Quote( _( "Start writing, no matter what. The water does not flow until the faucet is turned on." ), "Louis L’Amour" ) );
     add_quote( new Quote( _( "I can shake off everything as I write; my sorrows disappear, my courage is reborn." ), "Anne Frank" ) );
     add_quote( new Quote( _( "Preserve your memories, keep them well, what you forget you can never retell." ), "Louisa May Alcott" ) );
@@ -104,6 +103,31 @@ public class Quotes {
     add_quote( new Quote( _( "Documenting little details of your everyday life becomes a celebration of who you are." ), "Carolyn V. Hamilton" ) );
     add_quote( new Quote( _( "Turning your journal time into a mini-ritual gives it importance." ), "Julie Hage" ) );
     add_quote( new Quote( _( "Your journal is your private sanctuary, your safe haven." ), "Julie Hage" ) );
+    
+    add_quote( new Quote( _( "Keeping a journal of our thoughts, experiences, insights, and learnings promotes mental clarity, exactness, and context." ), "Stephen Covey" ) );
+    add_quote( new Quote( _( "Writing is another powerful way to sharpen the mental saw." ), "Stephen Covey" ) );
+    add_quote( new Quote( _( "When I go back and read my journals or fiction, I am always surprised. I may not remember having those thoughts, but they still exist and I know they are mine, and it’s all part of making sense of who I am." ), "Amy Tan" ) );
+    add_quote( new Quote( _( "Keeping a journal of what’s going on in your life is a good way to help you distill what’s important and what’s not." ), "Martina Navratilova" ) );
+    add_quote( new Quote( _( "A personal journal is an ideal environment in which to become. It is a perfect place for you to think, feel, discover, expand, remember, and dream." ), "Brad Wilcox" ) );
+    add_quote( new Quote( _( "In the journal I am at ease." ), "Anais Nin" ) );
+    add_quote( new Quote( _( "In the journal I do not just express myself more openly than I could to any person; I create myself." ), "Susan Sontag" ) );
+    add_quote( new Quote( _( "Whether you’re keeping a journal or writing as a meditation, it’s the same thing. What’s important is you’re having a relationship with your mind." ), "Natalie Goldberg" ) );
+    add_quote( new Quote( _( "I love my journal as much as I love my phone. I find it to be a big part of my self-care to reflect on my day and write words that inspire me." ), "Franchesca Ramsey" ) );
+    add_quote( new Quote( _( "I always have my journal with me." ), "Blake Mycoskie" ) );
+    add_quote( new Quote( _( "Journaling is paying attention to the inside for the purpose of living well from the inside out." ), "Lee Wise" ) );
+    add_quote( new Quote( _( "I started writing a journal, and I was learning so much along the way." ), "Jay Leno" ) );
+    add_quote( new Quote( _( "Fill your paper with the breathings of your heart." ), "William Wordsworth" ) );
+    add_quote( new Quote( _( "Journaling helps you to become a better version of yourself." ), "Asad Meah" ) );
+    add_quote( new Quote( _( "The starting point of discovering who you are, your gifts, your talents, your dreams, is being comfortable with yourself. Spend time alone. Write in a journal." ), "Robin Sharma" ) );
+    add_quote( new Quote( _( "As there are a thousand thoughts lying within a man that he does not know till he takes up the pen to write." ), "William Makepeace Thackeray" ) );
+    add_quote( new Quote( _( "Journal to awaken your mind and transform your life." ), "Asad Meah" ) );
+    add_quote( new Quote( _( "Your Journal is like your best friend. You don’t have to pretend with it, you can be honest and write exactly how you feel." ), "Bukola Ogunwale" ) );
+    add_quote( new Quote( _( "There comes a point in your life when you need to stop reading other people’s books and write your own." ), "Albert Einstein" ) );
+    add_quote( new Quote( _( "What a comfort is this journal. I tell myself to myself and throw the burden on my book and feel relieved." ), "Anne Lister" ) );
+    add_quote( new Quote( _( "Just write every day of your life. Read intensely. Then see what happens. Most of my friends who are put on that diet have very pleasant careers." ), "Ray Bradbury" ) );
+    add_quote( new Quote( _( "Writing is powerful communication: perhaps even more so than speech, as it does not disappear on the breath." ), "Gillie Bolton" ) );
+    add_quote( new Quote( _( "These empty pages are your future, soon to become your past. I will read the most personal tale you shall ever find in a book.") ) );
+    add_quote( new Quote( _( "When I look back on my personal story through my journals, it struck me my words had an unmatched power to heal me. To change me." ), "Sandra Marinella" ) );
 
     _built_in_length = (int)_quotes.length;
 
