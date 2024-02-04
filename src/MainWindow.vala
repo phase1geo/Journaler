@@ -239,6 +239,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     /* Create gear menu */
     var misc_img = new Image.from_icon_name( get_header_icon_name( "emblem-system" ) );
     var misc_btn = new MenuButton() {
+      has_frame  = !on_elementary,
       child      = misc_img,
       menu_model = create_misc_menu()
     };
