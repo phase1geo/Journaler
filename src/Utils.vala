@@ -313,4 +313,26 @@ public class Utils {
 
   }
 
+  /* Adjusts the listbox to place the currently selected row into view */
+  public static void scroll_to_selected_row( ListBox listbox ) {
+
+    Idle.add(() => {
+      var row = listbox.get_selected_row();
+      if( row != null ) {
+        double x, y;
+        if( row.translate_coordinates( listbox, 0.0, 0.0, out x, out y ) && (y >= 0) ) {
+          var adj = listbox.get_adjustment();
+          if( adj != null ) {
+            Requisition min_size, natural_size;
+            row.get_preferred_size( out min_size, out natural_size );
+            var row_height = natural_size.height;
+            adj.set_value( y - (adj.get_page_size() - row_height) / 2);
+          }
+        }
+      }
+      return( false );
+    });
+
+  }
+
 }

@@ -333,6 +333,7 @@ public class SidebarEntries : Box {
       var index = get_listbox_index_for_date_time( date, "" );
       if( index != -1 ) {
         _listbox.select_row( _listbox.get_row_at_index( index ) );
+        Utils.scroll_to_selected_row( _listbox );
       } else {
         _listbox.select_row( null );
         show_entry_for_date( _journals.current.name, date, "", (strcmp( date, DBEntry.todays_date() ) < 1), true, SelectedEntryPos.OTHER, "add_calendar" );
@@ -612,9 +613,11 @@ public class SidebarEntries : Box {
   private void select_entry_only( DBEntry entry ) {
     var index = get_listbox_index_for_date_time( entry.date, entry.time );
     if( index != -1 ) {
+      stdout.printf( "In select_entry_only, index: %d\n", index );
       _ignore_select = true;
       _listbox.select_row( _listbox.get_row_at_index( index ) );
       _cal.select_day( entry.datetime() );
+      Utils.scroll_to_selected_row( _listbox );
       _ignore_select = false;
     }
   }

@@ -834,6 +834,7 @@ public class Reviewer : Grid {
     /* Display the first entry */
     if( _match_entries.size > 0 ) {
       _match_lb.select_row( _match_lb.get_row_at_index( 0 ) );
+      Utils.scroll_to_selected_row( _match_lb );
     }
 
     _lb_status.label = _match_entries.size.to_string();
@@ -866,12 +867,14 @@ public class Reviewer : Grid {
   public void show_previous_entry() {
     var index = _match_index;
     _match_lb.select_row( _match_lb.get_row_at_index( index - 1 ) );
+    Utils.scroll_to_selected_row( _match_lb );
   }
 
   /* Displays the next entry in the list */
   public void show_next_entry() {
     var index = _match_index;
     _match_lb.select_row( _match_lb.get_row_at_index( index + 1 ) );
+    Utils.scroll_to_selected_row( _match_lb );
   }
 
   /* Displays the given entry in the textarea */
@@ -1409,6 +1412,25 @@ public class Reviewer : Grid {
     var entry       = new DBEntry.for_show( match_image.journal, match_image.trash, match_image.date, match_image.time );
     
     show_matched_entry( entry, SelectedEntryPos.parse( _match_images.size, index ), match_image.index );
+
+    /* Clear the selected rows */
+    var selected = _match_lb.get_selected_rows();
+    selected.foreach((row) => {
+      _match_lb.unselect_row( row );
+    });
+
+    /* Select and show the row in the entries listbox */
+    var lb_index = 0;
+    _match_entries.foreach((journal_entry) => {
+      if( (journal_entry.date == entry.date) && (journal_entry.time == entry.time) ) {
+        _match_lb.select_row( _match_lb.get_row_at_index( lb_index ) );
+        return( false );
+      }
+      lb_index++;
+      return( true );
+    });
+
+    Utils.scroll_to_selected_row( _match_lb );
     
   }
 
