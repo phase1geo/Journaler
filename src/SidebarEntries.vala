@@ -613,7 +613,6 @@ public class SidebarEntries : Box {
   private void select_entry_only( DBEntry entry ) {
     var index = get_listbox_index_for_date_time( entry.date, entry.time );
     if( index != -1 ) {
-      stdout.printf( "In select_entry_only, index: %d\n", index );
       _ignore_select = true;
       _listbox.select_row( _listbox.get_row_at_index( index ) );
       _cal.select_day( entry.datetime() );
