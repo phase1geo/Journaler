@@ -70,6 +70,7 @@ public class Reviewer : Grid {
   private Button     _tag_set_all;
   private Button     _tag_clear_all;
   private int        _num_tags = 0;
+  private bool       _ignore_search  = true;
   private bool       _ignore_toggled = false;
 
   private DateSelector _start_date;
@@ -653,6 +654,7 @@ public class Reviewer : Grid {
   public void initialize( SavedReview? review = null ) {
 
     _last_review = review;
+    _ignore_search = true;
 
     /* Populate the journals and tags lists */
     populate_journals( review );
@@ -660,6 +662,7 @@ public class Reviewer : Grid {
     populate_dates( review );
 
     _search_entry.text = (review == null) ? "" : review.search_str;
+    _ignore_search = false;
 
     /* Do an initial search */
     do_search();
@@ -761,6 +764,8 @@ public class Reviewer : Grid {
 
   /* Performs search of selected items, date ranges, and search terms */
   private void do_search() {
+
+    if( _ignore_search ) return;
 
     var journals = new List<string>();
     var tags     = new List<string>();
