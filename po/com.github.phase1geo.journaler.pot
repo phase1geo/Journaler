@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: com.github.phase1geo.journaler\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-02-03 15:05-0600\n"
+"POT-Creation-Date: 2024-02-08 23:13-0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -308,27 +308,27 @@ msgstr ""
 msgid "New Rewards Achieved!"
 msgstr ""
 
-#: src/ImageArea.vala:277 src/Preferences.vala:461
+#: src/ImageArea.vala:279 src/Preferences.vala:461
 msgid "Select an image"
 msgstr ""
 
-#: src/ImageArea.vala:277 src/TextArea.vala:747
+#: src/ImageArea.vala:279 src/TextArea.vala:747
 msgid "Add Image"
 msgstr ""
 
-#: src/ImageArea.vala:281
+#: src/ImageArea.vala:283
 msgid "Image Files"
 msgstr ""
 
-#: src/ImageArea.vala:334
+#: src/ImageArea.vala:336
 msgid "To Entry"
 msgstr ""
 
-#: src/ImageArea.vala:391
+#: src/ImageArea.vala:393
 msgid "Original Location:"
 msgstr ""
 
-#: src/ImageArea.vala:415 src/ImageArea.vala:468
+#: src/ImageArea.vala:417 src/ImageArea.vala:470
 msgid "Enter Description (Optional)"
 msgstr ""
 
@@ -374,57 +374,57 @@ msgstr ""
 msgid "Go To Today"
 msgstr ""
 
-#: src/MainWindow.vala:250
+#: src/MainWindow.vala:251
 msgid "Review Entries"
 msgstr ""
 
-#: src/MainWindow.vala:257
+#: src/MainWindow.vala:258
 msgid "Lock Journaler"
 msgstr ""
 
-#: src/MainWindow.vala:464 src/SidebarEditor.vala:275
+#: src/MainWindow.vala:465 src/SidebarEditor.vala:275
 msgid "Create New Template"
 msgstr ""
 
-#: src/MainWindow.vala:471
+#: src/MainWindow.vala:472
 msgid "View Awards"
 msgstr ""
 
-#: src/MainWindow.vala:474
+#: src/MainWindow.vala:475
 msgid "Shortcut Cheatsheet"
 msgstr ""
 
-#: src/MainWindow.vala:475
+#: src/MainWindow.vala:476
 msgid "Preferences…"
 msgstr ""
 
-#: src/MainWindow.vala:478
+#: src/MainWindow.vala:479
 msgid "Manage Templates"
 msgstr ""
 
-#: src/MainWindow.vala:636 src/SidebarEditor.vala:213 src/TagListbox.vala:74
+#: src/MainWindow.vala:637 src/SidebarEditor.vala:213 src/TagListbox.vala:74
 #: src/Templater.vala:733 src/Utils.vala:309
 msgid "Cancel"
 msgstr ""
 
-#: src/MainWindow.vala:644
+#: src/MainWindow.vala:645
 msgid "Set Password"
 msgstr ""
 
-#: src/MainWindow.vala:801 src/Preferences.vala:95
+#: src/MainWindow.vala:802 src/Preferences.vala:95
 msgid "Close"
 msgstr ""
 
-#: src/MainWindow.vala:973
+#: src/MainWindow.vala:974
 msgid "Complete!"
 msgstr ""
 
-#: src/MainWindow.vala:974
+#: src/MainWindow.vala:975
 #, c-format
 msgid "%d out of %d (%d%%)"
 msgstr ""
 
-#: src/MainWindow.vala:976
+#: src/MainWindow.vala:977
 #, c-format
 msgid "Status: %s"
 msgstr ""
@@ -964,27 +964,27 @@ msgstr ""
 msgid "No Tags"
 msgstr ""
 
-#: src/Reviewer.vala:1061
+#: src/Reviewer.vala:1064
 msgid "Entries"
 msgstr ""
 
-#: src/Reviewer.vala:1062
+#: src/Reviewer.vala:1065
 msgid "Images"
 msgstr ""
 
-#: src/Reviewer.vala:1118
+#: src/Reviewer.vala:1121
 msgid "Restore from trash"
 msgstr ""
 
-#: src/Reviewer.vala:1124
+#: src/Reviewer.vala:1127
 msgid "Move to trash"
 msgstr ""
 
-#: src/Reviewer.vala:1130
+#: src/Reviewer.vala:1133
 msgid "Edit tags"
 msgstr ""
 
-#: src/Reviewer.vala:1161
+#: src/Reviewer.vala:1164
 msgid "Shown Entries:"
 msgstr ""
 
@@ -1111,23 +1111,23 @@ msgid ""
 "This operation cannot be undone."
 msgstr ""
 
-#: src/SidebarEntries.vala:376
+#: src/SidebarEntries.vala:377
 msgid "Journal:"
 msgstr ""
 
-#: src/SidebarEntries.vala:386
+#: src/SidebarEntries.vala:387
 msgid "Monthly:"
 msgstr ""
 
-#: src/SidebarEntries.vala:396
+#: src/SidebarEntries.vala:397
 msgid "Current Streak:"
 msgstr ""
 
-#: src/SidebarEntries.vala:439
+#: src/SidebarEntries.vala:440
 msgid "Hidden Journals"
 msgstr ""
 
-#: src/SidebarEntries.vala:461
+#: src/SidebarEntries.vala:462
 msgid "No journal selected"
 msgstr ""
 

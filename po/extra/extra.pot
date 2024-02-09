@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: extra\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-02-03 15:05-0600\n"
+"POT-Creation-Date: 2024-02-08 23:13-0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -105,11 +105,11 @@ msgid "Entry Panel"
 msgstr ""
 
 #: data/com.github.phase1geo.journaler.appdata.xml.in:40
-msgid "Review Panel"
+msgid "Entry Review Panel"
 msgstr ""
 
 #: data/com.github.phase1geo.journaler.appdata.xml.in:44
-msgid "Awards Panel"
+msgid "Image Review Panel"
 msgstr ""
 
 #: data/com.github.phase1geo.journaler.appdata.xml.in:49

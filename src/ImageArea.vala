@@ -239,13 +239,13 @@ public class ImageArea : Box {
 
     var drop = new Gtk.DropTarget( Type.STRING, DragAction.COPY );
 
+    var area = this;
     drop.motion.connect((x, y) => {
-      return( editable ? DragAction.COPY : 0 );
+      return( area.editable ? DragAction.COPY : 0 );
     });
 
     drop.drop.connect((val, x, y) => {
-      add_image_from_uri( val.get_string().strip() );
-      return( false );
+      return( add_image_from_uri( val.get_string().strip() ) );
     });
 
     return( drop );
@@ -253,7 +253,7 @@ public class ImageArea : Box {
   }
 
   /* Adds an image for the given URI if it is unique */
-  public void add_image_from_uri( string text ) {
+  public bool add_image_from_uri( string text ) {
     var uri = text;
     if( FileUtils.test( uri, FileTest.EXISTS ) && (Uri.peek_scheme( uri ) == null) ) {
       uri = "file://" + uri;
@@ -261,14 +261,16 @@ public class ImageArea : Box {
     if( (Uri.peek_scheme( uri ) != null) && is_uri_supported_image( uri ) ) {
       for( int i=0; i<_images.length; i++ ) {
         if( _images.index( i ).uri == uri ) {
-          return;
+          return( false );
         }
       }
       var image = new DBImage();
       if( image.store_file( _journal, uri ) ) {
         add_image( image );
+        return( true );
       }
     }
+    return( false );
   }
 
   /* Adds or changes the image associated with the current entry */

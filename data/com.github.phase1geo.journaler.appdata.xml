@@ -37,12 +37,12 @@
       <image>https://raw.githubusercontent.com/phase1geo/Journaler/master/data/screenshots/screenshot-entry-solarized.png</image>
     </screenshot>
     <screenshot>
-      <caption>Review Panel</caption>
-      <image>https://raw.githubusercontent.com/phase1geo/Journaler/master/data/screenshots/screenshot-review-solarized.png</image>
+      <caption>Entry Review Panel</caption>
+      <image>https://raw.githubusercontent.com/phase1geo/Journaler/master/data/screenshots/screenshot-entry-review.png</image>
     </screenshot>
     <screenshot>
-      <caption>Awards Panel</caption>
-      <image>https://raw.githubusercontent.com/phase1geo/Journaler/master/data/screenshots/screenshot-awards.png</image>
+      <caption>Image Review Panel</caption>
+      <image>https://raw.githubusercontent.com/phase1geo/Journaler/master/data/screenshots/screenshot-image-review.png</image>
     </screenshot>
   </screenshots>
   <launchable type="desktop-id">com.github.phase1geo.journaler.desktop</launchable>
