@@ -646,7 +646,7 @@ public class Preferences : Gtk.Dialog {
       add_btn.clicked.connect( add_test_entries );
       box.append( add_btn );
 
-      var test_btn = new Button.with_label( "Add test entries" );
+      var test_btn = new Button.with_label( "Add award testing entries" );
       test_btn.clicked.connect( add_award_test_entries );
       box.append( test_btn );
 
@@ -663,6 +663,7 @@ public class Preferences : Gtk.Dialog {
     var journal = _journals.current;
     var entries = new Array<DBEntry>();
     var date    = new DateTime.now_local();
+    date.add_days( -1 );
 
     stdout.printf( "Adding 100 test entries to journal %s\n", journal.name );
 
