@@ -1426,6 +1426,7 @@ public class Reviewer : Grid {
 
     /* Select and show the row in the entries listbox */
     var lb_index = 0;
+    _ignore_toggled = true;
     _match_entries.foreach((journal_entry) => {
       if( (journal_entry.date == entry.date) && (journal_entry.time == entry.time) ) {
         _match_lb.select_row( _match_lb.get_row_at_index( lb_index ) );
@@ -1434,6 +1435,7 @@ public class Reviewer : Grid {
       lb_index++;
       return( true );
     });
+    _ignore_toggled = false;
 
     Utils.scroll_to_selected_row( _match_lb );
     
