@@ -1073,8 +1073,11 @@ public class Reviewer : Grid {
       if( stack.visible_child_name == "entries" ) {
         _win.show_content( "text" );
       } else {
-        show_image( 0 );
-        _win.show_content( "image" );
+        if( show_image( 0 ) ) {
+          _win.show_content( "image" );
+        } else {
+          _win.show_content( "empty" );
+        }
       }
     });
 
@@ -1411,7 +1414,9 @@ public class Reviewer : Grid {
 
   }
   
-  private void show_image( int index ) {
+  private bool show_image( int index ) {
+
+    if( _match_images.size == 0 ) return( false );
     
     var match_image = _match_images.get( index );
     var entry       = new DBEntry.for_show( match_image.journal, match_image.trash, match_image.date, match_image.time );
@@ -1438,7 +1443,9 @@ public class Reviewer : Grid {
     _ignore_toggled = false;
 
     Utils.scroll_to_selected_row( _match_lb );
-    
+
+    return( true );
+
   }
 
   private void add_match_image( DBQueryImage image, int fbox_index ) {

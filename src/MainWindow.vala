@@ -565,6 +565,9 @@ public class MainWindow : Gtk.ApplicationWindow {
       case "image" :
         _content_stack.transition_type = StackTransitionType.SLIDE_UP;
         break;
+      case "empty" :
+        _content_stack.transition_type = StackTransitionType.NONE;
+        break;
     }
 
     _content_stack.visible_child_name = name;
@@ -577,6 +580,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     _content_stack = new Stack();
     _content_stack.add_named( add_text_area( app ), "text" );
     _content_stack.add_named( _text_area.image_area.create_full_image_viewer(), "image" );
+    _content_stack.add_named( add_empty_area(), "empty" );
 
     box.append( _content_stack );
 
@@ -584,13 +588,22 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   /* Creates the textbox with today's entry. */
   private Box add_text_area( Gtk.Application app ) {
-
     _text_area = new TextArea( app, this, _journals, _templates );
-
     _stack_focus_widgets.set( "entry-view", _text_area.get_focus_widget() );
-
     return( _text_area );
+  }
 
+  /* Displays empty image box */
+  private Box add_empty_area() {
+    var placeholder = new Granite.Placeholder( _( "No Images In Review" ) ) {
+      description = _( "The review query results do not contain any entries with images." )
+    };
+    var box = new Box( Orientation.VERTICAL, 5 ) {
+      valign = Align.CENTER,
+      vexpand = true
+    };
+    box.append( placeholder );
+    return( box );
   }
 
   /* Adds the sidebar */
