@@ -565,7 +565,8 @@ public class MainWindow : Gtk.ApplicationWindow {
       case "image" :
         _content_stack.transition_type = StackTransitionType.SLIDE_UP;
         break;
-      case "empty" :
+      case "empty-text"  :
+      case "empty-image" :
         _content_stack.transition_type = StackTransitionType.NONE;
         break;
     }
@@ -574,13 +575,19 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   }
 
+  /* Returns the current shown content area */
+  public string get_shown_content() {
+    return( _content_stack.visible_child_name );
+  }
+
   /* Creates the content area stack where the textarea and reviewer image viewer are displayed */
   private void add_content_area( Gtk.Application app, Box box ) {
 
     _content_stack = new Stack();
     _content_stack.add_named( add_text_area( app ), "text" );
     _content_stack.add_named( _text_area.image_area.create_full_image_viewer(), "image" );
-    _content_stack.add_named( add_empty_area(), "empty" );
+    _content_stack.add_named( add_empty_text_area(),  "empty-text" );
+    _content_stack.add_named( add_empty_image_area(), "empty-image" );
 
     box.append( _content_stack );
 
@@ -594,7 +601,20 @@ public class MainWindow : Gtk.ApplicationWindow {
   }
 
   /* Displays empty image box */
-  private Box add_empty_area() {
+  private Box add_empty_text_area() {
+    var placeholder = new Granite.Placeholder( _( "No Entries In Review" ) ) {
+      description = _( "The review query results do not contain any entries." )
+    };
+    var box = new Box( Orientation.VERTICAL, 5 ) {
+      valign = Align.CENTER,
+      vexpand = true
+    };
+    box.append( placeholder );
+    return( box );
+  }
+
+  /* Displays empty image box */
+  private Box add_empty_image_area() {
     var placeholder = new Granite.Placeholder( _( "No Images In Review" ) ) {
       description = _( "The review query results do not contain any entries with images." )
     };

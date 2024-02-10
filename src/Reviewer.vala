@@ -837,9 +837,25 @@ public class Reviewer : Grid {
     _tag_btn.sensitive     = false;
 
     /* Display the first entry */
+    var shown_content = _win.get_shown_content();
     if( _match_entries.size > 0 ) {
-      _match_lb.select_row( _match_lb.get_row_at_index( 0 ) );
-      Utils.scroll_to_selected_row( _match_lb );
+      if( (shown_content == "text") || (shown_content == "empty-text") ) {
+        _match_lb.select_row( _match_lb.get_row_at_index( 0 ) );
+        Utils.scroll_to_selected_row( _match_lb );
+        _win.show_content( "text" );
+      } else {
+        if( show_image( 0 ) ) {
+          _win.show_content( "image" );
+        } else {
+          _win.show_content( "empty-image" );
+        }
+      }
+    } else {
+      if( (shown_content == "text") || (shown_content == "empty-text") ) {
+        _win.show_content( "empty-text" );
+      } else {
+        _win.show_content( "empty-image" );
+      }
     }
 
     _lb_status.label = _match_entries.size.to_string();
@@ -1440,6 +1456,7 @@ public class Reviewer : Grid {
       lb_index++;
       return( true );
     });
+    _match_fbox.select_child( _match_fbox.get_child_at_index( 0 ) );
     _ignore_toggled = false;
 
     Utils.scroll_to_selected_row( _match_lb );

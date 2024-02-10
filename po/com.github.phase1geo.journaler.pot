@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: com.github.phase1geo.journaler\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-02-08 23:13-0600\n"
+"POT-Creation-Date: 2024-02-10 00:09-0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -31,7 +31,7 @@ msgstr ""
 msgid "Run '%s --help' to see valid options\n"
 msgstr ""
 
-#: src/Database.vala:676 src/Reviewer.vala:630
+#: src/Database.vala:676 src/Reviewer.vala:631
 msgid "Untagged"
 msgstr ""
 
@@ -47,7 +47,7 @@ msgstr ""
 msgid "JSON"
 msgstr ""
 
-#: src/exports/ExportXML.vala:30 src/Preferences.vala:780
+#: src/exports/ExportXML.vala:30 src/Preferences.vala:781
 msgid "XML"
 msgstr ""
 
@@ -402,29 +402,45 @@ msgstr ""
 msgid "Manage Templates"
 msgstr ""
 
-#: src/MainWindow.vala:637 src/SidebarEditor.vala:213 src/TagListbox.vala:74
+#: src/MainWindow.vala:605
+msgid "No Entries In Review"
+msgstr ""
+
+#: src/MainWindow.vala:606
+msgid "The review query results do not contain any entries."
+msgstr ""
+
+#: src/MainWindow.vala:618
+msgid "No Images In Review"
+msgstr ""
+
+#: src/MainWindow.vala:619
+msgid "The review query results do not contain any entries with images."
+msgstr ""
+
+#: src/MainWindow.vala:670 src/SidebarEditor.vala:213 src/TagListbox.vala:74
 #: src/Templater.vala:733 src/Utils.vala:309
 msgid "Cancel"
 msgstr ""
 
-#: src/MainWindow.vala:645
+#: src/MainWindow.vala:678
 msgid "Set Password"
 msgstr ""
 
-#: src/MainWindow.vala:802 src/Preferences.vala:95
+#: src/MainWindow.vala:835 src/Preferences.vala:95
 msgid "Close"
 msgstr ""
 
-#: src/MainWindow.vala:974
+#: src/MainWindow.vala:1007
 msgid "Complete!"
 msgstr ""
 
-#: src/MainWindow.vala:975
+#: src/MainWindow.vala:1008
 #, c-format
 msgid "%d out of %d (%d%%)"
 msgstr ""
 
-#: src/MainWindow.vala:977
+#: src/MainWindow.vala:1010
 #, c-format
 msgid "Status: %s"
 msgstr ""
@@ -547,89 +563,89 @@ msgstr ""
 msgid "Choose Image"
 msgstr ""
 
-#: src/Preferences.vala:737
+#: src/Preferences.vala:738
 msgid "Export all journals"
 msgstr ""
 
-#: src/Preferences.vala:740
+#: src/Preferences.vala:741
 msgid "Export journal"
 msgstr ""
 
-#: src/Preferences.vala:768
+#: src/Preferences.vala:769
 msgid "Export for the purpose of importing back into Journaler"
 msgstr ""
 
-#: src/Preferences.vala:771
+#: src/Preferences.vala:772
 msgid "Include entry images"
 msgstr ""
 
-#: src/Preferences.vala:778
+#: src/Preferences.vala:779
 msgid "Export Format:"
 msgstr ""
 
-#: src/Preferences.vala:801
+#: src/Preferences.vala:802
 msgid "Export…"
 msgstr ""
 
-#: src/Preferences.vala:837
+#: src/Preferences.vala:838
 msgid "Export Options"
 msgstr ""
 
-#: src/Preferences.vala:855
+#: src/Preferences.vala:856
 msgid ""
 "Import entries into original journals, automatically creating non-existing "
 "journals"
 msgstr ""
 
-#: src/Preferences.vala:859
+#: src/Preferences.vala:860
 msgid "Import all entries into journal"
 msgstr ""
 
-#: src/Preferences.vala:870
+#: src/Preferences.vala:871
 msgid "Create new journal"
 msgstr ""
 
-#: src/Preferences.vala:892
+#: src/Preferences.vala:893
 msgid "Enter new journal name"
 msgstr ""
 
-#: src/Preferences.vala:938
+#: src/Preferences.vala:939
 msgid "Import Options"
 msgstr ""
 
-#: src/Preferences.vala:993
+#: src/Preferences.vala:994
 msgid "Export Data As…"
 msgstr ""
 
-#: src/Preferences.vala:993
+#: src/Preferences.vala:994
 msgid "Export"
 msgstr ""
 
-#: src/Preferences.vala:1010
+#: src/Preferences.vala:1011
 msgid "Export successful"
 msgstr ""
 
-#: src/Preferences.vala:1012
+#: src/Preferences.vala:1013
 msgid "Export failed"
 msgstr ""
 
-#: src/Preferences.vala:1038
+#: src/Preferences.vala:1039
 msgid "new called"
 msgstr ""
 
-#: src/Preferences.vala:1062
+#: src/Preferences.vala:1063
 msgid "Import Data From…"
 msgstr ""
 
-#: src/Preferences.vala:1062
+#: src/Preferences.vala:1063
 msgid "Import"
 msgstr ""
 
-#: src/Preferences.vala:1081
+#: src/Preferences.vala:1082
 msgid "Import successful"
 msgstr ""
 
-#: src/Preferences.vala:1083
+#: src/Preferences.vala:1084
 msgid "Import failed"
 msgstr ""
 
@@ -896,95 +912,95 @@ msgid ""
 "quotes to the system"
 msgstr ""
 
-#: src/Reviewer.vala:161
+#: src/Reviewer.vala:162
 msgid "Journals:"
 msgstr ""
 
-#: src/Reviewer.vala:167 src/Reviewer.vala:253
+#: src/Reviewer.vala:168 src/Reviewer.vala:254
 msgid "Select All"
 msgstr ""
 
-#: src/Reviewer.vala:176 src/Reviewer.vala:262
+#: src/Reviewer.vala:177 src/Reviewer.vala:263
 msgid "Clear All"
 msgstr ""
 
-#: src/Reviewer.vala:247
+#: src/Reviewer.vala:248
 msgid "Tags:"
 msgstr ""
 
-#: src/Reviewer.vala:308
+#: src/Reviewer.vala:309
 msgid "Date Range:"
 msgstr ""
 
-#: src/Reviewer.vala:357
+#: src/Reviewer.vala:358
 msgid "Search entry title and text"
 msgstr ""
 
-#: src/Reviewer.vala:374
+#: src/Reviewer.vala:375
 msgid "Save exact dates"
 msgstr ""
 
-#: src/Reviewer.vala:375
+#: src/Reviewer.vala:376
 msgid "Save relative to exact start date"
 msgstr ""
 
-#: src/Reviewer.vala:376
+#: src/Reviewer.vala:377
 msgid "Save relative to current date"
 msgstr ""
 
-#: src/Reviewer.vala:379
+#: src/Reviewer.vala:380
 msgid "Save search"
 msgstr ""
 
-#: src/Reviewer.vala:382
+#: src/Reviewer.vala:383
 msgid "Delete saved search"
 msgstr ""
 
-#: src/Reviewer.vala:385
+#: src/Reviewer.vala:386
 msgid "Show all entries"
 msgstr ""
 
-#: src/Reviewer.vala:392
+#: src/Reviewer.vala:393
 msgid "Save Review Criteria"
 msgstr ""
 
-#: src/Reviewer.vala:725
+#: src/Reviewer.vala:728
 msgid "All Journals"
 msgstr ""
 
-#: src/Reviewer.vala:725
+#: src/Reviewer.vala:728
 msgid "No Journals"
 msgstr ""
 
-#: src/Reviewer.vala:729
+#: src/Reviewer.vala:732
 msgid "All Tags"
 msgstr ""
 
-#: src/Reviewer.vala:729
+#: src/Reviewer.vala:732
 msgid "No Tags"
 msgstr ""
 
-#: src/Reviewer.vala:1064
+#: src/Reviewer.vala:1085
 msgid "Entries"
 msgstr ""
 
-#: src/Reviewer.vala:1065
+#: src/Reviewer.vala:1086
 msgid "Images"
 msgstr ""
 
-#: src/Reviewer.vala:1121
+#: src/Reviewer.vala:1145
 msgid "Restore from trash"
 msgstr ""
 
-#: src/Reviewer.vala:1127
+#: src/Reviewer.vala:1151
 msgid "Move to trash"
 msgstr ""
 
-#: src/Reviewer.vala:1133
+#: src/Reviewer.vala:1157
 msgid "Edit tags"
 msgstr ""
 
-#: src/Reviewer.vala:1164
+#: src/Reviewer.vala:1188
 msgid "Shown Entries:"
 msgstr ""
 
