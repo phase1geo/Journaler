@@ -19,16 +19,19 @@
 * Authored by: Trevor Williams <phase1geo@gmail.com>
 */
 
+using Gtk;
+using GLib.Math;
+
 public class MarkdownTable {
 
-  private class Matrix {
+  public enum ColumnAlignment {
+    NONE,
+    CENTER,
+    LEFT,
+    RIGHT
+  }
 
-    public enum ColumnAlignment {
-      NONE,
-      CENTER,
-      LEFT,
-      RIGHT
-    }
+  public class Matrix {
 
     private class Cell {
       public string data;
@@ -108,6 +111,7 @@ public class MarkdownTable {
           var cell = _cells.index( i ).copy();
           _cells.append_val( cell );
         }
+        return( row );
       }
       public void add_cell( string data ) {
         if( data != "" ) {
@@ -190,7 +194,7 @@ public class MarkdownTable {
     private Array<ColumnAlignment> get_alignments() {
       return( _rows.index( 1 ).get_alignments() );
     }
-    private string create_align_row( ref int[] widths, Array<ColumnAlignment> aligns ) {
+    public string create_align_row( ref int[] widths, Array<ColumnAlignment> aligns ) {
       var cols = new Array<string>();
       cols.append_val( string.nfill( widths[0], ' ' ) );
       for( int i=1; i<=_max_column; i++ ) {
@@ -205,15 +209,19 @@ public class MarkdownTable {
     }
 
     public string insert_row( bool above ) {
+      return( "" );
     }
 
     public string insert_column( bool before ) {
+      return( "" );
     }
 
     public string delete_row() {
+      return( "" );
     }
 
     public string delete_column() {
+      return( "" );
     }
 
     /* Called to beautify the tables */
@@ -243,10 +251,10 @@ public class MarkdownTable {
   }
 
   /* Loads the given table into memory */
-  public void load_table( TextBuffer buffer ) {
+  public Matrix? load_table( TextBuffer buffer ) {
 
     TextIter cursor;
-    buffer.get_iter_at_mark( cursor, buffer.get_insert() );
+    buffer.get_iter_at_mark( out cursor, buffer.get_insert() );
 
     MatchInfo match;
     var text   = buffer.text;
@@ -258,30 +266,117 @@ public class MarkdownTable {
 
     foreach( string line in text.split( "\n" ) ) {
       if( _table_re.match( line, 0, out match ) ) {
-        if( !found ) sbytes = bytes;
-        ebytes = bytes + line.length;
+        if( !found ) schars = chars;
+        echars = chars + line.char_count();
         found = true;
       } else {
         if( found && (schars <= cchar) && (cchar <= echars) ) {
-          str += beautify_table( text, buffer.index_of_nth_char( schars ), buffer.index_of_nth_char( echars ) ) + "\n";
-          found = false;
+          var matrix = new Matrix( text.slice( text.index_of_nth_char( schars ), text.index_of_nth_char( echars ) ) );
+          return( matrix );
         }
-        str += line + "\n";
+        found = false;
       }
       chars += (line.char_count() + 1);
     }
 
-    if( found ) {
-      str += beautify_table( text, sbytes, ebytes );
-    }
-
-    return( str );
+    return( null );
 
   }
 
+  // Inserts a new, blank table at the insertion cursor point with the given number of rows, columns
+  // and alignment.  Beautifies the table
+  public void insert_blank_table( TextBuffer buffer, int rows, int cols, ColumnAlignment alignment ) {
+    var table  = create_blank_table( rows, cols, alignment );
+    var matrix = new Matrix( table );
+    var str    = matrix.adjust_rows();
+    buffer.insert_at_cursor( str, str.length );
+  }
+
+  // Inserts a new table based on CSV data at the current insertion point
+  public void insert_csv_table( TextBuffer buffer, string csv_data, string split_char, bool first_line_is_header, ColumnAlignment alignment ) {
+    var table  = create_csv_table( csv_data, split_char, first_line_is_header, alignment );
+    var matrix = new Matrix( table );
+    var str    = matrix.adjust_rows();
+    buffer.insert_at_cursor( str, str.length );
+  }
+
+  // Beautifies the table in the given text range and returns it as a string
   private string beautify_table( string text, int start, int end ) {
     var matrix = new Matrix( text.slice( start, end ) );
     return( matrix.adjust_rows() );
+  }
+
+  // Creates a blank table (with header) with the given alignment and table size.
+  private string create_blank_table( int rows, int cols, ColumnAlignment alignment ) {
+
+    var lines = new Array<string>();
+    var cells = new Array<string>();
+    var acols = new Array<string>();
+    for( int col=0; col<cols; col++ ) {
+      cells.append_val( "   " );
+      switch( alignment ) {
+        case ColumnAlignment.LEFT   :  acols.append_val( ":--" );  break;
+        case ColumnAlignment.RIGHT  :  acols.append_val( "--:" );  break;
+        case ColumnAlignment.CENTER :  acols.append_val( ":-:" );  break;
+        case ColumnAlignment.NONE   :  acols.append_val( "---" );  break;
+      }
+    }
+    var trow = "|" + string.joinv( "|", cells.data ) + "|";
+
+    // Create header row
+    lines.append_val( trow );
+
+    // Create alignment row
+    lines.append_val( "|" + string.joinv( "|", acols.data ) + "|" );
+
+    // Create rows
+    for( int row=0; row<rows; row++ ) {
+      lines.append_val( trow );
+    }
+
+    return( string.joinv( "\n", lines.data ) );
+
+  }
+
+  // Creates a table from CSV data
+  private string create_csv_table( string csv_data, string split_char, bool first_line_is_header, ColumnAlignment alignment ) {
+
+    var lines     = new Array<string>();
+    var csv_lines = csv_data.split( "\n" );
+    var line      = 0;
+
+    foreach( string csv_line in csv_lines ) {
+      var csv_cols = csv_line.split( split_char );
+      var col_num  = csv_cols.length;
+      if( line == 0 ) {
+        if ( first_line_is_header ) {
+          var row = "|";
+          foreach( string csv_col in csv_cols ) {
+            row += csv_col + "|";
+          }
+          lines.append_val( row );
+        }
+        var arow = "|";
+        for( int i=0; i<col_num; i++ ) {
+          switch( alignment ) {
+            case ColumnAlignment.LEFT   :  arow += ":--|";  break;
+            case ColumnAlignment.RIGHT  :  arow += "--:|";  break;
+            case ColumnAlignment.CENTER :  arow += ":-:|";  break;
+            case ColumnAlignment.NONE   :  arow += "---|";  break;
+          }
+        }
+        lines.append_val( arow );
+      } else {
+        var row = "|";
+        foreach( string csv_col in csv_cols ) {
+          row += csv_col + "|";
+        }
+        lines.append_val( row );
+      }
+    }
+
+    return( string.joinv( "\n", lines.data ) );
+
   }
 
 }

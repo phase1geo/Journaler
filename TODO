@@ -1,0 +1,29 @@
+In Progress:
+
+  ☐ Add functionality for inserting a blank table
+
+
+Release TODO:
+
+  ☐ Add support for Markdown table editing @new
+    ☐ Add functionality for inserting a blank table
+    ☐ Add functionality for converting CSV data to table within text
+    ☐ Add support for beautifying an embedded table
+    ☐ Add functionality for converting clipboard CSV data to table
+    ☐ Add support for inserting row
+    ☐ Add support for inserting column
+    ☐ Add menu items for this new functionality
+    ☐ Add keyboard shortcuts to help dialog
+    ☐ Add keyboard shortcuts
+  ☐ Fix/improve and enable support for weather, location and RSS feeds @bugfix
+    Use GLib.Task to help accomplish this
+  ☐ Export @new
+    Integrate PanDoc?
+  ☐ Add basic image editing tools to large image display @new
+  ☐ Update documentation @documentation
+
+ --- ✄ -----------------------
+  
+Other Items:
+
+  ☐ Add support for archiving @new
