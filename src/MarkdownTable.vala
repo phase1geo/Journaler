@@ -37,14 +37,19 @@ public class MarkdownTable {
       public string data;
       public int    column;
       public int    colspan;
-      public Cell( string data, int column ) {
-        this.data    = data;
-        this.column  = column;
-        this.colspan = 1;
+      public int    start_tcol;
+      public Cell( string data, int column, int start_tcol ) {
+        this.data       = data;
+        this.column     = column;
+        this.colspan    = 1;
+        this.start_tcol = start_tcol;
       }
       public Cell copy() {
-        var cell = new Cell( this.data, this.column );
+        var cell = new Cell( this.data, this.column, this.start_tcol );
         return( cell );
+      }
+      public int end_tcol() {
+        return( start_tcol + data.char_count() + 1 );
       }
       public int last_column() {
         return( column + (colspan - 1) );
@@ -101,21 +106,26 @@ public class MarkdownTable {
 
     public class Row {
       private Array<Cell> _cells;
-      public Row() {
+      private int         _lnum;
+      public Row( int lnum ) {
         _cells = new Array<Cell>();
-        _cells.append_val( new Cell( "", 0 ) );
+        _cells.append_val( new Cell( "", 0, 0 ) );
+        _lnum = lnum;
       }
       public Row copy() {
-        var row = new Row();
+        var row = new Row( _lnum );
         for( int i=0; i<_cells.length; i++ ) {
           var cell = _cells.index( i ).copy();
           _cells.append_val( cell );
         }
         return( row );
       }
-      public void add_cell( string data ) {
+      public Cell? get_cell( int index ) {
+        return( (index < _cells.length) ? _cells.index( index ) : null );
+      }
+      public void add_cell( string data, int start_tcol ) {
         if( data != "" ) {
-          var cell = new Cell( data, (num_columns() + 1) );
+          var cell = new Cell( data, (num_columns() + 1), start_tcol );
           _cells.append_val( cell );
         } else {
           _cells.index( _cells.length - 1 ).colspan++;
@@ -125,8 +135,12 @@ public class MarkdownTable {
         return( (_cells.length > 0) ? _cells.index( _cells.length - 1 ).last_column() : 0 );
       }
       public void pad_columns( string data, int max_column ) {
+        Cell last_cell = _cells.index( _cells.length - 1 );
+        int tcol       = last_cell.end_tcol() + 1; 
+        int data_len   = data.char_count();
         for( int i=(num_columns() + 1); i<=max_column; i++ ) {
-          _cells.append_val( new Cell( data, i ) );
+          _cells.append_val( new Cell( data, i, tcol ) );
+          tcol += data_len + 1;
         }
       }
       public void update_column_widths( ref int[] col_widths ) {
@@ -155,16 +169,20 @@ public class MarkdownTable {
 
     private Array<Row> _rows;
     private int        _max_column;
-    public Matrix( string text ) {
+    public Matrix( string text, int start_line = 0 ) {
+      var line = start_line;
       _rows = new Array<Row>();
       foreach( string rowstr in text.split( "\n" ) ) {
-        var row  = new Matrix.Row();
+        var row  = new Matrix.Row( line );
         var data = rowstr.split( "|" );
+        var tcol = data[0].char_count() + 1;
         foreach( string item in data[1:data.length-1] ) {
           var stripped = item.strip();
-          row.add_cell( (item == "") ? "" : ((stripped == "") ? " " : stripped) );
+          row.add_cell( (item == "") ? "" : ((stripped == "") ? " " : stripped), tcol );
+          tcol += item.char_count() + 1;
         }
         add_row( row );
+        line++;
       }
     }
     private void add_row( Row row ) {
@@ -207,23 +225,35 @@ public class MarkdownTable {
       }
       return( string.joinv( "|", cols.data ) + "|" );
     }
-
-    public string insert_row( bool above ) {
-      return( "" );
+    public Row create_empty_row( int lnum, int cell0_tcol ) {
+      var row  = new Row( lnum );
+      var tcol = cell0_tcol;
+      for( int i=1; i<=_max_column; i++ ) {
+        row.add_cell( " ", _rows);
+        tcol += 2;
+      }
     }
-
-    public string insert_column( bool before ) {
-      return( "" );
+    public void insert_row( int trow, bool above ) {
+      for( int i=0; i<_rows.length; i++ ) {
+        var row = _rows.index( i );
+        if( row.lnum == trow ) {
+          var tcol = row.get_cell( 0 ).start_tcol;
+          _rows.insert_val( (above ? i : (i + 1)), create_empty_row( (row.lnum + (above ? 0 : 1)), tcol ) );
+        }
+      }
     }
-
-    public string delete_row() {
-      return( "" );
+    public void insert_column( int tcol, bool before ) {
+      for( int i=0; i<_rows.length; i++ ) {
+        var row = _rows.index( i );
+        int col = row.get_column( tcol );
+        var cell = new Cell( " ", FOOBAR );
+        row.insert_cell( i + (before ? 0 : 1) );
+      }
     }
-
-    public string delete_column() {
-      return( "" );
+    public void delete_row( int trow ) {
     }
-
+    public void delete_column( int tcol ) {
+    }
     /* Called to beautify the tables */
     public string adjust_rows() {
       var lines  = new Array<string>();
@@ -263,6 +293,7 @@ public class MarkdownTable {
     var cchar  = cursor.get_offset();
     var chars  = 0;
     var found  = false;
+    var lnum   = 1;
 
     foreach( string line in text.split( "\n" ) ) {
       if( _table_re.match( line, 0, out match ) ) {
@@ -271,12 +302,14 @@ public class MarkdownTable {
         found = true;
       } else {
         if( found && (schars <= cchar) && (cchar <= echars) ) {
-          var matrix = new Matrix( text.slice( text.index_of_nth_char( schars ), text.index_of_nth_char( echars ) ) );
+          var contents = text.slice( text.index_of_nth_char( schars ), text.index_of_nth_char( echars ) );
+          var matrix   = new Matrix( contents, lnum );
           return( matrix );
         }
         found = false;
       }
       chars += (line.char_count() + 1);
+      lnum++;
     }
 
     return( null );
