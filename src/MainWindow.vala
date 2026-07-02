@@ -886,7 +886,7 @@ public class MainWindow : Gtk.ApplicationWindow {
   private void load_css() {
 
     var provider = new CssProvider();
-    provider.load_from_resource( "/com/github/phase1geo/journaler/Application.css" );
+    provider.load_from_resource( "/io/github/phase1geo/journaler/Application.css" );
     StyleContext.add_provider_for_display( get_display(), provider, STYLE_PROVIDER_PRIORITY_APPLICATION );
 
   }
@@ -993,9 +993,9 @@ public class MainWindow : Gtk.ApplicationWindow {
 
       /* Create image icon */
       if( goal.achieved ) {
-        img = new Picture.for_resource( "/com/github/phase1geo/journaler/award-achieved.png" );
+        img = new Picture.for_resource( "/io/github/phase1geo/journaler/award-achieved.png" );
       } else {
-        img = new Picture.for_resource( "/com/github/phase1geo/journaler/award-unachieved.png" );
+        img = new Picture.for_resource( "/io/github/phase1geo/journaler/award-unachieved.png" );
       }
 
       var lbl1 = new Label( Utils.make_title( goal.label ) ) {
@@ -1081,7 +1081,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     reset_timer();
     if( locked ) return;
 
-    var builder = new Builder.from_resource( "/com/github/phase1geo/journaler/shortcuts.ui" );
+    var builder = new Builder.from_resource( "/io/github/phase1geo/journaler/shortcuts.ui" );
     _shortcuts = builder.get_object( "shortcuts" ) as ShortcutsWindow;
 
     _shortcuts.transient_for = this;
@@ -1190,7 +1190,7 @@ public class MainWindow : Gtk.ApplicationWindow {
       var notification = new Notification( title );
       notification.set_body( msg );
       notification.set_priority( priority );
-      app.send_notification( "com.github.phase1geo.minder", notification );
+      app.send_notification( "io.github.phase1geo.minder", notification );
     }
   }
 

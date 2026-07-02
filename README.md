@@ -1,10 +1,10 @@
 <h1 align="center">Journaler</h1>
 <p align="center">
-  <img src="https://raw.githubusercontent.com/phase1geo/Journaler/master/data/icons/scalable/com.github.phase1geo.journaler.svg" width="256"/>
+  <img src="https://raw.githubusercontent.com/phase1geo/Journaler/master/data/icons/scalable/io.github.phase1geo.journaler.svg" width="256"/>
 </p>
 
 <p align="center">
-  <a href="https://appcenter.elementary.io/com.github.phase1geo.journaler">
+  <a href="https://appcenter.elementary.io/io.github.phase1geo.journaler">
     <img src="https://appcenter.elementary.io/badge.svg" alt="Get it on AppCenter" />
   </a>
 </p>
@@ -80,7 +80,7 @@ Currently, there are no available distribution packages.
 Journaler documentation can be found [here](https://github.com/phase1geo/Journaler/wiki/Table-of-Contents).
 
 <p align="center">
-  <a href="https://appcenter.elementary.io/com.github.phase1geo.journaler">
+  <a href="https://appcenter.elementary.io/io.github.phase1geo.journaler">
     <img src="https://appcenter.elementary.io/badge.svg" alt="Get it on AppCenter" />
   </a>
 </p>

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: extra\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-02-10 00:12-0600\n"
+"POT-Creation-Date: 2026-07-02 18:22-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,28 +17,28 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: data/com.github.phase1geo.journaler.desktop.in:3
-#: data/com.github.phase1geo.journaler.appdata.xml.in:7
+#: data/io.github.phase1geo.journaler.desktop.in:3
+#: data/io.github.phase1geo.journaler.appdata.xml.in:7
 msgid "Journaler"
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.desktop.in:4
+#: data/io.github.phase1geo.journaler.desktop.in:4
 msgid "Journal"
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.desktop.in:5
+#: data/io.github.phase1geo.journaler.desktop.in:5
 msgid "Make every day memorable"
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.desktop.in:14
+#: data/io.github.phase1geo.journaler.desktop.in:14
 msgid "Journaling;Diary;Journal"
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:8
+#: data/io.github.phase1geo.journaler.appdata.xml.in:8
 msgid "Make every day a memory"
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:10
+#: data/io.github.phase1geo.journaler.appdata.xml.in:10
 msgid ""
 "Make memories in life and never forget them with Journaler, a journaling "
 "application that allows you to easily and expressively capture the details "
@@ -46,189 +46,189 @@ msgid ""
 "ways. Stay motivated to keep writing. Easily export your data when needed."
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:15
+#: data/io.github.phase1geo.journaler.appdata.xml.in:15
 msgid "Features:"
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:17
+#: data/io.github.phase1geo.journaler.appdata.xml.in:17
 msgid "Support for multiple journals."
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:18
+#: data/io.github.phase1geo.journaler.appdata.xml.in:18
 msgid "Application-wide password protection."
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:19
+#: data/io.github.phase1geo.journaler.appdata.xml.in:19
 msgid "Markdown writing support."
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:20
+#: data/io.github.phase1geo.journaler.appdata.xml.in:20
 msgid "Add images to each journal entry."
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:21
+#: data/io.github.phase1geo.journaler.appdata.xml.in:21
 msgid "Tagging support."
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:22
+#: data/io.github.phase1geo.journaler.appdata.xml.in:22
 msgid ""
 "Expressive and robust journal entry review features, including image review "
 "mode."
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:23
+#: data/io.github.phase1geo.journaler.appdata.xml.in:23
 msgid "Fullscreen distraction-free writing and review mode."
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:24
+#: data/io.github.phase1geo.journaler.appdata.xml.in:24
 msgid "Template support."
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:25
+#: data/io.github.phase1geo.journaler.appdata.xml.in:25
 msgid ""
 "Motivation support with entry length goals, awards, inspirational quotes, "
 "and customizations."
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:26
+#: data/io.github.phase1geo.journaler.appdata.xml.in:26
 msgid "Built-in entry trash support."
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:27
+#: data/io.github.phase1geo.journaler.appdata.xml.in:27
 msgid "Import from XML"
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:28
+#: data/io.github.phase1geo.journaler.appdata.xml.in:28
 msgid "Export to XML and JSON."
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:36
+#: data/io.github.phase1geo.journaler.appdata.xml.in:36
 msgid "Entry Panel"
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:40
+#: data/io.github.phase1geo.journaler.appdata.xml.in:40
 msgid "Entry Review Panel"
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:44
+#: data/io.github.phase1geo.journaler.appdata.xml.in:44
 msgid "Image Review Panel"
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:49
+#: data/io.github.phase1geo.journaler.appdata.xml.in:49
 msgid "Trevor Williams"
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:62
+#: data/io.github.phase1geo.journaler.appdata.xml.in:62
 msgid "New"
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:64
+#: data/io.github.phase1geo.journaler.appdata.xml.in:64
 msgid "Added ability to add new entries to past dates."
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:65
+#: data/io.github.phase1geo.journaler.appdata.xml.in:65
 msgid ""
 "Added ability to move a journal entry to a different journal within the "
 "content panel."
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:66
+#: data/io.github.phase1geo.journaler.appdata.xml.in:66
 msgid ""
 "Added ability to move a journal entry to a different date within the content "
 "panel."
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:67
+#: data/io.github.phase1geo.journaler.appdata.xml.in:67
 msgid "Added sidebar entry count information (including entry stream count)."
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:68
+#: data/io.github.phase1geo.journaler.appdata.xml.in:68
 msgid ""
 "Added ability to bulk edit entries in the review sidebar (includes moving, "
 "trashing and tagging features)."
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:69
+#: data/io.github.phase1geo.journaler.appdata.xml.in:69
 msgid "Added new image review panel."
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:70
+#: data/io.github.phase1geo.journaler.appdata.xml.in:70
 msgid "Added ability to sort review entries oldest or newest first."
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:71
+#: data/io.github.phase1geo.journaler.appdata.xml.in:71
 msgid "Added preference option to change the spell checker language."
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:72
+#: data/io.github.phase1geo.journaler.appdata.xml.in:72
 msgid "Added new inspirational quotes."
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:74
+#: data/io.github.phase1geo.journaler.appdata.xml.in:74
 msgid "Changes"
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:76
+#: data/io.github.phase1geo.journaler.appdata.xml.in:76
 msgid "Changed to allow multiple entries per day."
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:77
+#: data/io.github.phase1geo.journaler.appdata.xml.in:77
 msgid "Added image date and original location information to image viewer."
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:78
+#: data/io.github.phase1geo.journaler.appdata.xml.in:78
 msgid "Minor UI enhancements to improve application use and appearance."
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:80
-#: data/com.github.phase1geo.journaler.appdata.xml.in:91
+#: data/io.github.phase1geo.journaler.appdata.xml.in:80
+#: data/io.github.phase1geo.journaler.appdata.xml.in:91
 msgid "Bug Fixes"
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:82
+#: data/io.github.phase1geo.journaler.appdata.xml.in:82
 msgid "Fixed issue with using non-PNG images."
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:83
+#: data/io.github.phase1geo.journaler.appdata.xml.in:83
 msgid "Fixed tag matching issue in review mode."
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:84
+#: data/io.github.phase1geo.journaler.appdata.xml.in:84
 msgid ""
 "Fixed bug where editing an entry before the current day could cause its "
 "contents to not get saved when a new date is chosen."
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:85
+#: data/io.github.phase1geo.journaler.appdata.xml.in:85
 msgid ""
 "Fixed application crash that could happen if there are no suggestions for a "
 "misspelled word."
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:93
+#: data/io.github.phase1geo.journaler.appdata.xml.in:93
 msgid "Adding launchable tag."
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:94
+#: data/io.github.phase1geo.journaler.appdata.xml.in:94
 msgid "Fixing release dates in appdata."
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:95
+#: data/io.github.phase1geo.journaler.appdata.xml.in:95
 msgid ""
 "Fixed UI issues when switching from distraction-free editing to normal "
 "editing mode."
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:101
+#: data/io.github.phase1geo.journaler.appdata.xml.in:101
 msgid ""
 "Updating versioning information to 1.0.2 to satisfy AppCenter review "
 "requirements."
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:106
+#: data/io.github.phase1geo.journaler.appdata.xml.in:106
 msgid "Adding Stripe key to appdata.xml file"
 msgstr ""
 
-#: data/com.github.phase1geo.journaler.appdata.xml.in:111
+#: data/io.github.phase1geo.journaler.appdata.xml.in:111
 msgid "Initial release"
 msgstr ""

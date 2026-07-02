@@ -20,7 +20,6 @@
 */
 
 using Gtk;
-using Granite;
 
 public enum SelectedEntryPos {
   FIRST,

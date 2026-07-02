@@ -1,4 +1,4 @@
-project('com.github.phase1geo.journaler', ['vala', 'c'],
+project('io.github.phase1geo.journaler', ['vala', 'c'],
   meson_version : '>= 0.59.0',
   version : '1.1.0',
   license: 'GPL-3.0'
@@ -48,7 +48,7 @@ core_deps = [
     dependency('webkitgtk-6.0')
 ]
 
-e = executable('com.github.phase1geo.journaler',
+e = executable('io.github.phase1geo.journaler',
     sources,
     config_file,
     gresource,
@@ -60,7 +60,7 @@ e = executable('com.github.phase1geo.journaler',
     install : true
 )
 
-#d = executable('com.github.phase1geo.journaler.daemon',
+#d = executable('io.github.phase1geo.journaler.daemon',
 #    files('src/Daemon.vala'),
 #    dependencies: [
 #      dependency('gobject-2.0'),

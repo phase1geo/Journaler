@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2023 (https://github.com/phase1geo/Journaler)
+* Copyright (c) 2023-2026 (https://github.com/phase1geo/Journaler)
 *
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public
@@ -37,9 +37,9 @@ public class Journaler : Gtk.Application {
 
   public Journaler () {
 
-    Object( application_id: "com.github.phase1geo.journaler", flags: ApplicationFlags.HANDLES_OPEN );
+    Object( application_id: "io.github.phase1geo.journaler", flags: ApplicationFlags.HANDLES_OPEN );
 
-    /* Register with the session manager so that we can be alerted to screensaver status */
+    // Register with the session manager so that we can be alerted to screensaver status
     register_session = true;
 
     Intl.setlocale( LocaleCategory.ALL, "" );
@@ -52,27 +52,29 @@ public class Journaler : Gtk.Application {
 
   }
 
-  /* First method called in the startup process */
+  //-------------------------------------------------------------
+  // First method called in the startup process
   private void start_application() {
 
-    /* Initialize the settings */
-    settings = new GLib.Settings( "com.github.phase1geo.journaler" );
+    // Initialize the settings
+    settings = new GLib.Settings( "io.github.phase1geo.journaler" );
 
-    /* Add the application-specific icons */
+    // Add the application-specific icons
     weak IconTheme default_theme = IconTheme.get_for_display( Display.get_default() );
-    default_theme.add_resource_path( "/com/github/phase1geo/journaler" );
+    default_theme.add_resource_path( "/io/github/phase1geo/journaler" );
+    default_theme.add_resource_path( "/io/github/phase1geo/journaler/icons/hicolor" );
 
-    /* Make sure that the user data directory exists */
+    // Make sure that the user data directory exists
     var app_dir = GLib.Path.build_filename( Environment.get_user_data_dir(), "journaler" );
     Utils.create_dir( app_dir );
 
-    /* Create the main window */
+    // Create the main window
     appwin = new MainWindow( this, settings );
 
     var granite_settings = Granite.Settings.get_default();
     var gtk_settings = Gtk.Settings.get_default();
 
-    /* Handle dark mode changes */
+    // Handle dark mode changes
     gtk_settings.gtk_application_prefer_dark_theme = (
       granite_settings.prefers_color_scheme == Granite.Settings.ColorScheme.DARK
     );
@@ -85,38 +87,25 @@ public class Journaler : Gtk.Application {
       appwin.themes.dark_mode = gtk_settings.gtk_application_prefer_dark_theme;
     });
 
-    /* Handle any changes to the position of the window */
-    /* DONT_KNOW_HOW_TO_HANDLE_YET
-    appwin.configure_event.connect(() => {
-      int root_x, root_y;
-      int size_w, size_h;
-      appwin.get_position( out root_x, out root_y );
-      appwin.get_size( out size_w, out size_h );
-      settings.set_int( "window-x", root_x );
-      settings.set_int( "window-y", root_y );
-      settings.set_int( "window-w", size_w );
-      settings.set_int( "window-h", size_h );
-      return( false );
-    });
-    */
-
   }
 
-  /* Called if we have no files to open */
+  //-------------------------------------------------------------
+  // Called if we have no files to open
   private void on_activate() {
   }
 
-  /* Parse the command-line arguments */
+  //-------------------------------------------------------------
+  // Parse the command-line arguments
   private void parse_arguments( ref unowned string[] args ) {
 
     var context = new OptionContext( "- Journaler Options" );
     var options = new OptionEntry[2];
 
-    /* Create the command-line options */
+    // Create the command-line options
     options[0] = {"version", 0, 0, OptionArg.NONE, ref show_version, _( "Display version number" ), null};
     options[1] = {null};
 
-    /* Parse the arguments */
+    // Parse the arguments
     try {
       context.set_help_enabled( true );
       context.add_main_entries( options, null );
@@ -127,7 +116,7 @@ public class Journaler : Gtk.Application {
       Process.exit( 1 );
     }
 
-    /* If the version was specified, output it and then exit */
+    // If the version was specified, output it and then exit
     if( show_version ) {
       stdout.printf( version + "\n" );
       Process.exit( 0 );
@@ -135,7 +124,8 @@ public class Journaler : Gtk.Application {
 
   }
 
-  /* Main routine which gets everything started */
+  //-------------------------------------------------------------
+  // Main routine which gets everything started
   public static int main( string[] args ) {
 
     var app = new Journaler();

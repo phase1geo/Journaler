@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Copyright 2018 Trevor Williams <phase1geo@icloud.com> -->
 <component type="desktop-application">
-  <id>com.github.phase1geo.journaler</id>
+  <id>io.github.phase1geo.journaler</id>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0+</project_license>
   <name>Journaler</name>
@@ -29,7 +29,7 @@
     </ul>
   </description>
   <provides>
-    <binary>com.github.phase1geo.journaler</binary>
+    <binary>io.github.phase1geo.journaler</binary>
   </provides>
   <screenshots>
     <screenshot type="default">
@@ -45,7 +45,7 @@
       <image>https://raw.githubusercontent.com/phase1geo/Journaler/master/data/screenshots/screenshot-image-review.png</image>
     </screenshot>
   </screenshots>
-  <launchable type="desktop-id">com.github.phase1geo.journaler.desktop</launchable>
+  <launchable type="desktop-id">io.github.phase1geo.journaler.desktop</launchable>
   <developer_name>Trevor Williams</developer_name>
   <url type="homepage">https://github.com/phase1geo/journaler/</url>
   <url type="bugtracker">https://github.com/phase1geo/journaler/issues/</url>
