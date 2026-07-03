@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2023 (https://github.com/phase1geo/Journaler)
+* Copyright (c) 2023-2026 (https://github.com/phase1geo/Journaler)
 *
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public
@@ -49,7 +49,8 @@ public class ImageArea : Box {
     }
   }
 
-  /* Create the main window UI */
+  //-------------------------------------------------------------
+  // Create the main window UI
   public ImageArea( MainWindow win ) {
 
     Object( orientation: Orientation.VERTICAL, spacing: 0 );
@@ -58,13 +59,13 @@ public class ImageArea : Box {
 
     add_image_area();
 
-    /* Gather the list of available image extensions */
+    // Gather the list of available image extensions
     get_image_extensions();
 
-    /* Set the size of this widget */
+    // Set the size of this widget
     set_size_request( -1, thumbnail_height );
 
-    /* Make sure our background matches the color used by the text area */
+    // Make sure our background matches the color used by the text area
     Idle.add(() => {
       add_css_class( "text-background" );
       return( false );
@@ -72,7 +73,8 @@ public class ImageArea : Box {
 
   }
 
-  /* Creates the image area */
+  //-------------------------------------------------------------
+  // Creates the image area
   private void add_image_area() {
 
     _image_box = new Box( Orientation.HORIZONTAL, 5 );
@@ -95,7 +97,8 @@ public class ImageArea : Box {
 
   }
 
-  /* Gathers the supported image extensions that we can support */
+  //-------------------------------------------------------------
+  // Gathers the supported image extensions that we can support
   private void get_image_extensions() {
 
     _extensions = new Gee.HashMap<string,bool>();
@@ -109,20 +112,24 @@ public class ImageArea : Box {
 
   }
 
-  /* Returns true if the given URI is a supported image based on its extension */
+  //-------------------------------------------------------------
+  // Returns true if the given URI is a supported image based on
+  // its extension
   public bool is_uri_supported_image( string uri ) {
     string[] parts = uri.split( "." );
     return( _extensions.has_key( parts[parts.length - 1].down() ) );
   }
 
-  /* Retrieves an image object used for saving to database */
+  //-------------------------------------------------------------
+  // Retrieves an image object used for saving to database
   public void get_images( DBEntry entry ) {
     for( int i=0; i<_images.length; i++ ) {
       entry.add_image( _images.index( i ) );
     }
   }
 
-  /* Sets the image to the given object */
+  //-------------------------------------------------------------
+  // Sets the image to the given object
   public void set_images( Journal journal, DBEntry? entry ) {
 
     _journal = journal;
@@ -130,22 +137,23 @@ public class ImageArea : Box {
 
     hide();
 
-    /* Clear the images array */
+    // Clear the images array
     _images.remove_range( 0, _images.length );
 
-    /* Clear the image box */
+    // Clear the image box
     while( _image_box.get_first_child() != null ) {
       _image_box.remove( _image_box.get_first_child() );
     }
 
-    /* Add in the images */
+    // Add in the images
     foreach( var image in entry.images ) {
       add_image( image );
     }
 
   }
 
-  /* Adds the given image to the scrollable image box */
+  //-------------------------------------------------------------
+  // Adds the given image to the scrollable image box
   private void add_image( DBImage image ) {
 
     var pixbuf = image.make_pixbuf( _journal, thumbnail_height );
@@ -221,20 +229,21 @@ public class ImageArea : Box {
         }
       });
 
-      /* Add the image picture to the scrollable box */
+      // Add the image picture to the scrollable box
       _image_box.append( overlay );
 
-      /* Add the image to the list */
+      // Add the image to the list
       _images.append_val( image );
 
-      /* Make sure that this widget is seen */
+      // Make sure that this widget is seen
       show();
 
     }
 
   }
 
-  /* Create the image drop handler */
+  //-------------------------------------------------------------
+  // Create the image drop handler
   public DropTarget create_image_drop() {
 
     var drop = new Gtk.DropTarget( Type.STRING, DragAction.COPY );
@@ -252,7 +261,8 @@ public class ImageArea : Box {
 
   }
 
-  /* Adds an image for the given URI if it is unique */
+  //-------------------------------------------------------------
+  // Adds an image for the given URI if it is unique
   public bool add_image_from_uri( string text ) {
     var uri = text;
     if( FileUtils.test( uri, FileTest.EXISTS ) && (Uri.peek_scheme( uri ) == null) ) {
@@ -273,34 +283,39 @@ public class ImageArea : Box {
     return( false );
   }
 
-  /* Adds or changes the image associated with the current entry */
+  //-------------------------------------------------------------
+  // Adds or changes the image associated with the current entry
   public void add_new_image() {
 
-    var dialog = Utils.make_file_chooser( _( "Select an image" ), _win, FileChooserAction.OPEN, _( "Add Image" ) );
-
-    /* Add filters */
     var filter = new FileFilter() {
       name = _( "Image Files" )
     };
     filter.add_pixbuf_formats();
-    dialog.add_filter( filter );
 
-    dialog.response.connect((id) => {
-      _win.reset_timer();
-      if( id == ResponseType.ACCEPT ) {
-        var file = dialog.get_file();
+    var filters = new GLib.ListStore( typeof( FileFilter ) );
+    filters.append( filter );
+
+    var dialog = new FileDialog() {
+      modal = true,
+      title = _( "Select an image" ),
+      accept_label = _( "Add Image" ),
+      filters = filters
+    };
+
+    dialog.open.begin( _win, null, (obj, res) => {
+      try {
+        var file = dialog.open.end( res );
         if( file != null ) {
           add_image_from_uri( file.get_uri() );
         }
-      }
-      dialog.destroy();
+      } catch( Error e ) {}
     });
-
-    dialog.show();
 
   }
 
-  /* Returns true if the image of the entry or its positioning information had changed since it was loaded */
+  //-------------------------------------------------------------
+  // Returns true if the image of the entry or its positioning
+  // information had changed since it was loaded
   public bool changed() {
     for( int i=0; i<_images.length; i++ ) {
       if( _images.index( i ).state != ChangeState.NONE ) {
@@ -310,7 +325,8 @@ public class ImageArea : Box {
     return( false );
   }
 
-  /* Returns the index of the image to display */
+  //-------------------------------------------------------------
+  // Returns the index of the image to display
   private int get_image_index( DBImage image ) {
     for( int i=0; i<_images.length; i++ ) {
       if( _images.index( i ).matches( image ) ) {
@@ -320,7 +336,8 @@ public class ImageArea : Box {
     return( -1 );
   }
 
-  /* Updates the state of the current image */
+  //-------------------------------------------------------------
+  // Updates the state of the current image
   private void update_current_state() {
     if( _viewer_image.description != _viewer_description.text ) {
       _viewer_image.description = _viewer_description.text;
@@ -330,7 +347,8 @@ public class ImageArea : Box {
     }
   }
 
-  /* Create the full image viewer window */
+  //-------------------------------------------------------------
+  // Create the full image viewer window
   public Box create_full_image_viewer() {
 
     var close_btn = new Button.with_label( _( "To Entry" ) ) {
@@ -343,7 +361,7 @@ public class ImageArea : Box {
     
     _viewer_date = new Label( "" );
 
-    /* Create image carousel */
+    // Create image carousel
     _viewer_prev_btn = new Button.from_icon_name( "go-previous-symbolic" ) {
       valign    = Align.FILL,
       vexpand   = true,
@@ -439,15 +457,16 @@ public class ImageArea : Box {
 
   }
 
-  /* Displays the image and description */
+  //-------------------------------------------------------------
+  // Displays the image and description
   public void show_full_image( int index ) {
 
-    /* Get the index of the image to display */
+    // Get the index of the image to display
     var image = _images.index( index );
     
     _viewer_date.label = "%s, %s".printf( _entry.date, _entry.time );
 
-    /* Handle the button sensitivity */
+    // Handle the button sensitivity
     _viewer_prev_btn.sensitive = (index > 0);
     _viewer_next_btn.sensitive = (index < (_images.length - 1));
     
@@ -457,25 +476,26 @@ public class ImageArea : Box {
       _viewer_prev_next_box.hide();
     }
     
-    /* Display the button */
+    // Display the button
     _viewer_preview.set_pixbuf( image.make_pixbuf( _journal, 600 ) );
 
     _viewer_detail.label = image.uri;
     _viewer_detail.tooltip_text = image.uri;
 
-    /* Set the description field */
+    // Set the description field
     _viewer_description.text             = image.description;
     _viewer_description.editable         = editable;
     _viewer_description.has_frame        = editable;
     _viewer_description.placeholder_text = editable ? _( "Enter Description (Optional)" ) : "";
     _viewer_description.sensitive        = editable;
 
-    /* Save the current viewer image */
+    // Save the current viewer image
     _viewer_image = image;
 
   }
 
-  /* Returns the widget will which receive input focus */
+  //-------------------------------------------------------------
+  // Returns the widget will which receive input focus
   public Widget get_focus_widget() {
     return( _viewer_description );
   }

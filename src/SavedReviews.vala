@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2023 (https://github.com/phase1geo/Journaler)
+* Copyright (c) 2023-2026 (https://github.com/phase1geo/Journaler)
 *
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public
@@ -23,45 +23,52 @@ public class SavedReviews {
 
   private Array<SavedReview> _reviews;
 
-  /* Constructor */
+  //-------------------------------------------------------------
+  // Constructor
   public SavedReviews() {
     _reviews = new Array<SavedReview>();
   }
 
-  /* Adds a new saved review to this list */
+  //-------------------------------------------------------------
+  // Adds a new saved review to this list
   public void add_review( SavedReview review ) {
     _reviews.append_val( review );
     save();
   }
 
-  /* Removes the review from the list */
+  //-------------------------------------------------------------
+  // Removes the review from the list
   public void remove_review( int index ) {
     _reviews.remove_index( index );
     save();
   }
 
-  /* Returns the number of stored reviews */
+  //-------------------------------------------------------------
+  // Returns the number of stored reviews
   public int size() {
     return( (int)_reviews.length );
   }
 
-  /* Returns the review at the given index */
+  //-------------------------------------------------------------
+  // Returns the review at the given index
   public SavedReview get_review( int index ) {
     return( _reviews.index( index ) );
   }
 
-  /* Returns the pathname of the XML file */
+  //-------------------------------------------------------------
+  // Returns the pathname of the XML file
   private string xml_file() {
     return( GLib.Path.build_filename( Environment.get_user_data_dir(), "journaler", "reviews.xml" ) );
   }
 
-  /* Saves the reviews in XML format */
+  //-------------------------------------------------------------
+  // Saves the reviews in XML format
   public void save() {
 
     Xml.Doc*  doc  = new Xml.Doc( "1.0" );
     Xml.Node* root = new Xml.Node( null, "reviews" );
 
-    root->set_prop( "version", Journaler.version );
+    root->set_prop( "version", Journaler.static_version );
 
     for( int i=0; i<_reviews.length; i++ ) {
       root->add_child( _reviews.index( i ).save() );
@@ -74,7 +81,8 @@ public class SavedReviews {
 
   }
 
-  /* Loads the reviews from XML format */
+  //-------------------------------------------------------------
+  // Loads the reviews from XML format
   public void load() {
 
     Xml.Doc* doc = Xml.Parser.read_file( xml_file(), null, (Xml.ParserOption.HUGE | Xml.ParserOption.NOWARNING) );
@@ -100,7 +108,8 @@ public class SavedReviews {
 
   }
 
-  /* Allows us to handle any version issues in the future, if needed */
+  //-------------------------------------------------------------
+  // Allows us to handle any version issues in the future, if needed
   private void check_version( string version ) {
 
   }

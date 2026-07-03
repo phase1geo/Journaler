@@ -85,7 +85,7 @@ public class Exports {
     }
     Xml.Doc*  doc  = new Xml.Doc( "1.0" );
     Xml.Node* root = new Xml.Node( null, "exports" );
-    root->set_prop( "version", Journaler.version );
+    root->set_prop( "version", Journaler.static_version );
     doc->set_root_element( root );
     for( int i=0; i<_exports.length; i++ ) {
       root->add_child( _exports.index( i ).save() );

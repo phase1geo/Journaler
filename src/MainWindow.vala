@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2023 (https://github.com/phase1geo/Journaler)
+* Copyright (c) 2023-2026 (https://github.com/phase1geo/Journaler)
 *
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public
@@ -35,7 +35,8 @@ public enum AutoLockOption {
   ON_APP_BACKGROUND,
   NUM;
 
-  /* Returns the user-facing string value to display */
+  //-------------------------------------------------------------
+  // Returns the user-facing string value to display
   public string label() {
     switch( this ) {
       case NEVER             :  return( _( "Never" ) );
@@ -52,12 +53,15 @@ public enum AutoLockOption {
     }
   }
 
-  /* Returns true if we should start adding this option and subsequence to a new menu */
+  //-------------------------------------------------------------
+  // Returns true if we should start adding this option and
+  // subsequence to a new menu
   public bool new_menu() {
     return( (this == NEVER) || (this == AFTER_1_MIN) || (this == ON_SCREENSAVER) );
   }
 
-  /* Parses the integer value and converts it to this type */
+  //-------------------------------------------------------------
+  // Parses the integer value and converts it to this type
   public static AutoLockOption parse( uint value ) {
     if( value >= (uint)NUM ) {
       return( NEVER );
@@ -66,7 +70,9 @@ public enum AutoLockOption {
     }
   }
 
-  /* Returns the number of minutes of inactivity before the application is locked */
+  //-------------------------------------------------------------
+  // Returns the number of minutes of inactivity before the
+  // application is locked
   public int minutes() {
     switch( this ) {
       case AFTER_1_MIN  :  return( 1 );
@@ -124,6 +130,7 @@ public class MainWindow : Gtk.ApplicationWindow {
     { "action_awards",              action_awards },
     { "action_shortcuts",           action_shortcuts },
     { "action_preferences",         action_preferences },
+    { "action_about",               action_about },
     { "action_toggle_distract",     action_toggle_distract },
     { "action_escape",              action_escape },
     { "action_show_previous_entry", action_show_previous_entry },
@@ -176,7 +183,8 @@ public class MainWindow : Gtk.ApplicationWindow {
   public bool review_mode           { get; set; default = false; }
   public bool distraction_free_mode { get; set; default = false; }
 
-  /* Create the main window UI */
+  //-------------------------------------------------------------
+  // Create the main window UI
   public MainWindow( Gtk.Application app, GLib.Settings settings ) {
 
     Object( application: app );
@@ -184,59 +192,59 @@ public class MainWindow : Gtk.ApplicationWindow {
     _settings = settings;
     _header_buttons = new List<Widget>();
 
-    /* Load the available themes */
+    // Load the available themes
     _themes = new Themes();
 
-    /* Add the exporters */
+    // Add the exporters
     _exports = new Exports();
 
-    /* Create and load the templates */
+    // Create and load the templates
     _templates = new Templates();
     _templates.changed.connect((name, added) => {
       update_templates();
     });
 
-    /* Create and load the journals */
+    // Create and load the journals
     _journals = new Journals( _templates );
 
-    /* Creates the goals */
+    // Creates the goals
     _goals = new Goals( this );
 
-    /* Creates the locker */
+    // Creates the locker
     _locker = new Locker( this );
 
-    /* Create the hash map for the focus widgets */
+    // Create the hash map for the focus widgets
     _stack_focus_widgets = new Gee.HashMap<string,Widget>();
 
     var window_w = settings.get_int( "window-w" );
     var window_h = settings.get_int( "window-h" );
 
-    /* Create the header bar */
+    // Create the header bar
     var header = new HeaderBar() {
       show_title_buttons = true,
       title_widget = new Gtk.Label( _( "Journaler" ) )
     };
     set_titlebar( header );
 
-    /* Set the main window data */
+    // Set the main window data
     set_default_size( window_w, window_h );
 
-    /* Set the stage for menu actions */
+    // Set the stage for menu actions
     var actions = new SimpleActionGroup ();
     actions.add_action_entries( action_entries, this );
     insert_action_group( "win", actions );
 
-    /* Add keyboard shortcuts */
+    // Add keyboard shortcuts
     add_keyboard_shortcuts( app );
 
-    /* Create title toolbar */
+    // Create title toolbar
     var today_btn = new Button.from_icon_name( get_header_icon_name( "today", "x-office-calendar-symbolic" ) );
     today_btn.set_tooltip_markup( Utils.tooltip_with_accel( _( "Go To Today" ), "<Control>t" ) );
     today_btn.clicked.connect( action_today );
     _header_buttons.append( today_btn );
     header.pack_start( today_btn );
 
-    /* Create gear menu */
+    // Create gear menu
     var misc_img = new Image.from_icon_name( get_header_icon_name( "emblem-system" ) );
     var misc_btn = new MenuButton() {
       has_frame  = !on_elementary,
@@ -246,21 +254,21 @@ public class MainWindow : Gtk.ApplicationWindow {
     _header_buttons.append( misc_btn );
     header.pack_end( misc_btn );
 
-    /* Create review button */
+    // Create review button
     var review_btn = new Button.from_icon_name( get_header_icon_name( "media-seek-backward" ) );
     review_btn.set_tooltip_markup( Utils.tooltip_with_accel( _( "Review Entries" ), "<Control>r" ) );
     review_btn.clicked.connect( action_review );
     _header_buttons.append( review_btn );
     header.pack_end( review_btn );
 
-    /* Create lock */
+    // Create lock
     var lock_btn = new Button.from_icon_name( get_header_icon_name( "changes-prevent" ) );
     lock_btn.set_tooltip_markup( Utils.tooltip_with_accel( _( "Lock Journaler" ), "<Control>l" ) );
     lock_btn.clicked.connect( action_lock );
     _header_buttons.append( lock_btn );
     header.pack_end( lock_btn );
 
-    /* Create the reviewer UI */
+    // Create the reviewer UI
     _reviewer = new Reviewer( this, _journals );
     _reviewer.show_matched_entry.connect((entry, pos, image_index) => {
       _journals.current = entry.trash ? _journals.trash : _journals.get_journal_by_name( entry.journal );
@@ -343,7 +351,7 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     add_awards_view( abox );
 
-    /* Create primary stack */
+    // Create primary stack
     _lock_stack = new Stack() {
       halign = Align.FILL,
       valign = Align.FILL,
@@ -360,16 +368,7 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     show();
 
-    /*
-    _themes.theme_changed.connect((name) => {
-      pbox.remove_css_class( _themes.dark_mode ? "login-pane-light" : "login-pane-dark" );
-      sbox.remove_css_class( _themes.dark_mode ? "login-pane-light" : "login-pane-dark" );
-      pbox.add_css_class( _themes.dark_mode ? "login-pane-dark" : "login-pane-light" );
-      sbox.add_css_class( _themes.dark_mode ? "login-pane-dark" : "login-pane-light" );
-    });
-    */
-
-    /* If the user has set a password, show the journal as locked immediately */
+    // If the user has set a password, show the journal as locked immediately
     if( Security.does_password_exist() ) {
       show_pane( "lock-view", true );
       _auto_lock = (AutoLockOption)settings.get_int( "auto-lock" );
@@ -378,14 +377,14 @@ public class MainWindow : Gtk.ApplicationWindow {
       show_pane( "entry-view", true );
     }
 
-    /* Handle any request to close the window */
+    // Handle any request to close the window
     close_request.connect(() => {
       action_save();
       _journals.purge_empty_entries();
       return( false );
     });
 
-    /* If the auto-lock settings change, grab the value and reset the timer */
+    // If the auto-lock settings change, grab the value and reset the timer
     settings.changed["auto-lock"].connect(() => {
       if( Security.does_password_exist() ) {
         _auto_lock = (AutoLockOption)settings.get_int( "auto-lock" );
@@ -393,37 +392,36 @@ public class MainWindow : Gtk.ApplicationWindow {
       reset_timer();
     });
 
-    /* Loads the application-wide CSS */
+    // Loads the application-wide CSS
     load_css();
 
-    /* Load the available templates */
+    // Load the available templates
     _templates.load();
 
-    /* Load the available journals */
+    // Load the available journals
     _journals.load();
 
-    /* Load the goals */
+    // Load the goals
     _goals.load();
 
-    /* Make sure that we display today's entry */
+    // Make sure that we display today's entry
     action_today();
 
   }
 
-  /*
-   This should be called for any user interactions with the UI.  This will cause the auto-lock
-   timer to be reset.
-  */
+  //-------------------------------------------------------------
+  // This should be called for any user interactions with the UI.
+  // This will cause the auto-lock timer to be reset.
   public void reset_timer() {
 
-    /* Clear the counter and the timer */
+    // Clear the counter and the timer
     if( _auto_lock_id > 0 ) {
       Source.remove( _auto_lock_id );
     }
 
     if( _auto_lock == AutoLockOption.NEVER ) return;
 
-    /* Set the timer */
+    // Set the timer
     switch( _auto_lock ) {
       case AutoLockOption.ON_SCREENSAVER :
         _auto_lock_id = Timeout.add_seconds( 1, () => {
@@ -456,7 +454,8 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   }
 
-  /* Create the miscellaneous menu */
+  //-------------------------------------------------------------
+  // Create the miscellaneous menu
   private GLib.Menu create_misc_menu() {
 
     _templates_menu = new GLib.Menu();
@@ -468,23 +467,25 @@ public class MainWindow : Gtk.ApplicationWindow {
     template_menu.append_section( null, _templates_menu );
     template_menu.append_section( null, new_template );
 
-    var award_menu = new GLib.Menu();
-    award_menu.append( _( "View Awards" ), "win.action_awards" );
-
     var pref_menu = new GLib.Menu();
     pref_menu.append( _( "Shortcut Cheatsheet" ), "win.action_shortcuts" );
     pref_menu.append( _( "Preferences…" ), "win.action_preferences" );
 
+    var about_menu = new GLib.Menu();
+    about_menu.append( _( "About Journaler…" ), "win.action_about" );
+
     var misc_menu = new GLib.Menu();
     misc_menu.append_submenu( _( "Manage Templates" ), template_menu );
-    misc_menu.append_section( null, award_menu );
+    misc_menu.append( _( "View Awards" ), "win.action_awards" );
     misc_menu.append_section( null, pref_menu );
+    misc_menu.append_section( null, about_menu );
 
     return( misc_menu );
 
   }
 
-  /* Updates the templates to manage */
+  //-------------------------------------------------------------
+  // Updates the templates to manage
   private void update_templates() {
     _templates_menu.remove_all();
     foreach( var template in _templates.templates ) {
@@ -492,22 +493,26 @@ public class MainWindow : Gtk.ApplicationWindow {
     }
   }
 
-  /* Returns the currently visible lock stack pane */
+  //-------------------------------------------------------------
+  // Returns the currently visible lock stack pane
   public string get_current_pane() {
     return( _lock_stack.visible_child_name );
   }
 
-  /* Sets the sensitivity of all header bar buttons placed by the application to the given value */
+  //-------------------------------------------------------------
+  // Sets the sensitivity of all header bar buttons placed by the
+  // application to the given value
   private void set_header_bar_sensitivity( bool sensitive ) {
     foreach( var btn in _header_buttons ) {
       btn.sensitive = sensitive;
     }
   }
 
-  /* Displays the given pane in the main window */
+  //-------------------------------------------------------------
+  // Displays the given pane in the main window
   public void show_pane( string name, bool on_start = false ) {
 
-    /* Set the transition type */
+    // Set the transition type
     switch( name ) {
       case "entry-view" :
         if( _lock_stack.visible_child_name == "template-view" ) {
@@ -544,10 +549,10 @@ public class MainWindow : Gtk.ApplicationWindow {
       _lock_stack.transition_type = StackTransitionType.NONE;
     }
 
-    /* Perform the transition */
+    // Perform the transition
     _lock_stack.visible_child_name = name;
 
-    /* Make sure that the proper widget is given the focus */
+    // Make sure that the proper widget is given the focus
     Idle.add(() => {
       _stack_focus_widgets.get( name ).grab_focus();
       return( false );
@@ -555,7 +560,8 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   }
 
-  /* Displays the pane in the content area */
+  //-------------------------------------------------------------
+  // Displays the pane in the content area
   public void show_content( string name ) {
 
     switch( name ) {
@@ -575,12 +581,15 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   }
 
-  /* Returns the current shown content area */
+  //-------------------------------------------------------------
+  // Returns the current shown content area
   public string get_shown_content() {
     return( _content_stack.visible_child_name );
   }
 
-  /* Creates the content area stack where the textarea and reviewer image viewer are displayed */
+  //-------------------------------------------------------------
+  // Creates the content area stack where the textarea and reviewer
+  // image viewer are displayed
   private void add_content_area( Gtk.Application app, Box box ) {
 
     _content_stack = new Stack();
@@ -593,14 +602,16 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   }
 
-  /* Creates the textbox with today's entry. */
+  //-------------------------------------------------------------
+  // Creates the textbox with today's entry.
   private Box add_text_area( Gtk.Application app ) {
     _text_area = new TextArea( app, this, _journals, _templates );
     _stack_focus_widgets.set( "entry-view", _text_area.get_focus_widget() );
     return( _text_area );
   }
 
-  /* Displays empty image box */
+  //-------------------------------------------------------------
+  // Displays empty image box
   private Box add_empty_text_area() {
     var placeholder = new Granite.Placeholder( _( "No Entries In Review" ) ) {
       description = _( "The review query results do not contain any entries." )
@@ -613,7 +624,8 @@ public class MainWindow : Gtk.ApplicationWindow {
     return( box );
   }
 
-  /* Displays empty image box */
+  //-------------------------------------------------------------
+  // Displays empty image box
   private Box add_empty_image_area() {
     var placeholder = new Granite.Placeholder( _( "No Images In Review" ) ) {
       description = _( "The review query results do not contain any entries with images." )
@@ -626,7 +638,8 @@ public class MainWindow : Gtk.ApplicationWindow {
     return( box );
   }
 
-  /* Adds the sidebar */
+  //-------------------------------------------------------------
+  // Adds the sidebar
   private void add_sidebar( Box box ) {
 
     _sidebar_stack = new Stack();
@@ -644,7 +657,8 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   }
 
-  /* Create the setlock view panel */
+  //-------------------------------------------------------------
+  // Create the setlock view panel
   private void add_setlock_view( Box box ) {
 
     var lbl1 = new Label( Utils.make_title( "Enter Lock Password:" ) ) {
@@ -736,16 +750,10 @@ public class MainWindow : Gtk.ApplicationWindow {
 
     _stack_focus_widgets.set( "setlock-view", entry1 );
 
-    /*
-    _themes.theme_changed.connect((name) => {
-      grid.remove_css_class( _themes.dark_mode ? "login-frame-light" : "login-frame-dark" );
-      grid.add_css_class( _themes.dark_mode ? "login-frame-dark" : "login-frame-light" );
-    });
-    */
-
   }
 
-  /* Displays the locked view pane */
+  //-------------------------------------------------------------
+  // Displays the locked view pane
   private void add_locked_view( Box box ) {
 
     var lbl = new Label( Utils.make_title( "Password:" ) ) {
@@ -786,7 +794,8 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   }
 
-  /* Creates the template editor pane */
+  //-------------------------------------------------------------
+  // Creates the template editor pane
   private void add_template_view( Gtk.Application app, Box box ) {
 
     _templater = new Templater( app, this, _text_area.image_area, _templates );
@@ -797,7 +806,9 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   }
 
-  /* Edits the given template name.  If name is not specified, a new template will be created. */
+  //-------------------------------------------------------------
+  // Edits the given template name.  If name is not specified, a
+  // new template will be created.
   public void edit_template( string? name = null ) {
 
     _templater.set_current( name );
@@ -805,7 +816,8 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   }
 
-  /* Create the rewards view */
+  //-------------------------------------------------------------
+  // Create the rewards view
   private void add_awards_view( Box box ) {
 
     _awards_box = new FlowBox() {
@@ -851,7 +863,8 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   }
 
-  /* Creates the current journal sidebar */
+  //-------------------------------------------------------------
+  // Creates the current journal sidebar
   private Box add_current_sidebar() {
 
     _entries = new SidebarEntries( this, _text_area, _journals, _templates );
@@ -869,7 +882,8 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   }
 
-  /* Adds the journal editor to the sidebar */
+  //-------------------------------------------------------------
+  // Adds the journal editor to the sidebar
   private Box add_journal_edit() {
 
     _editor = new SidebarEditor( this, _journals, _templates );
@@ -882,7 +896,8 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   }
 
-  /* Loads the application-wide CSS */
+  //-------------------------------------------------------------
+  // Loads the application-wide CSS
   private void load_css() {
 
     var provider = new CssProvider();
@@ -891,7 +906,8 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   }
 
-  /* Returns the name of the icon to use for a headerbar icon */
+  //-------------------------------------------------------------
+  // Returns the name of the icon to use for a headerbar icon
   private string get_header_icon_name( string icon_name, string? symbolic = null ) {
     if( symbolic == null ) {
       return( "%s%s".printf( icon_name, (on_elementary ? "" : "-symbolic") ) );
@@ -900,7 +916,8 @@ public class MainWindow : Gtk.ApplicationWindow {
     }
   }
 
-  /* Adds keyboard shortcuts for the menu actions */
+  //-------------------------------------------------------------
+  // Adds keyboard shortcuts for the menu actions
   private void add_keyboard_shortcuts( Gtk.Application app ) {
 
     app.set_accels_for_action( "win.action_today",               { "<Control>t" } );
@@ -918,7 +935,8 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   }
 
-  /* Creates a new file */
+  //-------------------------------------------------------------
+  // Creates a new file
   public void action_today() {
 
     reset_timer();
@@ -932,14 +950,16 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   }
 
-  /* Save the current entry to the database */
+  //-------------------------------------------------------------
+  // Save the current entry to the database
   public void action_save() {
     reset_timer();
     if( locked ) return;
     _text_area.save();
   }
 
-  /* Locks the application */
+  //-------------------------------------------------------------
+  // Locks the application
   public void action_lock() {
     if( Security.does_password_exist() ) {
       show_pane( "lock-view" );
@@ -948,7 +968,8 @@ public class MainWindow : Gtk.ApplicationWindow {
     }
   }
 
-  /* Called when the user uses the Control-q keyboard shortcut */
+  //-------------------------------------------------------------
+  // Called when the user uses the Control-q keyboard shortcut
   private void action_quit() {
     unfullscreen();
     Timeout.add(100, () => {
@@ -960,19 +981,22 @@ public class MainWindow : Gtk.ApplicationWindow {
     });
   }
 
-  /* Creates a new template */
+  //-------------------------------------------------------------
+  // Creates a new template
   private void action_new_template() {
     reset_timer();
     edit_template();
   }
 
-  /* Edits an existing template by the given name */
+  //-------------------------------------------------------------
+  // Edits an existing template by the given name
   private void action_edit_template( SimpleAction action, Variant? variant ) {
     reset_timer();
     edit_template( variant.get_string() );
   }
 
-  /* Refreshes the awards view */
+  //-------------------------------------------------------------
+  // Refreshes the awards view
   private void refresh_awards() {
 
     FlowBoxChild? w = null;
@@ -991,7 +1015,7 @@ public class MainWindow : Gtk.ApplicationWindow {
       Picture img;
       var goal = _goals.index( i );
 
-      /* Create image icon */
+      // Create image icon
       if( goal.achieved ) {
         img = new Picture.for_resource( "/io/github/phase1geo/journaler/award-achieved.png" );
       } else {
@@ -1035,13 +1059,14 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   }
 
-  /* Displays the review view */
+  //-------------------------------------------------------------
+  // Displays the review view
   private void action_review() {
 
     reset_timer();
     if( locked ) return;
 
-    /* If we are in distraction-free mode, switch back */
+    // If we are in distraction-free mode, switch back
     if( distraction_free_mode ) {
       action_toggle_distract();
     }
@@ -1064,7 +1089,8 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   }
 
-  /* Shows the awards view */
+  //-------------------------------------------------------------
+  // Shows the awards view
   private void action_awards() {
 
     reset_timer();
@@ -1075,7 +1101,8 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   }
 
-  /* Displays the shortcuts cheatsheet */
+  //-------------------------------------------------------------
+  // Displays the shortcuts cheatsheet
   private void action_shortcuts() {
 
     reset_timer();
@@ -1095,7 +1122,8 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   }
 
-  /* Displays the preferences window and then handles its closing */
+  //-------------------------------------------------------------
+  // Displays the preferences window and then handles its closing
   private void action_preferences() {
 
     reset_timer();
@@ -1117,7 +1145,17 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   }
 
-  /* Toggles distraction-free modes in edit and review modes */
+  //-------------------------------------------------------------
+  // Displays the About window
+  private void action_about() {
+
+    var about = new About( this );
+    about.show();
+
+  }
+
+  //-------------------------------------------------------------
+  // Toggles distraction-free modes in edit and review modes
   private void action_toggle_distract() {
 
     reset_timer();
@@ -1153,7 +1191,8 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   }
 
-  /* Handles a press of the escape key */
+  //-------------------------------------------------------------
+  // Handles a press of the escape key
   private void action_escape() {
 
     reset_timer();
@@ -1166,7 +1205,8 @@ public class MainWindow : Gtk.ApplicationWindow {
 
   }
 
-  /* Shows the previous entry in review mode */
+  //-------------------------------------------------------------
+  // Shows the previous entry in review mode
   private void action_show_previous_entry() {
     reset_timer();
     if( review_mode ) {
@@ -1174,7 +1214,8 @@ public class MainWindow : Gtk.ApplicationWindow {
     }
   }
 
-  /* Shows the next entry in review mode */
+  //-------------------------------------------------------------
+  // Shows the next entry in review mode
   private void action_show_next_entry() {
     reset_timer();
     if( review_mode ) {
@@ -1182,7 +1223,8 @@ public class MainWindow : Gtk.ApplicationWindow {
     }
   }
 
-  /* Generate a notification */
+  //-------------------------------------------------------------
+  // Generate a notification
   public void notification( string title, string msg, NotificationPriority priority = NotificationPriority.NORMAL ) {
     GLib.Application? app = null;
     @get( "application", ref app );

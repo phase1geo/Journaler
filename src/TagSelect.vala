@@ -62,7 +62,7 @@ public class TagSelect : Box {
     _button.add_controller( button_key );
     _button.add_controller( button_click );
     _button.add_css_class( "tags" );
-    _button.get_style_context().add_class( "flat" );
+    _button.add_css_class( "flat" );
 
     /*
     var entry_focus = new EventControllerFocus();

@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2023 (https://github.com/phase1geo/Journaler)
+* Copyright (c) 2023-2026 (https://github.com/phase1geo/Journaler)
 *
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public
@@ -25,21 +25,58 @@ using Cairo;
 
 public class Utils {
 
-  /* Creates the given directory (and all parent directories) with appropriate permissions */
+  //-------------------------------------------------------------
+  // Determines if we are executing this within the Pantheon desktop.
+  // If we are, we need to use icons in the header bar that contain
+  // color.
+  public static bool on_elementary() {
+    var desktop = Environment.get_variable( "XDG_CURRENT_DESKTOP" );
+    return( desktop == "Pantheon" );
+  }
+
+  //-------------------------------------------------------------
+  // Determines if we are using the adwaita theme.
+  public static bool using_adwaita() {
+    var settings = Gtk.Settings.get_default();
+    var theme    = settings.gtk_theme_name;
+    return( (theme != null) && theme.contains( "Adwaita" ) );
+  }
+
+  //-------------------------------------------------------------
+  // Returns the system information about how this application was
+  // built.
+  public static string get_flatpak_runtime() {
+
+    // Determine the Flatpak runtime being used
+    try {
+      var keyfile = new GLib.KeyFile();
+      keyfile.load_from_file( "/.flatpak-info", GLib.KeyFileFlags.NONE );
+      var runtime = keyfile.get_string( "Application", "runtime" );
+      return( runtime );
+    } catch( Error e ) {}
+
+    return( "" );
+
+  }
+
+  //-------------------------------------------------------------
+  // Creates the given directory (and all parent directories) with
+  // appropriate permissions
   public static bool create_dir( string path ) {
     return( DirUtils.create_with_parents( path, 0755 ) == 0 );
   }
 
-  /* Displays the given message to standard output if we are development mode */
+  //-------------------------------------------------------------
+  // Displays the given message to standard output if we are
+  // development mode
   public static void debug_output( string msg ) {
     if( Journaler.settings.get_boolean( "developer-mode" ) ) {
       stdout.printf( "%s\n", msg );
     }
   }
 
-  /*
-   Returns a regular expression useful for parsing clickable URLs.
-  */
+  //-------------------------------------------------------------
+  // Returns a regular expression useful for parsing clickable URLs.
   public static string url_re() {
     string[] res = {
       "mailto:.+@[a-z0-9-]+\\.[a-z0-9.-]+",
@@ -49,7 +86,8 @@ public class Utils {
     return( "(" + string.joinv( "|",res ) + ")" );
   }
 
-  /* Returns the rootname of the given filename */
+  //-------------------------------------------------------------
+  // Returns the rootname of the given filename
   public static string rootname( string filename ) {
     var basename = GLib.Path.get_basename( filename );
     var parts    = basename.split( "." );
@@ -60,23 +98,29 @@ public class Utils {
     }
   }
 
-  /* Returns true if the given coordinates are within the specified bounds */
+  //-------------------------------------------------------------
+  // Returns true if the given coordinates are within the specified
+  // bounds
   public static bool is_within_bounds( double x, double y, double bx, double by, double bw, double bh ) {
     return( (bx < x) && (x < (bx + bw)) && (by < y) && (y < (by + bh)) );
   }
 
-  /* Returns a string that is suitable to use as an inspector title */
+  //-------------------------------------------------------------
+  // Returns a string that is suitable to use as an inspector title
   public static string make_title( string str ) {
     return( "<b>" + str + "</b>" );
   }
 
-  /* Returns a string that is used to display a tooltip with displayed accelerator */
+  //-------------------------------------------------------------
+  // Returns a string that is used to display a tooltip with
+  // displayed accelerator
   public static string tooltip_with_accel( string tooltip, string accel ) {
     string[] accels = {accel};
     return( Granite.markup_accel_tooltip( accels, tooltip ) );
   }
 
-  /* Opens the given URL in the proper external default application */
+  //-------------------------------------------------------------
+  // Opens the given URL in the proper external default application
   public static void open_url( string url ) {
     if( (url.substring( 0, 7 ) == "file://") || (url.get_char( 0 ) == '/') ) {
       var app = AppInfo.get_default_for_type( "inode/directory", true );
@@ -96,7 +140,8 @@ public class Utils {
     }
   }
 
-  /* Prepares the given note string for use in a markup tooltip */
+  //-------------------------------------------------------------
+  // Prepares the given note string for use in a markup tooltip
   public static string prepare_note_markup( string note ) {
     var str = markdown_to_html( note );  // .replace( "<", "&lt;" ).replace( ">", "&gt;" ) );
     // stdout.printf( "---------------\n%s--------------\n", str );
@@ -161,7 +206,8 @@ public class Utils {
     return( str.replace( "\n\n\n", "\n\n" ) );
   }
 
-  /* Converts the given Markdown into HTML */
+  //-------------------------------------------------------------
+  // Converts the given Markdown into HTML
   public static string markdown_to_html( string md, string? tag = null ) {
     string html;
     // var    flags = 0x57607000;
@@ -176,7 +222,9 @@ public class Utils {
     }
   }
 
-  /* Returns the line height of the first line of the given pango layout */
+  //-------------------------------------------------------------
+  // Returns the line height of the first line of the given pango
+  // layout
   public static double get_line_height( Pango.Layout layout ) {
     int height;
     var line = layout.get_line_readonly( 0 );
@@ -191,7 +239,8 @@ public class Utils {
     return( height / Pango.SCALE );
   }
 
-  /* Searches for the beginning or ending word */
+  //-------------------------------------------------------------
+  // Searches for the beginning or ending word
   public static int find_word( string str, int cursor, bool wordstart ) {
     try {
       MatchInfo match_info;
@@ -206,12 +255,14 @@ public class Utils {
     return( -1 );
   }
 
-  /* Returns true if the given string is a valid URL */
+  //-------------------------------------------------------------
+  // Returns true if the given string is a valid URL
   public static bool is_url( string str ) {
     return( Regex.match_simple( url_re(), str ) );
   }
 
-  /* Returns true if the given file is read-only */
+  //-------------------------------------------------------------
+  // Returns true if the given file is read-only
   /*
   public static bool is_read_only( string fname ) {
     var file = File.new_for_path( fname );
@@ -222,40 +273,26 @@ public class Utils {
   }
   */
 
-  /* Show the specified popover */
-  public static void show_popover( Popover popover ) {
-#if GTK322
-    popover.popup();
-#else
-    popover.show();
-#endif
-  }
-
-  /* Hide the specified popover */
-  public static void hide_popover( Popover popover ) {
-#if GTK322
-    popover.popdown();
-#else
-    popover.hide();
-#endif
-  }
-
-  public static void set_chooser_folder( FileChooser chooser ) {
+  //-------------------------------------------------------------
+  // Sets the default folder in the given file dialog to the
+  // last directory used.
+  public static void set_chooser_folder( FileDialog dialog ) {
     var dir = Journaler.settings.get_string( "last-directory" );
     if( dir != "" ) {
-      try {
-        var fdir = File.new_for_path( dir );
-        chooser.set_current_folder( fdir );
-      } catch( Error e ) {}
+      var file = File.new_for_path( dir );
+      dialog.set_initial_folder( file );
     }
   }
 
+  //-------------------------------------------------------------
+  // Stores the last used directory in GLib settings.
   public static void store_chooser_folder( string file, bool is_dir ) {
     var dir = is_dir ? file : GLib.Path.get_dirname( file );
     Journaler.settings.set_string( "last-directory", dir );
   }
 
-  /* Creates a snippet that can be inserted into a GtkSource.Buffer */
+  //-------------------------------------------------------------
+  // Creates a snippet that can be inserted into a GtkSource.Buffer
   public static GtkSource.Snippet? make_snippet( string text ) {
 
     Xml.Doc*  doc       = new Xml.Doc( "1.0" );
@@ -292,28 +329,15 @@ public class Utils {
 
   }
 
-  /* Returns the preview string */
+  //-------------------------------------------------------------
+  // Returns the preview string
   public static string build_entry_title( string prefix, string suffix, string? date = null ) {
     string[] strs = {prefix.strip(), ((date == null) ? DBEntry.todays_date() : date), suffix.strip()};
     return( string.joinv( " ", strs ).strip() );
   }
 
-  /* Creates a file chooser dialog and returns it to the code */
-  public static Gtk.FileChooserNative make_file_chooser( string title, Gtk.Window win, Gtk.FileChooserAction action, string accept_label ) {
-
-    var gtk_settings = Gtk.Settings.get_default();
-
-    var use_header = gtk_settings.gtk_dialogs_use_header;
-    gtk_settings.gtk_dialogs_use_header = true;
-
-    var dialog = new FileChooserNative( title, win, action, accept_label, _( "Cancel" ) );
-    gtk_settings.gtk_dialogs_use_header = use_header;
-
-    return( dialog );
-
-  }
-
-  /* Adjusts the listbox to place the currently selected row into view */
+  //-------------------------------------------------------------
+  // Adjusts the listbox to place the currently selected row into view
   public static void scroll_to_selected_row( ListBox listbox ) {
 
     Idle.add(() => {

@@ -202,7 +202,7 @@ public class Goals {
     Xml.Doc*  doc  = new Xml.Doc( "1.0" );
     Xml.Node* root = new Xml.Node( null, "goals" );
 
-    root->set_prop( "version", Journaler.version );
+    root->set_prop( "version", Journaler.static_version );
 
     for( int i=0; i<_goals.length; i++ ) {
       root->add_child( _goals.index( i ).save() );

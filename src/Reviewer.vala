@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2023 (https://github.com/phase1geo/Journaler)
+* Copyright (c) 2023-2026 (https://github.com/phase1geo/Journaler)
 *
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public
@@ -119,7 +119,8 @@ public class Reviewer : Grid {
     }
   }
 
-  /* Default constructor */
+  //-------------------------------------------------------------
+  // Default constructor
   public Reviewer( MainWindow win, Journals journals ) {
 
     Object( row_spacing: 5, column_spacing: 5, margin_start: 5, margin_end: 5, margin_top: 5, margin_bottom: 5 );
@@ -130,7 +131,7 @@ public class Reviewer : Grid {
     _match_images  = new Gee.ArrayList<DBQueryImage>();
     _reviews       = new SavedReviews();
 
-    /* Add the UI components */
+    // Add the UI components
     add_journal_list();
     add_tag_list();
     add_date_selector();
@@ -138,24 +139,25 @@ public class Reviewer : Grid {
     add_search();
     add_search_save();
 
-    /* Load the stored reviews */
+    // Load the stored reviews
     _reviews.load();
     populate_reviews();
 
-    /* When the journals are loaded, grab the start date and use it in the start date widget */
+    // When the journals are loaded, grab the start date and use it in the start date widget
     _journals.loaded.connect(() => {
       _start_date.default_date = _journals.get_start_date();
       _start_date.date         = _journals.get_start_date();
     });
 
-    /* Add the menu actions */
+    // Add the menu actions
     var actions = new SimpleActionGroup();
     actions.add_action_entries( action_entries, this );
     insert_action_group( "review", actions );
 
   }
 
-  /* Creates the journal selection UI */
+  //-------------------------------------------------------------
+  // Creates the journal selection UI
   private void add_journal_list() {
 
     var label = new Label( Utils.make_title( _( "Journals:" ) ) ) {
@@ -241,7 +243,8 @@ public class Reviewer : Grid {
 
   }
 
-  /* Creates the tag selection UI */
+  //-------------------------------------------------------------
+  // Creates the tag selection UI
   private void add_tag_list() {
 
     var label = new Label( Utils.make_title( _( "Tags:" ) ) ) {
@@ -302,7 +305,8 @@ public class Reviewer : Grid {
 
   }
 
-  /* Add the date selection UI */
+  //-------------------------------------------------------------
+  // Add the date selection UI
   private void add_date_selector() {
 
     var range = new Label( Utils.make_title( _( "Date Range:" ) ) ) {
@@ -336,7 +340,8 @@ public class Reviewer : Grid {
 
   }
 
-  /* Adds a close button */
+  //-------------------------------------------------------------
+  // Adds a close button
   private void add_close() {
 
     var close_btn = new Button.from_icon_name( "window-close-symbolic" );
@@ -348,7 +353,8 @@ public class Reviewer : Grid {
 
   }
 
-  /* Add the search UI */
+  //-------------------------------------------------------------
+  // Add the search UI
   private void add_search() {
 
     _search_entry = new SearchEntry() {
@@ -364,7 +370,8 @@ public class Reviewer : Grid {
 
   }
 
-  /* Add the saved search UI */
+  //-------------------------------------------------------------
+  // Add the saved search UI
   private void add_search_save() {
 
     _saved_search_menu = new GLib.Menu();
@@ -397,7 +404,8 @@ public class Reviewer : Grid {
 
   }
 
-  /* Populates the list of saved searches/reviews */
+  //-------------------------------------------------------------
+  // Populates the list of saved searches/reviews
   private void populate_reviews() {
 
     _saved_search_menu.remove_all();
@@ -411,12 +419,14 @@ public class Reviewer : Grid {
 
   }
 
-  /* Shows all entries */
+  //-------------------------------------------------------------
+  // Shows all entries
   private void action_show_all() {
     initialize( null );
   }
 
-  /* Handles search saves */
+  //-------------------------------------------------------------
+  // Handles search saves
   private void action_save_review( SimpleAction action, Variant? variant ) {
 
     var search_type = variant.get_string();
@@ -433,7 +443,7 @@ public class Reviewer : Grid {
     var journals = new List<string>();
     var tags     = new List<string>();
 
-    /* Get the selected journals and tags */
+    // Get the selected journals and tags
     if( _trash_cb.active ) {
       journals.append( _journals.trash.name );
     } else {
@@ -441,16 +451,17 @@ public class Reviewer : Grid {
     }
     get_activated_items_from_list( _tag_lb, ref tags );
 
-    /* Create the review and add it to the list */
+    // Create the review and add it to the list
     var review = new SavedReview( journals, _num_journals, tags, _num_tags, _start_date.date, start_abs, _end_date.date, end_abs, _search_entry.text );
     _reviews.add_review( review );
 
-    /* Update the saved reviews */
+    // Update the saved reviews
     populate_reviews();
 
   }
 
-  /* Loads the current review and performs the search */
+  //-------------------------------------------------------------
+  // Loads the current review and performs the search
   private void action_load_review( SimpleAction action, Variant? variant ) {
 
     var index  = variant.get_int32();
@@ -460,20 +471,22 @@ public class Reviewer : Grid {
 
   }
 
-  /* Deletes the selected review and updates the menu */
+  //-------------------------------------------------------------
+  // Deletes the selected review and updates the menu
   private void action_delete_review( SimpleAction action, Variant? variant ) {
 
     var index = variant.get_int32();
 
-    /* Remove the review */
+    // Remove the review
     _reviews.remove_review( index );
 
-    /* Update the saved reviews */
+    // Update the saved reviews
     populate_reviews();
 
   }
 
-  /* Adds the given label as a checkbutton to the list */
+  //-------------------------------------------------------------
+  // Adds the given label as a checkbutton to the list
   private void add_item_to_list( ListBox lb, string label, bool active ) {
 
     var btn = new CheckButton.with_label( label ) {
@@ -494,7 +507,8 @@ public class Reviewer : Grid {
 
   }
 
-  /* Gathers the list of all activated items from the given list */
+  //-------------------------------------------------------------
+  // Gathers the list of all activated items from the given list
   private void get_activated_items_from_list( ListBox lb, ref List<string> items ) {
 
     var i   = 0;
@@ -515,7 +529,9 @@ public class Reviewer : Grid {
 
   }
 
-  /* Selects all of the items in the list and perform a search, if necessary */
+  //-------------------------------------------------------------
+  // Selects all of the items in the list and perform a search,
+  // if necessary
   private void change_select_of_all_items( ListBox lb, bool select ) {
 
     var i          = 0;
@@ -541,7 +557,8 @@ public class Reviewer : Grid {
 
   }
 
-  /* Clears the contents of the passed listbox */
+  //-------------------------------------------------------------
+  // Clears the contents of the passed listbox
   private void clear_listbox( ListBox lb ) {
     var row = lb.get_row_at_index( 0 );
     while( row != null ) {
@@ -550,7 +567,8 @@ public class Reviewer : Grid {
     }
   }
 
-  /* Clears the contents of the passed flowbox */
+  //-------------------------------------------------------------
+  // Clears the contents of the passed flowbox
   private void clear_flowbox( FlowBox fb ) {
     var row = fb.get_child_at_index( 0 );
     while( row != null ) {
@@ -559,17 +577,20 @@ public class Reviewer : Grid {
     }
   }
 
-  /* Returns the string date for the given picker */
+  //-------------------------------------------------------------
+  // Returns the string date for the given picker
   private string get_date( DateSelector selector ) {
     return( DBEntry.datetime_date( selector.date ) );
   }
 
-  /* Populates the journal listbox with the available journals to review */
+  //-------------------------------------------------------------
+  // Populates the journal listbox with the available journals to
+  // review
   private void populate_journals( SavedReview? review = null ) {
 
     clear_listbox( _journal_lb );
 
-    /* Get the list of available journal names and sort them */
+    // Get the list of available journal names and sort them
     var journals = new List<string>();
     for( int i=0; i<_journals.num_journals(); i++ ) {
       if( !_journals.get_journal( i ).hidden ) {
@@ -600,12 +621,13 @@ public class Reviewer : Grid {
 
   }
 
-  /* Grab the latest tags */
+  //-------------------------------------------------------------
+  // Grab the latest tags
   private void populate_tags( SavedReview? review = null ) {
 
     clear_listbox( _tag_lb );
 
-    /* Get the list of unique tags and sort them */
+    // Get the list of unique tags and sort them
     var all_tags = new TagList();
     for( int i=0; i<_journals.num_journals(); i++ ) {
       var journal = _journals.get_journal( i );
@@ -626,7 +648,7 @@ public class Reviewer : Grid {
     }
     selected.sort();
 
-    /* Populate the listbox */
+    // Populate the listbox
     add_item_to_list( _tag_lb, _( "Untagged" ), true );
     selected.foreach((tag) => {
       add_item_to_list( _tag_lb, tag, true );
@@ -636,7 +658,8 @@ public class Reviewer : Grid {
 
   }
 
-  /* Initializes the dates in the range selectors */
+  //-------------------------------------------------------------
+  // Initializes the dates in the range selectors
   private void populate_dates( SavedReview? review = null ) {
 
     if( review == null ) {
@@ -649,13 +672,14 @@ public class Reviewer : Grid {
 
   }
 
-  /* Initializes the reviewer UI when this is shown */
+  //-------------------------------------------------------------
+  // Initializes the reviewer UI when this is shown
   public void initialize( SavedReview? review = null ) {
 
     _last_review = review;
     _ignore_search = true;
 
-    /* Populate the journals and tags lists */
+    // Populate the journals and tags lists
     populate_journals( review );
     populate_tags( review );
     populate_dates( review );
@@ -663,12 +687,13 @@ public class Reviewer : Grid {
     _search_entry.text = (review == null) ? "" : review.search_str;
     _ignore_search = false;
 
-    /* Do an initial search */
+    // Do an initial search
     do_search();
 
   }
 
-  /* This should be called prior to exiting the review mode. */
+  //-------------------------------------------------------------
+  // This should be called prior to exiting the review mode.
   public void on_close() {
 
     // TBD - We may not need this at this point
@@ -677,7 +702,9 @@ public class Reviewer : Grid {
 
   // --------------------------------------------------------------
 
-  /* Creates the label that will be displayed on the journals or tags menubutton based on what is currently selected */
+  //-------------------------------------------------------------
+  // Creates the label that will be displayed on the journals or
+  // tags menubutton based on what is currently selected
   public static string make_menubutton_label( List<string> list, int max_length, string all_str, string none_str ) {
     if( list.length() == 0 ) {
       return( none_str );
@@ -705,7 +732,9 @@ public class Reviewer : Grid {
     }
   }
 
-  /* Updates the sensitivity of the reviewer UI to match the given value */
+  //-------------------------------------------------------------
+  // Updates the sensitivity of the reviewer UI to match the given
+  // value
   private void update_ui_sensitivity( bool sensitive ) {
 
     _match_lb.sensitive     = sensitive;
@@ -718,10 +747,11 @@ public class Reviewer : Grid {
 
   }
 
-  /* Updates the state of the UI */
+  //-------------------------------------------------------------
+  // Updates the state of the UI
   private void update_ui_state( List<string> journals, List<string> tags ) {
 
-    /* Update journal and tag listboxes */
+    // Update journal and tag listboxes
     _journal_set_all.sensitive   = (journals.length() < _num_journals);
     _journal_clear_all.sensitive = (journals.length() > 0);
     _journal_mb.label = make_menubutton_label( journals, _num_journals, _( "All Journals" ), _( "No Journals" ) );
@@ -730,12 +760,13 @@ public class Reviewer : Grid {
     _tag_clear_all.sensitive = (tags.length() > 0);
     _tag_mb.label = make_menubutton_label( tags, _num_tags, _( "All Tags" ), _( "No Tags" ) );
 
-    /* Disable the bulk edit UI */
+    // Disable the bulk edit UI
     bulk_edit = false;
 
   }
 
-  /* Updates the state of the bulk UI buttons */
+  //-------------------------------------------------------------
+  // Updates the state of the bulk UI buttons
   private void update_bulk_ui_state() {
 
     var i = 0;
@@ -761,7 +792,9 @@ public class Reviewer : Grid {
 
   }
 
-  /* Performs search of selected items, date ranges, and search terms */
+  //-------------------------------------------------------------
+  // Performs search of selected items, date ranges, and search
+  // terms
   private void do_search() {
 
     if( _ignore_search ) return;
@@ -770,7 +803,7 @@ public class Reviewer : Grid {
     var tags     = new List<string>();
     var taglist  = new TagList();
 
-    /* Get the selected journals and tags */
+    // Get the selected journals and tags
     if( _trash_cb.active ) {
       journals.append( _journals.trash.name );
     } else {
@@ -783,23 +816,23 @@ public class Reviewer : Grid {
     var start_date = get_date( _start_date );
     var end_date   = get_date( _end_date );
 
-    /* Update the state of the UI */
+    // Update the state of the UI
     update_ui_state( journals, tags );
 
-    /* Clear the list of match entries */
+    // Clear the list of match entries
     clear_listbox( _match_lb );
     clear_flowbox( _match_fbox );
     _match_entries.clear();
     _match_images.clear();
     _match_cb.clear();
 
-    /* Add the matching entries to the list */
+    // Add the matching entries to the list
     foreach( var journal_name in journals ) {
       var journal = (journal_name == _journals.trash.name) ? _journals.trash : _journals.get_journal_by_name( journal_name );
       journal.db.query_entries( (journal_name == _journals.trash.name), taglist, start_date, end_date, _search_entry.text.strip(), _match_entries, _match_images );
     }
 
-    /* Sort the entries */
+    // Sort the entries
     _match_entries.sort((a, b) => {
       var date_match = _newest_first ? strcmp( b.date, a.date ) : strcmp( a.date, b.date );
       if( date_match == 0 ) {
@@ -808,7 +841,7 @@ public class Reviewer : Grid {
       return( date_match );
     });
 
-    /* Sort the images */
+    // Sort the images
     _match_images.sort((a, b) => {
       var date_match = _newest_first ? strcmp( b.date, a.date ) : strcmp( a.date, b.date );
       if( date_match == 0 ) {
@@ -817,25 +850,25 @@ public class Reviewer : Grid {
       return( date_match );
     });
 
-    /* Add the entries */
+    // Add the entries
     _match_entries.foreach((journal_entry) => {
       add_match_entry( journal_entry );
       return( true );
     });
 
-    /* Add the images */
+    // Add the images
     var index = 0;
     _match_images.foreach((image) => {
       add_match_image( image, index++ );
       return( true );
     });
 
-    /* Set the sensitivity of the action buttons */
+    // Set the sensitivity of the action buttons
     _trash_btn.sensitive   = false;
     _restore_btn.sensitive = false;
     _tag_btn.sensitive     = false;
 
-    /* Display the first entry */
+    // Display the first entry
     var shown_content = _win.get_shown_content();
     if( _match_entries.size > 0 ) {
       if( (shown_content == "text") || (shown_content == "empty-text") ) {
@@ -861,10 +894,11 @@ public class Reviewer : Grid {
 
   }
 
-  /* Updates the listbox to enter bulk edit mode */
+  //-------------------------------------------------------------
+  // Updates the listbox to enter bulk edit mode
   void update_bulk_edit() {
 
-    /* Display the checkbuttons */
+    // Display the checkbuttons
     _match_cb.foreach((cb) => {
       var rev = (Revealer)cb.parent;
       if( rev != null ) {
@@ -873,31 +907,34 @@ public class Reviewer : Grid {
       return( true );
     });
 
-    /* Update the visibility of the bulk edit toolbar */
+    // Update the visibility of the bulk edit toolbar
     _bulk_box.visible = _bulk_edit;
 
-    /* Make sure that the tag UI element is hidden */
+    // Make sure that the tag UI element is hidden
     _tag_box.visible = false;
 
   }
 
   // --------------------------------------------------------------
 
-  /* Displays the previous entry in the list */
+  //-------------------------------------------------------------
+  // Displays the previous entry in the list
   public void show_previous_entry() {
     var index = _match_index;
     _match_lb.select_row( _match_lb.get_row_at_index( index - 1 ) );
     Utils.scroll_to_selected_row( _match_lb );
   }
 
-  /* Displays the next entry in the list */
+  //-------------------------------------------------------------
+  // Displays the next entry in the list
   public void show_next_entry() {
     var index = _match_index;
     _match_lb.select_row( _match_lb.get_row_at_index( index + 1 ) );
     Utils.scroll_to_selected_row( _match_lb );
   }
 
-  /* Displays the given entry in the textarea */
+  //-------------------------------------------------------------
+  // Displays the given entry in the textarea
   private void show_entry( ListBoxRow? row ) {
 
     if( row == null ) return;
@@ -922,7 +959,8 @@ public class Reviewer : Grid {
 
   }
 
-  /* Called whenever the selection_changed */
+  //-------------------------------------------------------------
+  // Called whenever the selection_changed
   private void selection_changed() {
 
     bulk_edit = (_match_lb.get_selected_rows().length() > 1);
@@ -939,20 +977,21 @@ public class Reviewer : Grid {
     });
     _ignore_toggled = false;
 
-    /* Update the state of the bulk UI */
+    // Update the state of the bulk UI
     if( bulk_edit ) {
       update_bulk_ui_state();
     }
 
   }
 
-  /* Makes sure that the specified row is within view in the viewport */
+  //-------------------------------------------------------------
+  // Makes sure that the specified row is within view in the viewport
   private void show_row( ListBoxRow row ) {
 
-    /* Adjust the lb_scroll viewport so that that current selected row is in view */
+    // Adjust the lb_scroll viewport so that that current selected row is in view
     double wleft, wtop, wbottom;
     row.translate_coordinates( _match_lb, 0, 0, out wleft, out wtop );
-    wbottom = wtop + row.get_allocated_height();
+    wbottom = wtop + row.get_height();
 
     var top    = _lb_scroll.vadjustment.value;
     var bottom = top + _lb_scroll.vadjustment.page_size;
@@ -967,12 +1006,13 @@ public class Reviewer : Grid {
 
   }
 
-  /* Creates the sidebar where matched entries will be displayed */
+  //-------------------------------------------------------------
+  // Creates the sidebar where matched entries will be displayed
   private Box create_reviewer_match_sidebar_entries() {
 
     _match_cb = new Gee.ArrayList<CheckButton>();
 
-    /* Add the entry listbox */
+    // Add the entry listbox
     _match_lb = new ListBox() {
       show_separators = true,
       activate_on_single_click = false,
@@ -1004,10 +1044,10 @@ public class Reviewer : Grid {
       return( false );
     });
 
-    /* Add the bulk edit UI box */
+    // Add the bulk edit UI box
     _bulk_box = add_bulk_edit_ui();
 
-    /* Create tag box */
+    // Create tag box
     _tag_box = new TagListbox() {
       visible = false
     };
@@ -1025,7 +1065,7 @@ public class Reviewer : Grid {
       hexpand = true
     };
 
-    /* Create the sidebar status UI */
+    // Create the sidebar status UI
     var status_box = add_sidebar_status();
 
     var box = new Box( Orientation.VERTICAL, 5 ) {
@@ -1040,7 +1080,8 @@ public class Reviewer : Grid {
 
   }
 
-  /* Creates the images sidebar */
+  //-------------------------------------------------------------
+  // Creates the images sidebar
   private Box create_reviewer_match_sidebar_images() {
 
     _match_fbox = new FlowBox() {
@@ -1077,7 +1118,8 @@ public class Reviewer : Grid {
 
   }
 
-  /* Create the match sidebar */
+  //-------------------------------------------------------------
+  // Create the match sidebar
   public Box create_reviewer_match_sidebar() {
 
     var stack = new Stack();
@@ -1102,7 +1144,7 @@ public class Reviewer : Grid {
       stack   = stack
     };
 
-    /* Get the saved setting */
+    // Get the saved setting
     _newest_first = Journaler.settings.get_boolean( "review-mode-order-newest-first" );
 
     var sort_btn = new Button() {
@@ -1137,7 +1179,8 @@ public class Reviewer : Grid {
 
   }
 
-  /* Add bulk edit UI to the sidebar */
+  //-------------------------------------------------------------
+  // Add bulk edit UI to the sidebar
   private Box add_bulk_edit_ui() {
 
     _restore_btn = new Button.from_icon_name( "edit-undo-symbolic" ) {
@@ -1181,7 +1224,9 @@ public class Reviewer : Grid {
 
   }
 
-  /* Adds the sidebar status area which also includes the bulk edit button */
+  //-------------------------------------------------------------
+  // Adds the sidebar status area which also includes the bulk
+  // edit button
   private Box add_sidebar_status() {
 
     var status = new Label( Utils.make_title( _( "Shown Entries:" ) ) ) {
@@ -1204,7 +1249,8 @@ public class Reviewer : Grid {
 
   // --------------------------------------------------------------
 
-  /* Moves all entries to the trash */
+  //-------------------------------------------------------------
+  // Moves all entries to the trash
   private void move_to_trash() {
     _win.reset_timer();
     var i = 0;
@@ -1222,7 +1268,8 @@ public class Reviewer : Grid {
     do_search();
   }
 
-  /* Restores the entries from the trash */
+  //-------------------------------------------------------------
+  // Restores the entries from the trash
   private void restore_from_trash() {
     _win.reset_timer();
     var i = 0;
@@ -1240,7 +1287,9 @@ public class Reviewer : Grid {
     do_search();
   }
 
-  /* Adds all of the tags from the checked entries to the given tag list */
+  //-------------------------------------------------------------
+  // Adds all of the tags from the checked entries to the given
+  // tag list
   private void collect_selected_tags( TagList tags ) {
     var i = 0;
     _match_cb.foreach((cb) => {
@@ -1257,17 +1306,18 @@ public class Reviewer : Grid {
     });
   }
 
-  /* Performs the setup task for editing tags */
+  //-------------------------------------------------------------
+  // Performs the setup task for editing tags
   private void setup_edit_tags() {
 
     var all_tags = new TagList();
     var sel_tags = new TagList();
 
-    /* Collect the selected tags */
+    // Collect the selected tags
     collect_selected_tags( sel_tags );
     sel_tags.sort();
 
-    /* Get all of the tags from the selected journals */
+    // Get all of the tags from the selected journals
     var journals = new List<string>();
     get_activated_items_from_list( _journal_lb, ref journals );
     foreach( var name in journals ) {
@@ -1275,22 +1325,23 @@ public class Reviewer : Grid {
       journal.db.get_all_tags( all_tags );
     }
 
-    /* Remove sel_tags from all_tags */
+    // Remove sel_tags from all_tags
     all_tags.remove_tag_list( sel_tags );
 
-    /* Add the remaining tags to the list of match tags */
+    // Add the remaining tags to the list of match tags
     all_tags.sort();
 
-    /* Add the tags to the tag box */
+    // Add the tags to the tag box
     _tag_box.add_all_tags( all_tags );
     _tag_box.add_selected_tags( sel_tags );
 
   }
 
-  /* Allows the user to add tags to all selected items */
+  //-------------------------------------------------------------
+  // Allows the user to add tags to all selected items
   private void bulk_change_tags() {
 
-    /* Add all of the tags to the selected items */
+    // Add all of the tags to the selected items
     var i = 0;
     _match_cb.foreach((cb) => {
       if( cb.active ) {
@@ -1306,15 +1357,17 @@ public class Reviewer : Grid {
       return( true );
     });
 
-    /* Add the tags to the list of tags to search for */
+    // Add the tags to the list of tags to search for
     populate_tags( _last_review );
 
-    /* Perform the search */
+    // Perform the search
     // do_search();
 
   }
 
-  /* Retrieves a portion of the matched entry text if the search entry contains any non-whitespace characters */
+  //-------------------------------------------------------------
+  // Retrieves a portion of the matched entry text if the search
+  // entry contains any non-whitespace characters
   private string get_matched_text( DBEntry entry ) {
 
     var text          = entry.text.replace( "\n", " " );
@@ -1348,12 +1401,13 @@ public class Reviewer : Grid {
 
   }
 
-  /* Adds the given match entry to the list of matching entries */
+  //-------------------------------------------------------------
+  // Adds the given match entry to the list of matching entries
   private void add_match_entry( DBEntry entry ) {
 
     var index = _match_cb.size;
 
-    /* Populate the listbox */
+    // Populate the listbox
     var label = new Label( "<b>" + entry.gen_title() + "</b>" ) {
       halign     = Align.START,
       hexpand    = true,
@@ -1438,13 +1492,13 @@ public class Reviewer : Grid {
     
     show_matched_entry( entry, SelectedEntryPos.parse( _match_images.size, index ), match_image.index );
 
-    /* Clear the selected rows */
+    // Clear the selected rows
     var selected = _match_lb.get_selected_rows();
     selected.foreach((row) => {
       _match_lb.unselect_row( row );
     });
 
-    /* Select and show the row in the entries listbox */
+    // Select and show the row in the entries listbox
     var lb_index = 0;
     _ignore_toggled = true;
     _match_entries.foreach((journal_entry) => {

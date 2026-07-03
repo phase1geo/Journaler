@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2023 (https://github.com/phase1geo/Journaler)
+* Copyright (c) 2023-2026 (https://github.com/phase1geo/Journaler)
 *
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public
@@ -91,7 +91,7 @@ public class Preferences : Gtk.Dialog {
 
     get_content_area().append( box );
 
-    /* Create close button at bottom of window */
+    // Create close button at bottom of window
     var close_button = new Button.with_label( _( "Close" ) );
     close_button.clicked.connect(() => {
       _win.reset_timer();
@@ -101,14 +101,15 @@ public class Preferences : Gtk.Dialog {
 
     add_action_widget( close_button, 0 );
 
-    /* Add the menu actions */
+    // Add the menu actions
     var actions = new SimpleActionGroup();
     actions.add_action_entries( action_entries, this );
     insert_action_group( "prefs", actions );
 
   }
 
-  /* Creates the general panel */
+  //-------------------------------------------------------------
+  // Creates the general panel
   private Grid create_general() {
 
     var grid = new Grid() {
@@ -146,7 +147,7 @@ public class Preferences : Gtk.Dialog {
     grid.attach( entry_preview, 1, row );
     row++;
 
-    /* Disable the menubutton if we haven't setup a password yet */
+    // Disable the menubutton if we haven't setup a password yet
     if( !Security.does_password_exist() ) {
       var mb = (MenuButton)grid.get_child_at( 1, 0 );
       mb.sensitive = false;
@@ -157,7 +158,8 @@ public class Preferences : Gtk.Dialog {
 
   }
 
-  /* Create the application auto-lock menu */
+  //-------------------------------------------------------------
+  // Create the application auto-lock menu
   private GLib.Menu create_lock_menu() {
 
     var menu = new GLib.Menu();
@@ -179,13 +181,15 @@ public class Preferences : Gtk.Dialog {
 
   }
 
-  /* Returns the lock menubutton label */
+  //-------------------------------------------------------------
+  // Returns the lock menubutton label
   private string lock_label() {
     var opt = (AutoLockOption)Journaler.settings.get_int( "auto-lock" );
     return( opt.label() );
   }
 
-  /* Sets the lock menu to the given value */
+  //-------------------------------------------------------------
+  // Sets the lock menu to the given value
   private void action_lock_menu( SimpleAction action, Variant? variant ) {
     _win.reset_timer();
     var opt = (AutoLockOption)variant.get_int32();
@@ -193,7 +197,8 @@ public class Preferences : Gtk.Dialog {
     Journaler.settings.set_int( "auto-lock", variant.get_int32() );
   }
 
-  /* Creates the editor panel */
+  //-------------------------------------------------------------
+  // Creates the editor panel
   private Grid create_editor() {
 
     var grid = new Grid() {
@@ -257,7 +262,8 @@ public class Preferences : Gtk.Dialog {
 
   }
   
-  /* Create the spell checker language menu */
+  //-------------------------------------------------------------
+  // Create the spell checker language menu
   private GLib.Menu create_spell_lang_menu() {
     
     var menu  = new GLib.Menu();
@@ -281,7 +287,9 @@ public class Preferences : Gtk.Dialog {
     
   }
   
-  /* Get the currently specified spell checker language value from settings */
+  //-------------------------------------------------------------
+  // Get the currently specified spell checker language value from
+  // settings
   private string spell_lang_label() {
     
     var lang = Journaler.settings.get_string( "spellchecker-language" );
@@ -294,7 +302,8 @@ public class Preferences : Gtk.Dialog {
     
   }
   
-  /* Handles changes to the spell checker language menu */
+  //-------------------------------------------------------------
+  // Handles changes to the spell checker language menu
   private void action_spell_menu( SimpleAction action, Variant? variant ) {
     _win.reset_timer();
     if( variant != null ) {
@@ -307,7 +316,8 @@ public class Preferences : Gtk.Dialog {
     }
   }
 
-  /* Create the application auto-lock menu */
+  //-------------------------------------------------------------
+  // Create the application auto-lock menu
   private GLib.Menu create_goal_menu() {
 
     var menu = new GLib.Menu();
@@ -321,13 +331,15 @@ public class Preferences : Gtk.Dialog {
 
   }
 
-  /* Returns the lock menubutton label */
+  //-------------------------------------------------------------
+  // Returns the lock menubutton label
   private string goal_label() {
     var goal_type = GoalType.parse( Journaler.settings.get_string( "goal-type" ) );
     return( goal_type.label() );
   }
 
-  /* Sets the lock menu to the given value */
+  //-------------------------------------------------------------
+  // Sets the lock menu to the given value
   private void action_goal_menu( SimpleAction action, Variant? variant ) {
     _win.reset_timer();
     var goal_type = (GoalType)variant.get_int32();
@@ -335,7 +347,8 @@ public class Preferences : Gtk.Dialog {
     Journaler.settings.set_string( "goal-type", goal_type.to_string() );
   }
 
-  /* Adds a feed row at the given position */
+  //-------------------------------------------------------------
+  // Adds a feed row at the given position
   private void add_feed_row( Grid grid, int position, NewsSource? source = null ) {
 
     var name = new Entry() {
@@ -375,7 +388,7 @@ public class Preferences : Gtk.Dialog {
       _win.reset_timer();
     });
 
-    /* Insert the new row with widgets */
+    // Insert the new row with widgets
     grid.insert_row( position );
     grid.attach( name,  0, position );
     grid.attach( feed,  1, position );
@@ -383,7 +396,7 @@ public class Preferences : Gtk.Dialog {
     grid.attach( add,   3, position );
     grid.attach( del,   4, position );
 
-    /* Populate the widgets if we have data to show */
+    // Populate the widgets if we have data to show
     if( source != null ) {
       name.text   = source.name;
       feed.text   = source.feed;
@@ -394,7 +407,8 @@ public class Preferences : Gtk.Dialog {
 
   }
 
-  /* Creates the preference panel for the login screens */
+  //-------------------------------------------------------------
+  // Creates the preference panel for the login screens
   private Box create_login() {
 
     var lbl = new Label( Utils.make_title( _( "Select a Login Screen Background" ) ) ) {
@@ -458,19 +472,7 @@ public class Preferences : Gtk.Dialog {
     pbrowse.clicked.connect(() => {
       _win.reset_timer();
       popover.popdown();
-      var dialog = Utils.make_file_chooser( _( "Select an image" ), this, FileChooserAction.OPEN, _( "Choose Image" ) );
-      dialog.response.connect((id) => {
-        _win.reset_timer();
-        if( id == ResponseType.ACCEPT ) {
-          var file = dialog.get_file();
-          if( file != null ) {
-            pentry.text = file.get_path();
-            pentry.activate();
-          }
-        }
-        dialog.destroy();
-      });
-      dialog.show();
+      choose_image( pentry );
     });
 
     var add_button = new MenuButton() {
@@ -484,7 +486,7 @@ public class Preferences : Gtk.Dialog {
     add_button.add_css_class( "login-thumbnail" );
     login_box.append( add_button );
 
-    /* Select the current theme */
+    // Select the current theme
     var flow_child = login_box.get_child_at_index( _win.locker.current );
     login_box.select_child( flow_child );
 
@@ -509,7 +511,39 @@ public class Preferences : Gtk.Dialog {
 
   }
 
-  /* Adds a login image to the given flowbox using the locker index */
+  //-------------------------------------------------------------
+  // Allows the user to select an image from the file system.
+  private void choose_image( Entry entry ) {
+
+    var filter = new FileFilter() {
+      name = _( "Image Files" )
+    };
+    filter.add_pixbuf_formats();
+
+    var filters = new GLib.ListStore( typeof( FileFilter ) );
+    filters.append( filter );
+
+    var dialog = new FileDialog() {
+      modal = true,
+      title = _( "Select an image" ),
+      accept_label = _( "Choose Image" ),
+      filters = filters
+    };
+
+    dialog.open.begin( _win, null, (obj, res) => {
+      try {
+        var file = dialog.open.end( res );
+        if( file != null ) {
+          entry.text = file.get_path();
+          entry.activate();
+        }
+      } catch( Error e ) {}
+    });
+
+  }
+
+  //-------------------------------------------------------------
+  // Adds a login image to the given flowbox using the locker index
   private void add_login_image( FlowBox flowbox, int index ) {
 
     var box = new Box( Orientation.VERTICAL, 5 ) {
@@ -563,7 +597,8 @@ public class Preferences : Gtk.Dialog {
 
   }
 
-  /* Creates the news feed panel */
+  //-------------------------------------------------------------
+  // Creates the news feed panel
   private ScrolledWindow create_news_feeds() {
 
     _feed_grid = new Grid() {
@@ -625,7 +660,8 @@ public class Preferences : Gtk.Dialog {
 
   }
 
-  /* Creates advanced pane */
+  //-------------------------------------------------------------
+  // Creates advanced pane
   private Box create_advanced() {
 
     var box = new Box( Orientation.VERTICAL, 5 );
@@ -667,7 +703,7 @@ public class Preferences : Gtk.Dialog {
 
     stdout.printf( "Adding 100 test entries to journal %s\n", journal.name );
 
-    /* Find the oldest date and work backwards from there */
+    // Find the oldest date and work backwards from there
     journal.db.get_all_entries( false, entries );
     if( entries.length > 0 ) {
       var entry = entries.index( entries.length - 1 );
@@ -731,10 +767,11 @@ public class Preferences : Gtk.Dialog {
 
   }
 
-  /* Creates the export frame for the Advanced panel */
+  //-------------------------------------------------------------
+  // Creates the export frame for the Advanced panel
   private Frame create_advanced_export() {
 
-    /* Export */
+    // Export
     var all = new CheckButton.with_label( _( "Export all journals" ) ) {
       active = true
     };
@@ -850,7 +887,8 @@ public class Preferences : Gtk.Dialog {
 
   }
 
-  /* Generates import UI for the Advanced panel */
+  //-------------------------------------------------------------
+  // Generates import UI for the Advanced panel
   private Frame create_advanced_import() {
 
     var import_merge = new CheckButton.with_label( _( "Import entries into original journals, automatically creating non-existing journals" ) ) {
@@ -951,7 +989,8 @@ public class Preferences : Gtk.Dialog {
 
   }
 
-  /* Selects the journal to export */
+  //-------------------------------------------------------------
+  // Selects the journal to export
   private void action_select_journal_for_export( SimpleAction action, Variant? variant ) {
 
     _win.reset_timer();
@@ -959,7 +998,8 @@ public class Preferences : Gtk.Dialog {
 
   }
 
-  /* Selects the export format */
+  //-------------------------------------------------------------
+  // Selects the export format
   private void action_select_export_format( SimpleAction action, Variant? variant ) {
 
     _win.reset_timer();
@@ -971,7 +1011,8 @@ public class Preferences : Gtk.Dialog {
 
   }
 
-  /* Performs the export based on the settings */
+  //-------------------------------------------------------------
+  // Performs the export based on the settings
   private void do_export( string journal, bool for_import, bool include_images, string format ) {
 
     var journals = new Array<Journal>();
@@ -991,21 +1032,27 @@ public class Preferences : Gtk.Dialog {
       xml_export.for_import = for_import;
     }
 
-    var dialog = Utils.make_file_chooser( _( "Export Data As…" ), this, FileChooserAction.SAVE, _( "Export" ) );
-
-    /* Add filters */
+    // Add filters
     var filter = new FileFilter() {
       name = export.label
     };
     foreach( var ext in export.extensions ) {
       filter.add_suffix( ext );
     }
-    dialog.add_filter( filter );
 
-    dialog.response.connect((id) => {
-      _win.reset_timer();
-      if( id == ResponseType.ACCEPT ) {
-        var file = dialog.get_file();
+    var filters = new GLib.ListStore( typeof( FileFilter ) );
+    filters.append( filter );
+
+    var dialog = new FileDialog() {
+      modal = true,
+      title = _( "Export Data As…" ),
+      accept_label = _( "Export" ),
+      filters = filters
+    };
+
+    dialog.save.begin( this, null, (obj, res) => {
+      try {
+        var file = dialog.save.end( res );
         if( file != null ) {
           if( export.export( file.get_path() + (include_images ? ".bundle" : ""), journals ) ) {
             _win.notification( _( "Export successful" ), "" );
@@ -1013,15 +1060,13 @@ public class Preferences : Gtk.Dialog {
             _win.notification( _( "Export failed" ), "" );
           }
         }
-      }
-      dialog.destroy();
+      } catch( Error e ) {}
     });
-
-    dialog.show();
 
   }
 
-  /* Called when the user selects an existing journal from the menu */
+  //-------------------------------------------------------------
+  // Called when the user selects an existing journal from the menu
   private void action_select_import_journal( SimpleAction action, Variant? variant ) {
 
     _win.reset_timer();
@@ -1032,7 +1077,8 @@ public class Preferences : Gtk.Dialog {
 
   }
 
-  /* Prompts the user to create a new Journal */
+  //-------------------------------------------------------------
+  // Prompts the user to create a new Journal
   private void action_select_new_import_journal() {
 
     _win.reset_timer();
@@ -1045,7 +1091,9 @@ public class Preferences : Gtk.Dialog {
 
   }
 
-  /* Handles the import of an XML file into either a new journal or merged into the existing journals */
+  //-------------------------------------------------------------
+  // Handles the import of an XML file into either a new journal
+  // or merged into the existing journals
   private void do_import( string journal_name ) {
 
     Journal journal = null;
@@ -1060,9 +1108,7 @@ public class Preferences : Gtk.Dialog {
       }
     }
 
-    var dialog = Utils.make_file_chooser( _( "Import Data From…" ), this, FileChooserAction.OPEN, _( "Import" ) );
-
-    /* Add filters */
+    // Add filters
     var filter = new FileFilter() {
       name = export.label
     };
@@ -1070,12 +1116,20 @@ public class Preferences : Gtk.Dialog {
       filter.add_suffix( ext );
       filter.add_suffix( ext + ".bundle" );
     }
-    dialog.add_filter( filter );
 
-    dialog.response.connect((id) => {
-      _win.reset_timer();
-      if( id == ResponseType.ACCEPT ) {
-        var file = dialog.get_file();
+    var filters = new GLib.ListStore( typeof( FileFilter ) );
+    filters.append( filter );
+
+    var dialog = new FileDialog() {
+      modal = true,
+      title = _( "Import Data From…" ),
+      accept_label = _( "Import" ),
+      filters = filters
+    };
+
+    dialog.open.begin( this, null, (obj, res) => {
+      try {
+        var file = dialog.open.end( res );
         if( file != null ) {
           if( export.import( file.get_path(), _journals, journal ) ) {
             _journals.current_changed( true );
@@ -1084,23 +1138,22 @@ public class Preferences : Gtk.Dialog {
             _win.notification( _( "Import failed" ), "" );
           }
         }
-      }
-      dialog.destroy();
+      } catch( Error e ) {}
     });
-
-    dialog.show();
 
   }
 
   // -----------------------------------------------------------------
 
-  /* Creates visual spacer */
+  //-------------------------------------------------------------
+  // Creates visual spacer
   private Label make_spacer() {
     var w = new Label( "" );
     return( w );
   }
 
-  /* Creates label */
+  //-------------------------------------------------------------
+  // Creates label
   private Label make_label( string label ) {
     var w = new Label( Utils.make_title( label ) ) {
       use_markup = true,
@@ -1109,7 +1162,8 @@ public class Preferences : Gtk.Dialog {
     return( w );
   }
 
-  /* Creates switch */
+  //-------------------------------------------------------------
+  // Creates switch
   private Switch make_switch( string setting ) {
     var w = new Switch() {
       halign = Align.START,
@@ -1120,7 +1174,8 @@ public class Preferences : Gtk.Dialog {
     return( w );
   }
 
-  /* Creates spinner */
+  //-------------------------------------------------------------
+  // Creates spinner
   private SpinButton make_spinner( string setting, int min_value, int max_value, int step ) {
     var w = new SpinButton.with_range( min_value, max_value, step );
     w.value_changed.connect( _win.reset_timer );
@@ -1128,7 +1183,8 @@ public class Preferences : Gtk.Dialog {
     return( w );
   }
 
-  /* Creates an entry */
+  //-------------------------------------------------------------
+  // Creates an entry
   private Entry make_entry( string setting, string placeholder, int max_length = 30, ValidateEntryCallback? cb = null ) {
     var w = new Entry() {
       placeholder_text        = placeholder,
@@ -1148,7 +1204,8 @@ public class Preferences : Gtk.Dialog {
     return( w );
   }
 
-  /* Helper function for the make_entry method */
+  //-------------------------------------------------------------
+  // Helper function for the make_entry method
   private void handle_text_insertion( Entry entry, string cleaned, ref int position ) {
     var void_entry = (void*)entry;
     SignalHandler.block_by_func( void_entry, (void*)handle_text_insertion, this );
@@ -1157,7 +1214,8 @@ public class Preferences : Gtk.Dialog {
     Signal.stop_emission_by_name( entry, "insert_text" );
   }
 
-  /* Creates a menubutton with the given menu */
+  //-------------------------------------------------------------
+  // Creates a menubutton with the given menu
   private MenuButton make_menu( string setting, string label, GLib.Menu menu ) {
     var w = new MenuButton() {
       label      = label,
@@ -1167,7 +1225,8 @@ public class Preferences : Gtk.Dialog {
     return( w );
   }
 
-  /* Creates an information image */
+  //-------------------------------------------------------------
+  // Creates an information image
   private Image make_info( string detail ) {
     var w = new Image.from_icon_name( "dialog-information-symbolic" ) {
       halign       = Align.START,
@@ -1176,7 +1235,8 @@ public class Preferences : Gtk.Dialog {
     return( w );
   }
 
-  /* Creates the theme menu button */
+  //-------------------------------------------------------------
+  // Creates the theme menu button
   private MenuButton make_themes() {
 
     var menu = new GLib.Menu();
@@ -1186,7 +1246,7 @@ public class Preferences : Gtk.Dialog {
       menu_model = menu
     };
 
-    /* Get the available theme names */
+    // Get the available theme names
     for( int i=0; i<_win.themes.size(); i++ ) {
       menu.append( _win.themes.index( i ).name, "prefs.action_set_current_theme('%s')".printf( _win.themes.index( i ).name ) );
     }
@@ -1195,17 +1255,18 @@ public class Preferences : Gtk.Dialog {
 
   }
 
-  /* Handles any changes to the theme */
+  //-------------------------------------------------------------
+  // Handles any changes to the theme
   private void action_set_current_theme( SimpleAction action, Variant? variant ) {
 
     var theme = variant.get_string();
 
     _theme_mb.label = theme;
 
-    /* Update the settings */
+    // Update the settings
     Journaler.settings.set_string( "default-theme", theme );
 
-    /* Indicate that the theme changed for the rest of the UI */
+    // Indicate that the theme changed for the rest of the UI
     _win.themes.theme = theme;
     _win.reset_timer();
 

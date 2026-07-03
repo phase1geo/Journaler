@@ -211,7 +211,7 @@ public class Journals {
     Xml.Node* root = new Xml.Node( null, "journals" );
     var       current_index = -1;
 
-    root->set_prop( "version", Journaler.version );
+    root->set_prop( "version", Journaler.static_version );
 
     for( int i=0; i<_journals.length; i++ ) {
       if( _journals.index( i ) == _current ) {

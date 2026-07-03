@@ -208,7 +208,7 @@ public class TextArea : Box {
     _text.right_margin  = margin;
 
     Timeout.add(100, () => {
-      var height = _text.get_allocated_height();
+      var height = _text.get_height();
       if( height > 0 ) {
         _text.bottom_margin = height / 2;
         return( false );
@@ -1072,7 +1072,7 @@ public class TextArea : Box {
         border-width: 0px;
       }
     """.printf( font_size, font_size, margin, margin, style.get_style( "text" ).background, (margin - 4) );
-    provider.load_from_data( css_data.data );
+    provider.load_from_string( css_data );
     StyleContext.add_provider_for_display( get_display(), provider, STYLE_PROVIDER_PRIORITY_APPLICATION );
 
     /* Handle the background color of the viewer */
@@ -1276,7 +1276,7 @@ public class TextArea : Box {
   /* Returns the image size to use for the given image */
   private string get_image_size( string path ) {
 
-    var canvas_width = get_allocated_width() - 20;
+    var canvas_width = get_width() - 20;
     var img_width    = 400;
     var img_height   = 300;
 
@@ -1437,8 +1437,8 @@ public class TextArea : Box {
       }
       Timeout.add( 100, () => {
         if( _win.is_fullscreen() ) {
-          var width  = _text.get_allocated_width();
-          var height = _text.get_allocated_height();
+          var width  = _text.get_width();
+          var height = _text.get_height();
           _text.left_margin   = width / 4;
           _text.right_margin  = width / 4;
           _text.top_margin    = 100;

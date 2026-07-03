@@ -23,7 +23,8 @@ public class TagListbox : Box {
     }
   }
 
-  /* Constructor */
+  //-------------------------------------------------------------
+  // Constructor
   public TagListbox() {
 
     Object(
@@ -167,7 +168,8 @@ public class TagListbox : Box {
 
   }
 
-  /* Updates the UI state */
+  //-------------------------------------------------------------
+  // Updates the UI state
   private void update_ui_state() {
 
     var changed = (_added.length() > 0) || (_removed.length() > 0);
@@ -176,7 +178,8 @@ public class TagListbox : Box {
 
   }
 
-  /* Clears the list of tags */
+  //-------------------------------------------------------------
+  // Clears the list of tags
   public void clear() {
 
     var row = _lb.get_row_at_index( 0 );
@@ -190,10 +193,11 @@ public class TagListbox : Box {
 
   }
 
-  /* Adds a single tag to the listbox */
+  //-------------------------------------------------------------
+  // Adds a single tag to the listbox
   private void add_tag( string tag, bool add ) {
 
-    /* Attempt to add the tag to the added tags list */
+    // Attempt to add the tag to the added tags list
     if( add && !_added.add_tag( tag ) ) {
       return;
     }
@@ -223,7 +227,8 @@ public class TagListbox : Box {
 
   }
 
-  /* Adds the list of tags that exist that can be added */
+  //-------------------------------------------------------------
+  // Adds the list of tags that exist that can be added
   public void add_all_tags( TagList tags ) {
 
     var store = new Gtk.ListStore( 1, typeof(string) );
@@ -238,7 +243,8 @@ public class TagListbox : Box {
 
   }
 
-  /* Adds the given list of tags to the listbox */
+  //-------------------------------------------------------------
+  // Adds the given list of tags to the listbox
   public void add_selected_tags( TagList tags ) {
 
     clear();

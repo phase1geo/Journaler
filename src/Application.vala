@@ -27,17 +27,21 @@ using Gee;
 public class Journaler : Gtk.Application {
 
   private const string INTERFACE_SCHEMA = "org.gnome.desktop.interface";
+  public  const string static_version = "1.2.0";
 
   private static bool show_version = false;
 
   public  static GLib.Settings settings;
-  public  static string version = "1.1.0";
 
   private MainWindow appwin;
 
   public Journaler () {
 
-    Object( application_id: "io.github.phase1geo.journaler", flags: ApplicationFlags.HANDLES_OPEN );
+    Object(
+      application_id: "io.github.phase1geo.journaler",
+      flags: ApplicationFlags.HANDLES_OPEN,
+      version: static_version
+    );
 
     // Register with the session manager so that we can be alerted to screensaver status
     register_session = true;
@@ -61,8 +65,8 @@ public class Journaler : Gtk.Application {
 
     // Add the application-specific icons
     weak IconTheme default_theme = IconTheme.get_for_display( Display.get_default() );
-    default_theme.add_resource_path( "/io/github/phase1geo/journaler" );
-    default_theme.add_resource_path( "/io/github/phase1geo/journaler/icons/hicolor" );
+    default_theme.add_resource_path( "/io/github/phase1geo/journaler/images" );
+    default_theme.add_resource_path( "/io/github/phase1geo/journaler/images/icons/hicolor" );
 
     // Make sure that the user data directory exists
     var app_dir = GLib.Path.build_filename( Environment.get_user_data_dir(), "journaler" );

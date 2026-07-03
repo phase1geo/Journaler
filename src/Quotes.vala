@@ -163,7 +163,7 @@ public class Quotes {
     Xml.Doc*  doc  = new Xml.Doc( "1.0" );
     Xml.Node* root = new Xml.Node( null, "quotes" );
 
-    root->set_prop( "version", Journaler.version );
+    root->set_prop( "version", Journaler.static_version );
     root->set_prop( "current", ((_quote_index < _built_in_length) ? "b:%d".printf( _quote_index ) : "u:%d".printf( _quote_index - _built_in_length )) );
     root->set_prop( "date",    _date );
 
