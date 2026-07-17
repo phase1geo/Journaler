@@ -51,6 +51,8 @@ public class Journaler : Gtk.Application {
     Intl.bind_textdomain_codeset( GETTEXT_PACKAGE, "UTF-8" );
     Intl.textdomain( GETTEXT_PACKAGE );
 
+    Environment.set_application_name( _( "Journaler" ) );
+
     startup.connect( start_application );
     activate.connect( on_activate );
 
